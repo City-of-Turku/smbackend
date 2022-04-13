@@ -1,4 +1,5 @@
 import logging
+import os
 
 from django import db
 from django.conf import settings
@@ -7,6 +8,7 @@ from django.contrib.gis.geos import Point
 from munigeo.models import AdministrativeDivision, AdministrativeDivisionGeometry
 
 from mobility_data.models import ContentType, MobileUnit
+from services.models import Unit
 
 from .utils import (
     delete_mobile_units,
@@ -17,11 +19,15 @@ from .utils import (
     set_translated_field,
 )
 
+BICYCLE_STANDS_SERVICE_ID = settings.BICYCLE_STANDS_IDS["service"]
 BICYCLE_STANDS_URL = "{}{}".format(
     settings.TURKU_WFS_URL,
     "?service=WFS&request=GetFeature&typeName=GIS:Polkupyoraparkki&outputFormat=GML3",
 )
-SOURCE_DATA_SRID = 3877
+WFS_SOURCE_DATA_SRID = 3877
+GEOJSON_SOURCE_DATA_SRID = 4326
+GEOJSON_FILENAME = "bicycle_stands_for_units.geojson"
+
 logger = logging.getLogger("mobility_data")
 division_turku = AdministrativeDivision.objects.get(name="Turku")
 turku_boundary = AdministrativeDivisionGeometry.objects.get(
@@ -31,7 +37,8 @@ turku_boundary = AdministrativeDivisionGeometry.objects.get(
 
 class BicyleStand:
 
-    HULL_LOCKABLE_STR = "runkolukitusmahdollisuus"
+    WFS_HULL_LOCKABLE_STR = "runkolukitusmahdollisuus"
+    GEOJSON_HULL_LOCKABLE_STR = "runkolukittava"
     COVERED_IN_STR = "katettu"
 
     geometry = None
@@ -44,20 +51,95 @@ class BicyleStand:
     city = None
     street_address = None
     maintained_by_turku = None
+    related_unit = None
 
     @classmethod
-    def locates_in_turku(cls, feature):
+    def locates_in_turku(cls, feature, feature_type):
         """
         Returns True if the geometry of the feature is inside the boundaries
         of Turku.
         """
-        point = Point(feature.geom.x, feature.geom.y, srid=SOURCE_DATA_SRID)
+        srid = None
+        if feature_type == "gml":
+            srid = WFS_SOURCE_DATA_SRID
+        elif feature_type == "geojson":
+            srid = GEOJSON_SOURCE_DATA_SRID
+        else:
+            return False
+        point = Point(feature.geom.x, feature.geom.y, srid=srid)
         point.transform(settings.DEFAULT_SRID)
         return turku_boundary.contains(point)
 
-    def __init__(self, feature):
+    def __init__(self):
         self.name = {}
         self.street_address = {}
+
+    def set_geojson_feature(self, feature):
+        name = feature["kohde"].as_string().strip()
+        unit_name = name.split(",")[0]
+
+        self.geometry = Point(
+            feature.geom.x, feature.geom.y, srid=GEOJSON_SOURCE_DATA_SRID
+        )
+        self.geometry.transform(settings.DEFAULT_SRID)
+
+        units_qs = Unit.objects.filter(name=unit_name)
+        # Make first unit with same name that is not a Bicycle Stand the related_unit
+        for unit in units_qs:
+            # Ensure we do not connect to a Bicycle stand unit
+            if not unit.services.filter(id=BICYCLE_STANDS_SERVICE_ID):
+                self.related_unit = unit
+                break
+
+        self.number_of_stands = feature["telineitä"].as_int()
+        self.number_of_places = feature["paikkoja"].as_int()
+        model_elem = feature["pys.malli"].as_string()
+        if model_elem:
+            self.model = model_elem
+
+        quality_elem = feature["laatutaso"].as_string()
+        if quality_elem:
+            quality_text = quality_elem.lower()
+            if self.GEOJSON_HULL_LOCKABLE_STR in quality_text:
+                self.hull_lockable = True
+            else:
+                self.hull_lockable = False
+
+            if self.COVERED_IN_STR in quality_text:
+                self.covered = True
+            else:
+                self.covered = False
+
+        self.city = get_municipality_name(self.geometry)
+        self.name["fi"] = name
+        # If related unit is known, use its translated names
+        if self.related_unit:
+            self.name["sv"] = self.related_unit.name_sv
+            self.name["en"] = self.related_unit.name_en
+        else:
+            self.name["sv"] = name
+            self.name["en"] = name
+
+        addr = feature["osoite"].as_string().split(",")
+        # Some addresses are in format:"Pyhän Henrikin aukio, Kupittaankatu 8, 20520 Turku"
+        # Then remove the prefix part.
+        if len(addr) > 2:
+            address = addr[1].strip().split(" ")
+        else:
+            address = addr[0].strip().split(" ")
+        # Street name can have multiple names e.g. Jäkärlän puistokatu 18
+        street_name = " ".join(address[:-1])
+        if len(address) == 1:
+            address_number = ""
+        else:
+            # The last part is always the number
+            address_number = address[-1]
+        translated_street_names = get_street_name_translations(street_name, self.city)
+        self.street_address["fi"] = f"{translated_street_names['fi']} {address_number}"
+        self.street_address["sv"] = f"{translated_street_names['sv']} {address_number}"
+        self.street_address["en"] = f"{translated_street_names['en']} {address_number}"
+
+    def set_gml_feature(self, feature):
         object_id = feature["id"].as_string()
         # If ObjectId is set to "0", the bicycle stand is not maintained by Turku
         if object_id == "0":
@@ -65,7 +147,7 @@ class BicyleStand:
         else:
             self.maintained_by_turku = True
 
-        self.geometry = Point(feature.geom.x, feature.geom.y, srid=SOURCE_DATA_SRID)
+        self.geometry = Point(feature.geom.x, feature.geom.y, srid=WFS_SOURCE_DATA_SRID)
         self.geometry.transform(settings.DEFAULT_SRID)
 
         model_elem = feature["Malli"]
@@ -103,11 +185,10 @@ class BicyleStand:
 
         if quality_elem:
             quality_text = quality_elem.lower()
-            if self.HULL_LOCKABLE_STR in quality_text:
+            if self.WFS_HULL_LOCKABLE_STR in quality_text:
                 self.hull_lockable = True
             else:
                 self.hull_lockable = False
-
             if self.COVERED_IN_STR in quality_text:
                 self.covered = True
             else:
@@ -119,17 +200,39 @@ class BicyleStand:
         self.name["en"] = translated_names["fi"]
 
 
-def get_bicycle_stand_objects(ds=None):
+def get_bicycle_stand_objects(data_source=None):
     """
     Returns a list containg instances of BicycleStand class.
     """
-    if not ds:
+    data_sources = []
+    if data_source:
+        data_sources.append(data_source)
+    else:
+        # Add the WFS datasource that is in GML format
         ds = DataSource(BICYCLE_STANDS_URL)
-    layer = ds[0]
+        data_sources.append(("gml", ds))
+        # Add the GEOJSON datasource which is a file
+        if hasattr(settings, "PROJECT_ROOT"):
+            root_dir = settings.PROJECT_ROOT
+        else:
+            root_dir = settings.BASE_DIR
+        data_path = os.path.join(root_dir, "mobility_data/data")
+        file_path = os.path.join(data_path, GEOJSON_FILENAME)
+        ds = DataSource(file_path)
+        data_sources.append(("geojson", ds))
+
     bicycle_stands = []
-    for feature in layer:
-        if BicyleStand.locates_in_turku(feature):
-            bicycle_stands.append(BicyleStand(feature))
+
+    for data_source in data_sources:
+        for feature in data_source[1][0]:
+            if BicyleStand.locates_in_turku(feature, data_source[0]):
+                bicycle_stand = BicyleStand()
+                if data_source[0] == "gml":
+                    bicycle_stand.set_gml_feature(feature)
+                elif data_source[0] == "geojson":
+                    bicycle_stand.set_geojson_feature(feature)
+                bicycle_stands.append(bicycle_stand)
+
     logger.info(f"Retrieved {len(bicycle_stands)} bicycle stands.")
     return bicycle_stands
 
@@ -169,4 +272,7 @@ def save_to_database(objects, delete_tables=True):
         mobile_unit.extra = extra
         mobile_unit.geometry = object.geometry
         set_translated_field(mobile_unit, "name", object.name)
+        if object.street_address:
+            set_translated_field(mobile_unit, "address", object.street_address)
+
         mobile_unit.save()
