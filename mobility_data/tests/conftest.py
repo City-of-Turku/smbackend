@@ -132,6 +132,13 @@ def streets():
         municipality_id="turku",
     )
     streets.append(street)
+    street = Street.objects.create(
+        name="Kupittaankatu",
+        name_fi="Kupittaankatu",
+        name_sv="Kuppisgatan",
+        municipality_id="turku",
+    )
+    streets.append(street)
     return streets
 
 
