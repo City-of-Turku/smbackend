@@ -89,6 +89,7 @@ INSTALLED_APPS = [
     "mobility_data.apps.MobilityDataConfig",
     "bicycle_network.apps.BicycleNetworkConfig",
     "iot.apps.IotConfig",
+    "django_jenkins"
 ]
 
 if env("ADDITIONAL_INSTALLED_APPS"):
@@ -299,6 +300,15 @@ CACHES = {
     }
 }
 
+
+PROJECT_APPS = (
+    "MyApp"
+)
+
+JENKINS_TASKS = (
+    #"django_jenkins.tasks.run_pep8",
+    "django_jenkins.tasks.run_pyflakes"
+)
 # Use in tests with override_settings CACHES = settings.TEST_CACHES
 TEST_CACHES = {
     "default": {
