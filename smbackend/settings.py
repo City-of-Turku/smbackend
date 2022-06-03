@@ -72,7 +72,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.gis",
     "django.contrib.postgres",
-    "raven.contrib.django.raven_compat",
+    #"raven.contrib.django.raven_compat",
     "rest_framework.authtoken",
     "rest_framework",
     "corsheaders",
@@ -307,13 +307,13 @@ TEST_CACHES = {
 }
 
 
-if SENTRY_DSN:
-    RAVEN_CONFIG = {
-        "dsn": SENTRY_DSN,
-        # Needs to change if settings.py is not in an immediate child of the project
-        "release": raven.fetch_git_sha(os.path.dirname(os.pardir)),
-        "environment": SENTRY_ENVIRONMENT,
-    }
+# if SENTRY_DSN:
+#     RAVEN_CONFIG = {
+#         "dsn": SENTRY_DSN,
+#         # Needs to change if settings.py is not in an immediate child of the project
+#         "release": raven.fetch_git_sha(os.path.dirname(os.pardir)),
+#         "environment": SENTRY_ENVIRONMENT,
+#     }
 
 
 COOKIE_PREFIX = env("COOKIE_PREFIX")

@@ -14,7 +14,7 @@ django-extensions
 psycopg2-binary<2.9
 django-mptt
 lxml>=4.6.5
-raven~=6.10.0
+#raven~=6.10.0
 pip-tools
 python-dateutil
 pytest-django
