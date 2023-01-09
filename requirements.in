@@ -41,4 +41,4 @@ libvoikko
 numpy>=1.22
 pyshp
 polyline
-wheel>0.38.1
+wheel>=0.38.1
