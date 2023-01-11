@@ -20,3 +20,4 @@ class Command(BaseCommand):
                 )
                 key = "search_column_%s" % lang
                 model.objects.update(**{key: None})
+        Unit.objects.update(search_column_fi_without_syllables=None)
