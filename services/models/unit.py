@@ -224,6 +224,8 @@ class Unit(SoftDeleteModel):
     service_names_en = ArrayField(models.CharField(max_length=200), default=list)
 
     search_column_fi = SearchVectorField(null=True)
+    search_column_fi_without_syllables = SearchVectorField(null=True)
+
     search_column_sv = SearchVectorField(null=True)
     search_column_en = SearchVectorField(null=True)
 
@@ -235,6 +237,7 @@ class Unit(SoftDeleteModel):
             GinIndex(fields=["search_column_fi"]),
             GinIndex(fields=["search_column_sv"]),
             GinIndex(fields=["search_column_en"]),
+            GinIndex(fields=["search_column_fi_without_syllables"]),
         )
 
     def __str__(self):
@@ -281,6 +284,16 @@ class Unit(SoftDeleteModel):
         the search_column.
         """
         return ["name_fi", "service_names_fi"]
+
+    @classmethod
+    def get_search_column_indexing_without_syllables(cls, lang="fi"):
+        if lang == "fi":
+            return [
+                ("name_fi", "finnish", "A"),
+                ("service_names_fi", "finnish", "B"),
+                ("extra", None, "C"),
+                ("address_zip", None, "D"),
+            ]
 
     @classmethod
     def get_search_column_indexing(cls, lang):
