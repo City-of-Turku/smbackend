@@ -56,6 +56,7 @@ from .utils import (
     get_preserved_order,
     get_service_node_results,
     get_trigram_results,
+    is_compound_word,
     set_address_fields,
     set_service_node_unit_count,
     set_service_unit_count,
@@ -280,10 +281,15 @@ class SearchViewSet(GenericAPIView):
             else:
                 search_query_str = f"{q}:*"
 
+        if is_compound_word(q_val) and language_short == "fi":
+            search_column_name = "search_column_fi_without_syllables"
+        else:
+            search_column_name = f"search_column_{language_short}"
         # This is ~100 times faster than using Djangos SearchRank and allows searching using wildard "|*"
         # and by rankig gives better results, e.g. extra fields weight is counted.
+
         sql = f"""
-        SELECT id, type_name, name_{language_short}, ts_rank_cd(search_column_{language_short}, search_query)
+        SELECT id, type_name, name_{language_short}, ts_rank_cd({search_column_name}, search_query)
         AS rank FROM search_view, to_tsquery('{config_language}','{search_query_str}') search_query
         WHERE search_query @@ search_column_{language_short}
         ORDER BY rank DESC LIMIT {sql_query_limit};
@@ -293,6 +299,8 @@ class SearchViewSet(GenericAPIView):
         cursor.execute(sql)
         # Note, fetchall() consumes the results and once called returns None.
         all_results = cursor.fetchall()
+        # [a for a in all_results if a[3]>1.2]
+        # breakpoint()
         all_ids = get_all_ids_from_sql_results(all_results)
         unit_ids = all_ids["Unit"]
         service_ids = all_ids["Service"]
