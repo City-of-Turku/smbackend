@@ -10,20 +10,23 @@ from services.search.utils import hyphenate
 logger = logging.getLogger("search")
 
 
-def get_search_column(model, lang):
+def get_search_column(model, lang, without_syllables=False):
     """
     Reads the columns, config languages and weights from the model
     to be indexed. Creates and returns a CombinedSearchVector, that
     can be stored into the search_column.
     """
     search_column = None
-    columns = model.get_search_column_indexing(lang)
+    if without_syllables:
+        columns = model.get_search_column_indexing_without_syllables(lang)
+    else:
+        columns = model.get_search_column_indexing(lang)
+
     for column in columns:
         if search_column:
             search_column += SearchVector(column[0], config=column[1], weight=column[2])
         else:
             search_column = SearchVector(column[0], config=column[1], weight=column[2])
-
     return search_column
 
 
@@ -102,6 +105,13 @@ class Command(BaseCommand):
             logger.info(
                 f"{lang} Units indexed: {Unit.objects.update(**{key: get_search_column(Unit, lang)})}"
             )
+            if lang == "fi":
+                column_name = "search_column_fi_without_syllables"
+                logger.info(
+                    f"{lang} Units no syllables search columns indexes:"
+                    f"{Unit.objects.update(**{column_name: get_search_column(Unit, lang, True)})}"
+                )
+
             logger.info(
                 f"{lang} Services indexed: {Service.objects.update(**{key: get_search_column(Service, lang)})}"
             )
