@@ -64,18 +64,18 @@ def generate_syllables(obj):
 
 
 def populate_search_column(obj):
-    # Get the information of columns and weights to be added to sear from the model
-    columns = {}
-    columns["fi"] = obj.get_search_column_indexing("fi")
-    columns["sv"] = obj.get_search_column_indexing("sv")
-    columns["en"] = obj.get_search_column_indexing("en")
+    # Get the information of search_columns and weights to be added to sear from the model
+    search_columns = {}
+    search_columns["fi"] = obj.get_search_column_indexing("fi")
+    search_columns["sv"] = obj.get_search_column_indexing("sv")
+    search_columns["en"] = obj.get_search_column_indexing("en")
     id = obj.id
 
     def on_commit():
         search_vectors = {}
         for lang in ["fi", "sv", "en"]:
             search_vectors[lang] = []
-            for column in columns[lang]:
+            for column in search_columns[lang]:
                 search_vectors[lang].append(
                     SearchVector(column[0], config=column[1], weight=column[2])
                 )
@@ -84,6 +84,18 @@ def populate_search_column(obj):
             key = "search_column_%s" % lang
             obj.__class__.objects.filter(id=id).update(
                 **{key: reduce(operator.add, search_vectors[lang])}
+            )
+        # Update finnish search column without syllables for Units
+        if isinstance(obj, Unit):
+            columns = obj.get_search_column_indexing_without_syllables()
+            search_vectors = []
+            for column in columns:
+                search_vectors.append(
+                    SearchVector(column[0], config=column[1], weight=column[2])
+                )
+            key = "search_column_fi_without_syllables"
+            obj.__class__.objects.filter(id=id).update(
+                **{key: reduce(operator.add, search_vectors)}
             )
 
     return on_commit
