@@ -52,7 +52,7 @@ components:
     rank_threshold_param:
       name: rank_threshold
       in: query
-      desription: Include results with search rank greater than to the value.
+      desription: Include results with search rank greater or equal than to the value.
       type: number 
       default: 0
     trigram_threshold_param:
