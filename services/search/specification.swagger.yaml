@@ -179,6 +179,7 @@ paths:
         - $ref: "#/components/parameters/q_param"
         - $ref: "#/components/parameters/language_param"
         - $ref: "#/components/parameters/use_trigram_param"
+        - $ref: "#/components/parameters/rank_threshold_param"
         - $ref: "#/components/parameters/trigram_threshold_param"
         - $ref: "#/components/parameters/order_units_by_num_services_param"
         - $ref: "#/components/parameters/geometry_param"
