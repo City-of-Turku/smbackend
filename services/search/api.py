@@ -296,7 +296,7 @@ class SearchViewSet(GenericAPIView):
         SELECT id, type_name, name_{language_short}, ts_rank_cd(search_column_{language_short}, search_query)
         AS rank FROM search_view, to_tsquery('{config_language}','{search_query_str}') search_query
         WHERE search_query @@ search_column_{language_short}
-        ORDER BY rank DESC LIMIT {sql_query_limit}) AS sub_query where sub_query.rank >= {rank_threshold};
+        ORDER BY rank DESC LIMIT {sql_query_limit}) AS sub_query where sub_query.rank > {rank_threshold};
         """
 
         cursor = connection.cursor()
