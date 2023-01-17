@@ -49,10 +49,16 @@ components:
         type: string
         example: unit,address
         default: unit
+    rank_threshold_param:
+      name: rank_threshold
+      in: query
+      desription: Include results with search rank greater than or equal to the value.
+      type: number 
+      default: 0
     trigram_threshold_param:
       name: trigram_threshold
       in: query
-      desription: The threshold value, if trigram similarity is greater-than or equal to this value return the result.
+      description: The threshold value, if trigram similarity is greater than or equal to this value return the result.
       type: number 
       default: 0.15
     sql_query_limit_param:
