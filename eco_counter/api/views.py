@@ -1,5 +1,8 @@
+import csv
 import sys
+from distutils.util import strtobool
 
+from django.http import HttpResponse
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ParseError
@@ -208,6 +211,17 @@ class MonthDataViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+def cvs_response(serializer, serializer_cls, del_fields):
+    header = [h for h in serializer_cls.Meta.fields if h not in del_fields]
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="export.csv"'
+    writer = csv.DictWriter(response, fieldnames=header)
+    writer.writeheader()
+    for row in serializer.data:
+        writer.writerow(row)
+    return response
+
+
 class YearDataViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = YearData.objects.all()
     serializer_class = YearDataSerializer
@@ -233,6 +247,8 @@ class YearDataViewSet(viewsets.ReadOnlyModelViewSet):
         start_year_number = request.query_params.get("start_year_number", None)
         end_year_number = request.query_params.get("end_year_number", None)
         station_id = request.query_params.get("station_id", None)
+        csv = strtobool(request.query_params.get("csv", False))
+
         if start_year_number is None or end_year_number is None or station_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         try:
@@ -244,7 +260,15 @@ class YearDataViewSet(viewsets.ReadOnlyModelViewSet):
         except YearData.DoesNotExist:
             return Response(NOT_FOUND_RESPONSE_MSG, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = YearDataSerializer(queryset, many=True)
+        del_fields = ["station", "year_info"]
+
+        serializer = YearDataSerializer(
+            queryset, many=True, context={"csv": csv, "del_fields": del_fields}
+        )
+
+        if csv:
+            return cvs_response(serializer, YearDataSerializer, del_fields)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
