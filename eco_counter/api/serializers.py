@@ -264,3 +264,10 @@ class YearDataSerializer(serializers.ModelSerializer):
             "station",
             "year_info",
         ] + VALUE_FIELDS
+
+    def __init__(self, *args, **kwargs):
+        if kwargs["context"]["csv"]:
+            for field in kwargs["context"]["del_fields"]:
+                del self.fields[field]
+
+        super().__init__(*args, **kwargs)
