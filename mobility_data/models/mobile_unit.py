@@ -2,6 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.contrib.gis.db import models
+from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.indexes import (  # add the Postgres recommended GIN index
     GinIndex,
 )
@@ -80,6 +81,10 @@ class MobileUnit(BaseUnit):
     search_column_sv = SearchVectorField(null=True)
     search_column_en = SearchVectorField(null=True)
 
+    content_type_names_fi = ArrayField(models.CharField(max_length=200), default=list)
+    content_type_names_sv = ArrayField(models.CharField(max_length=200), default=list)
+    content_type_names_en = ArrayField(models.CharField(max_length=200), default=list)
+
     @classmethod
     def get_search_column_indexing(cls, lang):
         """
@@ -89,13 +94,15 @@ class MobileUnit(BaseUnit):
         if lang == "fi":
             return [
                 ("name_fi", "finnish", "A"),
-                ("description_fi", "finnish", "A"),
+                ("content_type_names_fi", "finnish", "A"),
+                ("description_fi", "finnish", "B"),
                 ("extra", None, "C"),
                 ("address_zip", None, "D"),
             ]
         elif lang == "sv":
             return [
                 ("name_sv", "swedish", "A"),
+                ("content_type_names_sv", "swedish", "A"),
                 ("description_sv", "swedish", "B"),
                 ("extra", None, "C"),
                 ("address_zip", None, "D"),
@@ -103,6 +110,7 @@ class MobileUnit(BaseUnit):
         elif lang == "en":
             return [
                 ("name_en", "english", "A"),
+                ("content_type_names_en", "english", "A"),
                 ("description_en", "english", "B"),
                 ("extra", None, "C"),
                 ("address_zip", None, "D"),
