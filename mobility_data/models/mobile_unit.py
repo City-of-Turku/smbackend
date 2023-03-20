@@ -79,3 +79,33 @@ class MobileUnit(BaseUnit):
     search_column_fi = SearchVectorField(null=True)
     search_column_sv = SearchVectorField(null=True)
     search_column_en = SearchVectorField(null=True)
+
+    @classmethod
+    def get_search_column_indexing(cls, lang):
+        """
+        Defines the columns to be to_tsvector to the search_column
+        ,config language and weight.
+        """
+        if lang == "fi":
+            return [
+                ("name_fi", "finnish", "A"),
+                ("description_fi", "finnish", "A"),
+                ("extra", None, "C"),
+                ("address_zip", None, "D"),
+            ]
+        elif lang == "sv":
+            return [
+                ("name_sv", "swedish", "A"),
+                ("description_sv", "swedish", "B"),
+                ("extra", None, "C"),
+                ("address_zip", None, "D"),
+            ]
+        elif lang == "en":
+            return [
+                ("name_en", "english", "A"),
+                ("description_en", "english", "B"),
+                ("extra", None, "C"),
+                ("address_zip", None, "D"),
+            ]
+        else:
+            return []
