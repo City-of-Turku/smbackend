@@ -315,7 +315,8 @@ class SearchViewSet(GenericAPIView):
                 ).order_by(preserved)
             else:
                 mobile_units_qs = MobileUnit.objects.none()
-
+        else:
+            mobile_units_qs = MobileUnit.objects.none()
         if "service" in types:
             preserved = get_preserved_order(service_ids)
             services_qs = Service.objects.filter(id__in=service_ids).order_by(preserved)
