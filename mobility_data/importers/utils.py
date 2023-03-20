@@ -332,6 +332,24 @@ def log_imported_message(logger, content_type, num_created, num_deleted):
     logger.info(f"Deleted {num_deleted} obsolete {name} items")
 
 
+def set_content_type_names(mobile_unit):
+    content_type_names_fi = []
+    content_type_names_sv = []
+    content_type_names_en = []
+    for content_type in mobile_unit.content_types.all():
+        if content_type.name_fi:
+            content_type_names_fi.append(content_type.name_fi)
+        elif content_type.name_sv:
+            content_type_names_sv.append(content_type.name_sv)
+        elif content_type.name_en:
+            content_type_names_en.append(content_type.name_en)
+
+    setattr(mobile_unit, "content_type_names_fi", content_type_names_fi)
+    setattr(mobile_unit, "content_type_names_sv", content_type_names_sv)
+    setattr(mobile_unit, "content_type_names_en", content_type_names_en)
+    mobile_unit.save()
+
+
 @db.transaction.atomic
 def save_to_database(objects, content_types, logger=logger):
     if type(content_types) != list:
@@ -381,6 +399,7 @@ def save_to_database(objects, content_types, logger=logger):
         ):
             for content_type in content_types:
                 mobile_unit.content_types.add(content_type)
+        set_content_type_names(mobile_unit)
 
     MobileUnit.objects.filter(id__in=objs_to_delete).delete()
     return num_created, len(objs_to_delete)
