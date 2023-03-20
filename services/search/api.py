@@ -30,6 +30,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ParseError
 from rest_framework.generics import GenericAPIView
 
+from mobility_data.api.serializers.content_type import ContentTypeSerializerTrimmed
 from mobility_data.models.mobile_unit import MobileUnit
 from services.api import (
     TranslatedModelSerializer,
@@ -179,7 +180,10 @@ class SearchSerializer(serializers.Serializer):
                         raise ParseError(
                             f"Entity {object_type} does not contain a {include_field} field."
                         )
-
+        if object_type == "mobileunit":
+            representation["content_types"] = ContentTypeSerializerTrimmed(
+                obj.content_types, many=True
+            ).data
         return representation
 
 
