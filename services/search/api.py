@@ -30,6 +30,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ParseError
 from rest_framework.generics import GenericAPIView
 
+from mobility_data.models.mobile_unit import MobileUnit
 from services.api import (
     TranslatedModelSerializer,
     UnitConnectionSerializer,
@@ -90,6 +91,8 @@ class SearchSerializer(serializers.Serializer):
             object_type = "address"
         elif isinstance(obj, AdministrativeDivision):
             object_type = "administrativedivision"
+        elif isinstance(obj, MobileUnit):
+            object_type = "mobileunit"
         else:
             return representation
 
@@ -297,9 +300,17 @@ class SearchViewSet(GenericAPIView):
         unit_ids = all_ids["Unit"]
         service_ids = all_ids["Service"]
         service_node_ids = get_service_node_results(all_results)
-
         administrative_division_ids = all_ids["AdministrativeDivision"]
         address_ids = all_ids["Address"]
+        mobile_unit_ids = all_ids["MobileUnit"]
+        if "mobileunit" in types:
+            if mobile_unit_ids:
+                preserved = get_preserved_order(mobile_unit_ids)
+                mobile_units_qs = MobileUnit.objects.filter(
+                    id__in=mobile_unit_ids
+                ).order_by(preserved)
+            else:
+                mobile_units_qs = MobileUnit.objects.none()
 
         if "service" in types:
             preserved = get_preserved_order(service_ids)
@@ -458,6 +469,7 @@ class SearchViewSet(GenericAPIView):
                 service_nodes_qs,
                 administrative_divisions_qs,
                 addresses_qs,
+                mobile_units_qs,
             )
         )
         page = self.paginate_queryset(queryset)
