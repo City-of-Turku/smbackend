@@ -85,6 +85,8 @@ class MobileUnit(BaseUnit):
     content_type_names_sv = ArrayField(models.CharField(max_length=200), default=list)
     content_type_names_en = ArrayField(models.CharField(max_length=200), default=list)
 
+    syllables_fi = ArrayField(models.CharField(max_length=16), default=list)
+
     @classmethod
     def get_search_column_indexing(cls, lang):
         """
@@ -94,6 +96,7 @@ class MobileUnit(BaseUnit):
         if lang == "fi":
             return [
                 ("name_fi", "finnish", "A"),
+                ("syllables_fi", "finnish", "A"),
                 ("content_type_names_fi", "finnish", "A"),
                 ("description_fi", "finnish", "B"),
                 ("extra", None, "C"),
@@ -117,3 +120,13 @@ class MobileUnit(BaseUnit):
             ]
         else:
             return []
+
+    @classmethod
+    def get_syllable_fi_columns(cls):
+        """
+        Defines the columns that will be used when populating
+        finnish syllables to syllables_fi column. The content
+        will be tokenized to lexems(to_tsvector) and added to
+        the search_column.
+        """
+        return ["name_fi", "content_type_names_fi"]
