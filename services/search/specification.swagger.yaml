@@ -113,7 +113,7 @@ components:
     type_param:
       name: type
       in: query
-      description: A comma-separeted list of resource types to be returned in the results Possible values are *service*, *servicenode*, *unit*, *address* and *administrativedivision*. If not present, defualts to all types.
+      description: A comma-separeted list of resource types to be returned in the results Possible values are *service*, *servicenode*, *unit*, *address*, *administrativedivision* and *mobileunit*. If not present, defualts to all types.
       schema:
         type: string
     municipality_param:
