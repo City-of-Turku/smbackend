@@ -215,7 +215,7 @@ class SearchViewSet(GenericAPIView):
             try:
                 trigram_threshold = float(params.get("trigram_threshold"))
             except ValueError:
-                raise ParseError("'trigram_threshold' need to be of type float.")
+                raise ParseError("'trigram_threshold' needs to be of type float.")
         else:
             trigram_threshold = DEFAULT_TRIGRAM_THRESHOLD
 
@@ -249,7 +249,7 @@ class SearchViewSet(GenericAPIView):
             try:
                 sql_query_limit = int(params.get("sql_query_limit"))
             except ValueError:
-                raise ParseError("'sql_query_limit' need to be of type integer.")
+                raise ParseError("'sql_query_limit' needs to be of type integer.")
         else:
             sql_query_limit = DEFAULT_SEARCH_SQL_LIMIT_VALUE
         # Read values for limit values for each model
@@ -259,7 +259,7 @@ class SearchViewSet(GenericAPIView):
                 try:
                     model_limits[type_name] = int(params.get(param_name))
                 except ValueError:
-                    raise ParseError(f"{param_name} need to be of type integer.")
+                    raise ParseError(f"{param_name} needs to be of type integer.")
             else:
                 model_limits[type_name] = DEFAULT_MODEL_LIMIT_VALUE
 
