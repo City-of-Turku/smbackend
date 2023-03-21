@@ -3,11 +3,12 @@ import logging
 from django.core.management.base import BaseCommand
 from munigeo.models import Address, AdministrativeDivision
 
+from mobility_data.models.mobile_unit import MobileUnit
 from services.models import Service, ServiceNode, Unit
 
 logger = logging.getLogger("search")
 
-MODELS = [Address, AdministrativeDivision, Unit, Service, ServiceNode]
+MODELS = [Address, AdministrativeDivision, Unit, Service, ServiceNode, MobileUnit]
 
 
 class Command(BaseCommand):
