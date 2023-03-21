@@ -51,7 +51,7 @@ class MobileUnit(BaseUnit):
     data that are specific for a data source.
     """
 
-    class Meta:
+    class Meta(BaseUnit.Meta):
         indexes = (
             GinIndex(fields=["search_column_fi"]),
             GinIndex(fields=["search_column_sv"]),
