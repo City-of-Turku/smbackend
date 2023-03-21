@@ -4,7 +4,9 @@ from django.contrib.postgres.search import SearchVector
 from django.core.management.base import BaseCommand
 from munigeo.models import Address, AdministrativeDivision
 
+from mobility_data.models.mobile_unit import MobileUnit
 from services.models import Service, ServiceNode, Unit
+from services.search.constants import HYPHENATE_MODELS
 from services.search.utils import hyphenate
 
 logger = logging.getLogger("search")
@@ -33,7 +35,7 @@ def generate_syllables(model):
     """
     # Disable sending of signals
     model._meta.auto_created = True
-    num_populated = 0
+    num_generated_syllables = 0
     for row in model.objects.all():
         row.syllables_fi = []
         for column in model.get_syllable_fi_columns():
@@ -47,11 +49,11 @@ def generate_syllables(model):
                     syllables = hyphenate(word)
                     for s in syllables:
                         row.syllables_fi.append(s)
+                num_generated_syllables += len(row_content)
             row.save()
-            num_populated += 1
     # Enable sending of signals
     model._meta.auto_created = False
-    return num_populated
+    return num_generated_syllables
 
 
 def index_servicenodes(lang):
@@ -91,16 +93,15 @@ class Command(BaseCommand):
             # Only generate syllables for the finnish language
             if lang == "fi":
                 logger.info(f"Generating syllables for language: {lang}.")
-                logger.info(f"Syllables generated for {generate_syllables(Unit)} Units")
-                logger.info(
-                    f"Syllables generated for {generate_syllables(Service)} Services"
-                )
-                logger.info(
-                    f"Syllables generated for {generate_syllables(ServiceNode)} ServiceNodes"
-                )
-
+                for model in HYPHENATE_MODELS:
+                    logger.info(
+                        f"Generated {generate_syllables(model)} syllables for model {model.__name__}"
+                    )
             logger.info(
                 f"{lang} Units indexed: {Unit.objects.update(**{key: get_search_column(Unit, lang)})}"
+            )
+            logger.info(
+                f"{lang} MobileUnits indexed: {MobileUnit.objects.update(**{key: get_search_column(MobileUnit, lang)})}"
             )
             logger.info(
                 f"{lang} Services indexed: {Service.objects.update(**{key: get_search_column(Service, lang)})}"
