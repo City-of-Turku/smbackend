@@ -120,13 +120,3 @@ class MobileUnit(BaseUnit):
             ]
         else:
             return []
-
-    @classmethod
-    def get_syllable_fi_columns(cls):
-        """
-        Defines the columns that will be used when populating
-        finnish syllables to syllables_fi column. The content
-        will be tokenized to lexems(to_tsvector) and added to
-        the search_column.
-        """
-        return ["name_fi", "content_type_names_fi"]
