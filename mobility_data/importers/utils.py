@@ -339,9 +339,9 @@ def set_content_type_names(mobile_unit):
     for content_type in mobile_unit.content_types.all():
         if content_type.name_fi:
             content_type_names_fi.append(content_type.name_fi)
-        elif content_type.name_sv:
+        if content_type.name_sv:
             content_type_names_sv.append(content_type.name_sv)
-        elif content_type.name_en:
+        if content_type.name_en:
             content_type_names_en.append(content_type.name_en)
 
     setattr(mobile_unit, "content_type_names_fi", content_type_names_fi)
