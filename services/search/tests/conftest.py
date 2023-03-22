@@ -12,6 +12,8 @@ from munigeo.models import (
 )
 from rest_framework.test import APIClient
 
+from mobility_data.models.content_type import ContentType
+from mobility_data.models.mobile_unit import MobileUnit
 from services.management.commands.index_search_columns import get_search_column
 from services.management.commands.services_import.services import (
     update_service_counts,
@@ -244,3 +246,29 @@ def streets():
     Street.objects.create(id=43, name="Markulantie", municipality_id="turku")
     Street.objects.create(id=44, name="Yliopistonkatu", municipality_id="turku")
     return Street.objects.all()
+
+
+@pytest.mark.django_db
+@pytest.fixture
+def content_types():
+    ContentType.objects.create(type_name="ContentType", name_fi="content type name")
+    return ContentType.objects.all()
+
+
+@pytest.mark.django_db
+@pytest.fixture
+def mobile_units(content_types):
+    mobile_unit = MobileUnit.objects.create(
+        name="mobile unit",
+        content_type_names_fi=[content_types[0].name_fi],
+    )
+    mobile_unit.content_types.add(content_types[0])
+    mobile_unit = MobileUnit.objects.create(
+        name="extra unit",
+        extra={"key": "extra value"},
+        content_type_names_fi=[content_types[0].name_fi],
+        geometry=Point(22.22, 60.24, srid=4326),
+    )
+    mobile_unit.content_types.add(content_types[0])
+    MobileUnit.objects.update(search_column_fi=get_search_column(MobileUnit, "fi"))
+    return MobileUnit.objects.all()
