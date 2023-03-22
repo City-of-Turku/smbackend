@@ -137,13 +137,17 @@ class SearchSerializer(serializers.Serializer):
                 self, obj
             )
             representation["department"] = DepartmentSerializer(obj.department).data
-            if self.context["geometry"]:
-                if obj.geometry:
-                    representation["geometry"] = munigeo_api.geom_to_json(
-                        obj.geometry, DEFAULT_SRS
-                    )
-                else:
-                    representation["geometry"] = None
+        if (
+            object_type == "unit"
+            and self.context["geometry"]
+            or object_type == "mobileunit"
+        ):
+            if obj.geometry:
+                representation["geometry"] = munigeo_api.geom_to_json(
+                    obj.geometry, DEFAULT_SRS
+                )
+            else:
+                representation["geometry"] = None
 
         if object_type == "address":
             set_address_fields(obj, representation)
@@ -184,9 +188,6 @@ class SearchSerializer(serializers.Serializer):
             representation["content_types"] = ContentTypeSerializerTrimmed(
                 obj.content_types, many=True
             ).data
-            representation["geometry"] = munigeo_api.geom_to_json(
-                obj.geometry, DEFAULT_SRS
-            )
         return representation
 
 
@@ -310,16 +311,18 @@ class SearchViewSet(GenericAPIView):
         administrative_division_ids = all_ids["AdministrativeDivision"]
         address_ids = all_ids["Address"]
         mobile_unit_ids = all_ids["MobileUnit"]
+
         if "mobileunit" in types:
             if mobile_unit_ids:
                 preserved = get_preserved_order(mobile_unit_ids)
                 mobile_units_qs = MobileUnit.objects.filter(
                     id__in=mobile_unit_ids
                 ).order_by(preserved)
+                mobile_units_qs = mobile_units_qs.all().distinct()
+                mobile_units_qs = mobile_units_qs[: model_limits["mobileunit"]]
             else:
                 mobile_units_qs = MobileUnit.objects.none()
-        else:
-            mobile_units_qs = MobileUnit.objects.none()
+
         if "service" in types:
             preserved = get_preserved_order(service_ids)
             services_qs = Service.objects.filter(id__in=service_ids).order_by(preserved)
@@ -469,7 +472,6 @@ class SearchViewSet(GenericAPIView):
                 f"Search queries total execution time: {queries_time} Num queries: {len(connection.queries)}"
             )
             reset_queries()
-
         queryset = list(
             chain(
                 units_qs,
