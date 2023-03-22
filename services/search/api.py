@@ -184,6 +184,9 @@ class SearchSerializer(serializers.Serializer):
             representation["content_types"] = ContentTypeSerializerTrimmed(
                 obj.content_types, many=True
             ).data
+            representation["geometry"] = munigeo_api.geom_to_json(
+                obj.geometry, DEFAULT_SRS
+            )
         return representation
 
 
