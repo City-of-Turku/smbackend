@@ -313,15 +313,14 @@ class SearchViewSet(GenericAPIView):
         mobile_unit_ids = all_ids["MobileUnit"]
 
         if "mobileunit" in types:
-            if mobile_unit_ids:
-                preserved = get_preserved_order(mobile_unit_ids)
-                mobile_units_qs = MobileUnit.objects.filter(
-                    id__in=mobile_unit_ids
-                ).order_by(preserved)
-                mobile_units_qs = mobile_units_qs.all().distinct()
-                mobile_units_qs = mobile_units_qs[: model_limits["mobileunit"]]
-            else:
-                mobile_units_qs = MobileUnit.objects.none()
+            preserved = get_preserved_order(mobile_unit_ids)
+            mobile_units_qs = MobileUnit.objects.filter(
+                id__in=mobile_unit_ids
+            ).order_by(preserved)
+            mobile_units_qs = mobile_units_qs.all().distinct()
+            mobile_units_qs = mobile_units_qs[: model_limits["mobileunit"]]
+        else:
+            mobile_units_qs = MobileUnit.objects.none()
 
         if "service" in types:
             preserved = get_preserved_order(service_ids)
