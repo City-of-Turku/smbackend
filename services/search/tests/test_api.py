@@ -13,6 +13,8 @@ def test_search(
     administrative_division,
     accessibility_shortcoming,
     municipality,
+    content_types,
+    mobile_units,
 ):
     # Search for "museo" in entities: units,services and servicenods
     url = reverse("search") + "?q=museo&type=unit,service,servicenode"
@@ -133,3 +135,31 @@ def test_search(
     results = response.json()["results"]
     assert results[0]["object_type"] == "administrativedivision"
     assert results[0]["name"]["fi"] == "Turku"
+    # Test mobile unit search by content type
+    url = reverse("search") + "?q=content&type=mobileunit"
+    response = api_client.get(url)
+    results = response.json()["results"]
+    assert results[0]["object_type"] == "mobileunit"
+    assert results[0]["content_types"][0]["id"] == str(content_types[0].id)
+    # Test mobile unit search by name
+    url = reverse("search") + "?q=mobile&type=mobileunit"
+    response = api_client.get(url)
+    results = response.json()["results"]
+    assert results[0]["name"]["fi"] == "mobile unit"
+    # Test mobile unit search by extra field
+    url = reverse("search") + "?q=extra&type=mobileunit"
+    response = api_client.get(url)
+    results = response.json()["results"]
+    assert results[0]["name"]["fi"] == "extra unit"
+    # Test mobileunit_limit param
+    url = reverse("search") + "?q=unit&type=mobileunit"
+    response = api_client.get(url)
+    assert len(response.json()["results"]) == 2
+    url = reverse("search") + "?q=unit&type=mobileunit&mobileunit_limit=1"
+    response = api_client.get(url)
+    assert len(response.json()["results"]) == 1
+    # Test mobile unit search by non existing value
+    url = reverse("search") + "?q=notfound&type=mobileunit"
+    response = api_client.get(url)
+    results = response.json()["results"]
+    assert len(results) == 0
