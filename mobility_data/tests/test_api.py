@@ -1,6 +1,5 @@
 import pytest
 from django.conf import settings
-from django.contrib.gis.geos import Point
 from rest_framework.reverse import reverse
 
 
@@ -29,7 +28,15 @@ def test_group_type(api_client, group_type):
 
 
 @pytest.mark.django_db
-def test_mobile_unit(api_client, mobile_units, content_types, unit):
+def test_mobile_unit(
+    api_client,
+    mobile_units,
+    content_types,
+    unit,
+    administrative_division,
+    administrative_division_geometry,
+    administrative_division_type,
+):
     url = reverse("mobility_data:mobile_units-list")
     response = api_client.get(url)
     assert response.status_code == 200
@@ -47,8 +54,9 @@ def test_mobile_unit(api_client, mobile_units, content_types, unit):
     assert result["extra"]["test_string"] == "4242"
     assert result["extra"]["test_int"] == 4242
     assert result["extra"]["test_float"] == 42.42
-    assert result["geometry"] == Point(
-        235404.6706163187, 6694437.919005549, srid=settings.DEFAULT_SRID
+    assert (
+        result["geometry"]
+        == f"SRID={settings.DEFAULT_SRID};POINT (237087.7394446331 6709962.367627109)"
     )
     url = reverse(
         "mobility_data:mobile_units-detail",
@@ -122,6 +130,13 @@ def test_mobile_unit(api_client, mobile_units, content_types, unit):
     assert result["geometry"] == "POINT (24.24 62.22)"
     assert result["geometry_coords"]["lon"] == 24.24
     assert result["geometry_coords"]["lat"] == 62.22
+    # Test filtering by division
+    url = (
+        reverse("mobility_data:mobile_units-list")
+        + "?division=ocd-division/country:fi/kunta:turku"
+    )
+    response = api_client.get(url)
+    assert len(response.json()["results"]) == 1
 
 
 @pytest.mark.django_db
