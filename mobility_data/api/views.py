@@ -179,7 +179,8 @@ class MobileUnitViewSet(viewsets.ReadOnlyModelViewSet):
 
         if "division" in filters:
             # Divisions can be specified with form:
-            # division=/country:fi/kunta:turku/kaupunginosa:002_ii,/country:fi/kunta:turku/kaupunginosa:001_i
+            # division=ocd-division/country:fi/kunta:turku/kaupunginosa:002_ii,
+            # ocd-division/country:fi/kunta:turku/kaupunginosa:001_i
             d_list = filters["division"].lower().split(",")
             div_list = resolve_divisions(d_list)
 
