@@ -16,3 +16,12 @@ class ContentTypeSerializer(serializers.ModelSerializer):
             "description_sv",
             "description_en",
         ]
+
+
+class ContentTypeSerializerTrimmed(serializers.ModelSerializer):
+    class Meta:
+        model = ContentType
+        fields = [
+            "id",
+            "type_name",
+        ]

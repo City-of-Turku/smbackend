@@ -2,6 +2,11 @@ import uuid
 
 from django.conf import settings
 from django.contrib.gis.db import models
+from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.indexes import (  # add the Postgres recommended GIN index
+    GinIndex,
+)
+from django.contrib.postgres.search import SearchVectorField
 from munigeo.models import Municipality
 
 from . import ContentType, GroupType
@@ -46,6 +51,13 @@ class MobileUnit(BaseUnit):
     data that are specific for a data source.
     """
 
+    class Meta(BaseUnit.Meta):
+        indexes = (
+            GinIndex(fields=["search_column_fi"]),
+            GinIndex(fields=["search_column_sv"]),
+            GinIndex(fields=["search_column_en"]),
+        )
+
     geometry = models.GeometryField(srid=settings.DEFAULT_SRID, null=True)
     address = models.CharField(max_length=100, null=True)
     municipality = models.ForeignKey(
@@ -65,3 +77,56 @@ class MobileUnit(BaseUnit):
         related_name="mobile_units",
     )
     extra = models.JSONField(null=True)
+    search_column_fi = SearchVectorField(null=True)
+    search_column_sv = SearchVectorField(null=True)
+    search_column_en = SearchVectorField(null=True)
+
+    content_type_names_fi = ArrayField(models.CharField(max_length=200), default=list)
+    content_type_names_sv = ArrayField(models.CharField(max_length=200), default=list)
+    content_type_names_en = ArrayField(models.CharField(max_length=200), default=list)
+
+    syllables_fi = ArrayField(models.CharField(max_length=16), default=list)
+
+    @classmethod
+    def get_search_column_indexing(cls, lang):
+        """
+        Defines the columns to be to_tsvector to the search_column
+        ,config language and weight.
+        """
+        if lang == "fi":
+            return [
+                ("name_fi", "finnish", "A"),
+                ("syllables_fi", "finnish", "A"),
+                ("content_type_names_fi", "finnish", "A"),
+                ("description_fi", "finnish", "B"),
+                ("extra", None, "C"),
+                ("address_zip", None, "D"),
+            ]
+        elif lang == "sv":
+            return [
+                ("name_sv", "swedish", "A"),
+                ("content_type_names_sv", "swedish", "A"),
+                ("description_sv", "swedish", "B"),
+                ("extra", None, "C"),
+                ("address_zip", None, "D"),
+            ]
+        elif lang == "en":
+            return [
+                ("name_en", "english", "A"),
+                ("content_type_names_en", "english", "A"),
+                ("description_en", "english", "B"),
+                ("extra", None, "C"),
+                ("address_zip", None, "D"),
+            ]
+        else:
+            return []
+
+    @classmethod
+    def get_syllable_fi_columns(cls):
+        """
+        Defines the columns that will be used when populating
+        finnish syllables to syllables_fi column. The content
+        will be tokenized to lexems(to_tsvector) and added to
+        the search_column.
+        """
+        return ["name_fi", "content_type_names_fi"]

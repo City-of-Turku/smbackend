@@ -30,6 +30,8 @@ from rest_framework import serializers
 from rest_framework.exceptions import ParseError
 from rest_framework.generics import GenericAPIView
 
+from mobility_data.api.serializers.content_type import ContentTypeSerializerTrimmed
+from mobility_data.models.mobile_unit import MobileUnit
 from services.api import (
     TranslatedModelSerializer,
     UnitConnectionSerializer,
@@ -90,6 +92,8 @@ class SearchSerializer(serializers.Serializer):
             object_type = "address"
         elif isinstance(obj, AdministrativeDivision):
             object_type = "administrativedivision"
+        elif isinstance(obj, MobileUnit):
+            object_type = "mobileunit"
         else:
             return representation
 
@@ -133,13 +137,17 @@ class SearchSerializer(serializers.Serializer):
                 self, obj
             )
             representation["department"] = DepartmentSerializer(obj.department).data
-            if self.context["geometry"]:
-                if obj.geometry:
-                    representation["geometry"] = munigeo_api.geom_to_json(
-                        obj.geometry, DEFAULT_SRS
-                    )
-                else:
-                    representation["geometry"] = None
+        if (
+            object_type == "unit"
+            and self.context["geometry"]
+            or object_type == "mobileunit"
+        ):
+            if obj.geometry:
+                representation["geometry"] = munigeo_api.geom_to_json(
+                    obj.geometry, DEFAULT_SRS
+                )
+            else:
+                representation["geometry"] = None
 
         if object_type == "address":
             set_address_fields(obj, representation)
@@ -176,7 +184,10 @@ class SearchSerializer(serializers.Serializer):
                         raise ParseError(
                             f"Entity {object_type} does not contain a {include_field} field."
                         )
-
+        if object_type == "mobileunit":
+            representation["content_types"] = ContentTypeSerializerTrimmed(
+                obj.content_types, many=True
+            ).data
         return representation
 
 
@@ -208,7 +219,7 @@ class SearchViewSet(GenericAPIView):
             try:
                 trigram_threshold = float(params.get("trigram_threshold"))
             except ValueError:
-                raise ParseError("'trigram_threshold' need to be of type float.")
+                raise ParseError("'trigram_threshold' needs to be of type float.")
         else:
             trigram_threshold = DEFAULT_TRIGRAM_THRESHOLD
 
@@ -242,7 +253,7 @@ class SearchViewSet(GenericAPIView):
             try:
                 sql_query_limit = int(params.get("sql_query_limit"))
             except ValueError:
-                raise ParseError("'sql_query_limit' need to be of type integer.")
+                raise ParseError("'sql_query_limit' needs to be of type integer.")
         else:
             sql_query_limit = DEFAULT_SEARCH_SQL_LIMIT_VALUE
         # Read values for limit values for each model
@@ -252,7 +263,7 @@ class SearchViewSet(GenericAPIView):
                 try:
                     model_limits[type_name] = int(params.get(param_name))
                 except ValueError:
-                    raise ParseError(f"{param_name} need to be of type integer.")
+                    raise ParseError(f"{param_name} needs to be of type integer.")
             else:
                 model_limits[type_name] = DEFAULT_MODEL_LIMIT_VALUE
 
@@ -297,9 +308,19 @@ class SearchViewSet(GenericAPIView):
         unit_ids = all_ids["Unit"]
         service_ids = all_ids["Service"]
         service_node_ids = get_service_node_results(all_results)
-
         administrative_division_ids = all_ids["AdministrativeDivision"]
         address_ids = all_ids["Address"]
+        mobile_unit_ids = all_ids["MobileUnit"]
+
+        if "mobileunit" in types:
+            preserved = get_preserved_order(mobile_unit_ids)
+            mobile_units_qs = MobileUnit.objects.filter(
+                id__in=mobile_unit_ids
+            ).order_by(preserved)
+            mobile_units_qs = mobile_units_qs.all().distinct()
+            mobile_units_qs = mobile_units_qs[: model_limits["mobileunit"]]
+        else:
+            mobile_units_qs = MobileUnit.objects.none()
 
         if "service" in types:
             preserved = get_preserved_order(service_ids)
@@ -450,7 +471,6 @@ class SearchViewSet(GenericAPIView):
                 f"Search queries total execution time: {queries_time} Num queries: {len(connection.queries)}"
             )
             reset_queries()
-
         queryset = list(
             chain(
                 units_qs,
@@ -458,6 +478,7 @@ class SearchViewSet(GenericAPIView):
                 service_nodes_qs,
                 administrative_divisions_qs,
                 addresses_qs,
+                mobile_units_qs,
             )
         )
         page = self.paginate_queryset(queryset)

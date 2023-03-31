@@ -7,12 +7,21 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from munigeo.models import Address, AdministrativeDivision
 
+from mobility_data.models.mobile_unit import MobileUnit
 from services.models import Service, ServiceNode, Unit
 from services.search.utils import hyphenate
 
 
 @receiver(post_save, sender=Unit)
 def unit_on_save(sender, **kwargs):
+    obj = kwargs["instance"]
+    generate_syllables(obj)
+    # Do transaction after successfull commit.
+    transaction.on_commit(populate_search_column(obj))
+
+
+@receiver(post_save, sender=MobileUnit)
+def mobile_unit_on_save(sender, **kwargs):
     obj = kwargs["instance"]
     generate_syllables(obj)
     # Do transaction after successfull commit.

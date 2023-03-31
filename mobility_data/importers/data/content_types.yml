@@ -374,7 +374,7 @@ content_types:
     name:
       fi: Yleinen pöytä
       sv: Allmän bord
-      eb: Public table
+      en: Public table
 
   - content_type_name: PublicBench
     name:
@@ -405,4 +405,16 @@ content_types:
       fi: Nopeusrajoitusalue
       sv: Hastighetsbegränsningszon
       en: Speed limit zone
+
+  - content_type_name: Underpass
+    name:
+      fi: Alikulku
+      sv: Underfartsbro
+      en: Underpass
+
+  - content_Type_name: Overpass
+    name:
+      fi: Ylikulu
+      sv: Överfartsbro
+      en: Overpass
   # End of WFS importer content types
