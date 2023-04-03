@@ -17,6 +17,7 @@ features:
     # Optional, include only if 'field_name' contains the given string.
     include:
       field_name: this_must_be_in_field_name
+      field_name2: both include and exclude options can have multiple fields and they all must be include/excluded
     # Optional, exclude if 'field_name' contains given string.
     exclude:
       field_name: if_this_is_in_field_name_exclude
