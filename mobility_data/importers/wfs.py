@@ -35,10 +35,7 @@ class MobilityData(MobileUnitDataBase):
         super().__init__()
 
     def add_feature(self, feature, config):
-        create_multipolygon = False
-        if "create_multipolygon" in config:
-            create_multipolygon = config["create_multipolygon"]
-
+        create_multipolygon = config.get("create_multipolygon", False)
         if "include" in config:
             for attr, value in config["include"].items():
                 if attr not in feature.fields:
@@ -46,7 +43,7 @@ class MobilityData(MobileUnitDataBase):
                 # None value returns False as they are not the include value.
                 if not feature[attr].as_string():
                     return False
-                if value not in feature[attr].as_string():
+                if str(value) not in feature[attr].as_string():
                     return False
         if "exclude" in config:
             for attr, value in config["exclude"].items():
@@ -56,7 +53,7 @@ class MobilityData(MobileUnitDataBase):
                 # if the value matches.
                 if not feature[attr].as_string():
                     continue
-                if value in feature[attr].as_string():
+                if str(value) in feature[attr].as_string():
                     return False
 
         if "srid" in config:
