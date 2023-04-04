@@ -210,6 +210,32 @@ def root_service_nodes(services):
     )
 
 
+def resolve_divisions(divisions):
+    div_list = []
+    for division_path in divisions:
+        if division_path.startswith("ocd-division"):
+            muni_ocd_id = division_path
+        else:
+            ocd_id_base = r"[\w0-9~_.-]+"
+            match_re = r"(%s)/([\w_-]+):(%s)" % (ocd_id_base, ocd_id_base)
+            m = re.match(match_re, division_path, re.U)
+            if not m:
+                raise ParseError("'division' must be of form 'muni/type:id'")
+
+            arr = division_path.split("/")
+            muni_ocd_id = make_muni_ocd_id(arr.pop(0), "/".join(arr))
+        try:
+            div = AdministrativeDivision.objects.select_related("geometry").get(
+                ocd_id=muni_ocd_id
+            )
+        except AdministrativeDivision.DoesNotExist:
+            raise ParseError(
+                "administrative division with OCD ID '%s' not found" % muni_ocd_id
+            )
+        div_list.append(div)
+    return div_list
+
+
 class JSONAPISerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super(JSONAPISerializer, self).__init__(*args, **kwargs)
@@ -916,29 +942,7 @@ class UnitViewSet(
             # Divisions can be specified with form:
             # division=helsinki/kaupunginosa:kallio,vantaa/äänestysalue:5
             d_list = filters["division"].lower().split(",")
-            div_list = []
-            for division_path in d_list:
-                if division_path.startswith("ocd-division"):
-                    muni_ocd_id = division_path
-                else:
-                    ocd_id_base = r"[\w0-9~_.-]+"
-                    match_re = r"(%s)/([\w_-]+):(%s)" % (ocd_id_base, ocd_id_base)
-                    m = re.match(match_re, division_path, re.U)
-                    if not m:
-                        raise ParseError("'division' must be of form 'muni/type:id'")
-
-                    arr = division_path.split("/")
-                    muni_ocd_id = make_muni_ocd_id(arr.pop(0), "/".join(arr))
-                try:
-                    div = AdministrativeDivision.objects.select_related("geometry").get(
-                        ocd_id=muni_ocd_id
-                    )
-                except AdministrativeDivision.DoesNotExist:
-                    raise ParseError(
-                        "administrative division with OCD ID '%s' not found"
-                        % muni_ocd_id
-                    )
-                div_list.append(div)
+            div_list = resolve_divisions(d_list)
 
             if div_list:
                 mp = div_list.pop(0).geometry.boundary
@@ -1083,52 +1087,6 @@ class UnitViewSet(
 
 
 register_view(UnitViewSet, "unit")
-
-
-class SearchSerializer(serializers.Serializer):
-    def __init__(self, *args, **kwargs):
-        super(SearchSerializer, self).__init__(*args, **kwargs)
-        self.serializer_by_model = {}
-
-    def _strip_context(self, context, model):
-        if model == Unit:
-            key = "unit"
-        elif model == Service:
-            key = "service"
-        else:
-            key = "service_node"
-        for spec in ["include", "only"]:
-            if spec in context:
-                context[spec] = context[spec].get(key, [])
-        if "only" in context and context["only"] == []:
-            context.pop("only")
-        return context
-
-    def get_result_serializer(self, model, instance):
-        ser = self.serializer_by_model.get(model)
-        if not ser:
-            ser_class = serializers_by_model[model]
-            assert model in serializers_by_model, "Serializer for %s not found" % model
-            context = self._strip_context(self.context.copy(), model)
-            ser = ser_class(context=context, many=False)
-            self.serializer_by_model[model] = ser
-        # TODO: another way to serialize with new data without
-        # costly Serializer instantiation
-        ser.instance = instance
-        if hasattr(ser, "_data"):
-            del ser._data
-        return ser
-
-    def to_representation(self, search_result):
-        if not search_result or not search_result.model:
-            return None
-        model = search_result.model
-        serializer = self.get_result_serializer(model, search_result.object)
-        data = serializer.data
-        data["sort_index"] = search_result._sort_index
-        data["object_type"] = model._meta.model_name
-        data["score"] = search_result.score
-        return data
 
 
 class AccessibilityRuleView(viewsets.ViewSetMixin, generics.ListAPIView):

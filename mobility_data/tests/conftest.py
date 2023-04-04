@@ -96,7 +96,7 @@ def mobile_units(content_types):
         "test_string": "4242",
         "test_bool": False,
     }
-    geometry = Point(22.21, 60.3, srid=4326)
+    geometry = Point(22.22, 60.44, srid=4326)
     geometry.transform(settings.DEFAULT_SRID)
     mobile_unit = MobileUnit.objects.create(
         id="aa6c2903-d36f-4c61-b828-19084fc7a64b",
@@ -113,6 +113,7 @@ def mobile_units(content_types):
         "test_string": "hello",
         "test_bool": True,
     }
+    # Not in Turku
     mobile_unit = MobileUnit.objects.create(
         id="ba6c2903-d36f-4c61-b828-19084fc7a64b",
         name="Test2 mobileunit",
@@ -186,7 +187,11 @@ def administrative_division_type():
 @pytest.fixture
 def administrative_division(administrative_division_type):
     adm_div = AdministrativeDivision.objects.get_or_create(
-        id=1, name="Turku", origin_id=853, type_id=1
+        id=1,
+        name="Turku",
+        origin_id=853,
+        type_id=1,
+        ocd_id="ocd-division/country:fi/kunta:turku",
     )
     return adm_div
 

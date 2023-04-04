@@ -9,6 +9,7 @@ from rest_framework import status, viewsets
 from rest_framework.exceptions import ParseError
 from rest_framework.response import Response
 
+from services.api import resolve_divisions
 from services.models import Unit
 
 from ..models import ContentType, GroupType, MobileUnit, MobileUnitGroup
@@ -175,6 +176,20 @@ class MobileUnitViewSet(viewsets.ReadOnlyModelViewSet):
                     ref, val, geometry_field_name
                 )
                 queryset = queryset.filter(Q(**bbox_geometry_filter))
+
+        if "division" in filters:
+            # Divisions can be specified with form:
+            # division=ocd-division/country:fi/kunta:turku/kaupunginosa:002_ii,
+            # ocd-division/country:fi/kunta:turku/kaupunginosa:001_i
+            d_list = filters["division"].lower().split(",")
+            div_list = resolve_divisions(d_list)
+
+            if div_list:
+                mp = div_list.pop(0).geometry.boundary
+                for div in div_list:
+                    mp += div.geometry.boundary
+
+            queryset = queryset.filter(geometry__within=mp)
 
         for filter in filters:
             if filter.startswith("extra__"):
