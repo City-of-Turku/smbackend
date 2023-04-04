@@ -14,6 +14,13 @@ features:
     municipality: muni_field
     # Optional, if set, include only if geometry is inside the boundarys of Turku, default=False
     locates_in_turku: True
+    # If attribue 'expiration' is set, discard feature if datetime has passed.
+    expiration:
+      date_time_field: name_of_the_field_containing_the_date_time
+      # datetime format for python strptime() function
+      date_time_format: "%d/%m/%y %H:%M:%S.%f"
+      # Define what to do if value is missing, True=include, False=discard
+      missing_value_is: True   
     # Optional, include only if 'field_name' contains the given string.
     include:
       field_name: this_must_be_in_field_name
