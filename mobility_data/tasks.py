@@ -152,6 +152,13 @@ def import_parking_machines(name="import_parking_machines"):
 
 
 @shared_task_email
+def import_permits(name="import_permits"):
+    management.call_command(
+        "import_wfs", ["ExcavationPermit", "FencePermit", "PlacementPermit"]
+    )
+
+
+@shared_task_email
 def delete_obsolete_data(name="delete_obsolete_data"):
     MobileUnit.objects.filter(content_types__isnull=True).delete()
     ContentType.objects.filter(mobile_units__content_types__isnull=True).delete()
