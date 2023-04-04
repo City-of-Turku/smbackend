@@ -514,3 +514,81 @@ features:
       speed_limit:
         wfs_field: voimassa_a
         wfs_type: int
+  
+  - content_type_name: FencePermit
+    wfs_layer: GIS:Aitaamisluvat
+    wfs_url: http://192.103.111.10/TeklaOGCWeb/WFS.ashx
+    max_features: 10000
+    # If attribue 'expiration' is set, discard feature if datetime has passed.
+    expiration:
+      date_time_field: VoimassaolonPaattymispaiva
+      date_time_format: "%d.%M.%Y"
+      # Define what to do if value is missing, True=include, False=discard
+      missing_value_is: True    
+    extra_fields:
+      Lupanumero:
+        wfs_field: Lupanumero
+      Lupatyyppi:
+        wfs_field: Lupatyyppi
+      Kuvaus: 
+        wfs_field: Kuvaus
+      Voimassaoloaika:
+        wfs_field: Voimassaoloaika
+      VoimassaolonAlkamispaiva:
+        wfs_field: VoimassaolonAlkamispaiva
+      VoimassaolonAlkamisaika:
+         wfs_field: VoimassaolonAlkamisaika
+      VoimassaolonPaattymispaiva:
+        wfs_field: VoimassaolonPaattymispaiva
+      VoimassaolonPaattymissaika:
+        wfs_field: VoimassaolonPaattymissaika
+      # Currently removed due to protection of privacy
+      # HakijaNimi:
+      #   wfs_field: HakijaNimi
+      # HakijaPuhelin:
+      #   wfs_field: HakijaPuhelin 
+
+  - content_type_name: ExcavationPermit
+    wfs_layer: GIS:Kaivuluvat 
+    wfs_url: http://192.103.111.10/TeklaOGCWeb/WFS.ashx
+    max_features: 10000   
+    extra_fields:
+      Lupanumero:
+        wfs_field: Lupanumero
+      Lupatyyppi:
+        wfs_field: Lupatyyppi    
+      Voimassaoloaika:
+        wfs_field: Voimassaoloaika   
+
+  - content_type_name: PlacementPermit
+    wfs_layer: GIS:Sijoitusluvat
+    wfs_url: http://192.103.111.10/TeklaOGCWeb/WFS.ashx
+    max_features: 10000
+    # If attribue 'expiration' is set, discard feature if datetime has passed.
+    expiration:
+      date_time_field: VoimassaolonPaattymispaiva
+      date_time_format: "%d.%M.%Y"
+      # Define what to do if value is missing, True=include, False=discard
+      missing_value_is: True    
+    extra_fields:
+      Lupanumero:
+        wfs_field: Lupanumero
+      Lupatyyppi:
+        wfs_field: Lupatyyppi
+      Kuvaus: 
+        wfs_field: Kuvaus
+      Voimassaoloaika:
+        wfs_field: Voimassaoloaika
+      VoimassaolonAlkamispaiva:
+        wfs_field: VoimassaolonAlkamispaiva
+      VoimassaolonAlkamisaika:
+         wfs_field: VoimassaolonAlkamisaika
+      # VoimassaolonPaattymispaiva:
+      #   wfs_field: VoimassaolonPaattymispaiva      
+      VoimassaolonPaattymissaika:
+        wfs_field: VoimassaolonPaattymissaika
+      # Currently removed due to protection of privacy
+      # HakijaNimi:
+      #   wfs_field: HakijaNimi
+      # HakijaPuhelin:
+      #   wfs_field: HakijaPuhelin        

@@ -406,3 +406,22 @@ content_types:
       sv: Hastighetsbegränsningszon
       en: Speed limit zone
   # End of WFS importer content types
+
+  - content_type_name: FencePermit
+    name:
+      fi: Aitaamislupa
+      sv: Stängseltillstånd
+      en: Fence permit
+  
+  - content_type_name: ExcavationPermit
+    name:
+      fi: Kaivuulupa
+      sv: Grävtillstånd
+      en: Excavation permit
+
+  - content_type_name: PlacementPermit
+    name:
+      fi: Sijoituslupa
+      sv: Placeringstillstånd
+      en: Placement permit
+
