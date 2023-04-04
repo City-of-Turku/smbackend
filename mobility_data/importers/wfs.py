@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 import django.contrib.gis.gdal.geometries as gdalgeometries
 from django import db
@@ -36,6 +37,21 @@ class MobilityData(MobileUnitDataBase):
 
     def add_feature(self, feature, config):
         create_multipolygon = config.get("create_multipolygon", False)
+
+        if "expiration" in config:
+            expiration_attrs = config["expiration"]
+            date_time_str = feature[expiration_attrs["date_time_field"]].as_string()
+            if not date_time_str:
+                # if 'missin_values_is' set to False discard feature.
+                if not expiration_attrs["missing_value_is"]:
+                    return False
+            else:
+                date_time = datetime.strptime(
+                    date_time_str, expiration_attrs["date_time_format"]
+                )
+                if datetime.now() > date_time:
+                    return False
+
         if "include" in config:
             for attr, value in config["include"].items():
                 if attr not in feature.fields:
@@ -45,6 +61,7 @@ class MobilityData(MobileUnitDataBase):
                     return False
                 if str(value) not in feature[attr].as_string():
                     return False
+
         if "exclude" in config:
             for attr, value in config["exclude"].items():
                 if attr not in feature.fields:
