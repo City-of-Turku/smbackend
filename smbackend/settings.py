@@ -330,6 +330,7 @@ LOGGING = {
             "handlers": ["console"],
             "level": STREET_MAINTENANCE_LOG_LEVEL,
         },
+        "air_monitoring": {"handlers": ["console"], "level": "INFO"},
     },
 }
 logging.config.dictConfig(LOGGING)
