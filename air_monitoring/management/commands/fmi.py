@@ -39,6 +39,8 @@ SRID = 4326
 # URL = "https://data.fmi.fi/fmi-apikey/0fe6aa7c-de21-4f68-81d0-ed49c0409295/
 # wfs?request=getFeature&storedquery_id=urban::observations::airquality::hourly::timevaluepair
 # &geoId=-100823&parameters=AQINDEX_PT1H_avg&parameters=PM10_PT1H_avg&parameters=SO2_PT1H_avg&who=fmi&startTime=2023-01-01T12:20Z&endTime=2023-02-01T12:20Z"
+# NOTE, No more than 10000 hours is allowed per request.
+
 URL = "https://data.fmi.fi/fmi-apikey/0fe6aa7c-de21-4f68-81d0-ed49c0409295/wfs"
 AQINDEX_PT1H_AVG = "AQINDEX_PT1H_avg"
 PM10_PT1H_AVG = "PM10_PT1H_avg"
@@ -48,7 +50,6 @@ OBSERVABLE_PARAMETERS = [AQINDEX_PT1H_AVG, PM10_PT1H_AVG, SO2_PT1H_AVG]
 OBSERVABLE_PARAMETERS = [AQINDEX_PT1H_AVG, PM10_PT1H_AVG]
 
 
-# NOTE, No more than 10000 hours is allowed in on request.
 PARAMS = {
     "request": "getFeature",
     "storedquery_id": "urban::observations::airquality::hourly::timevaluepair",
@@ -110,8 +111,7 @@ def get_stations():
     return stations
 
 
-def get_dataframe(station, from_year=None, from_month=None):
-    stations = get_stations()
+def get_dataframe(stations, from_year=None, from_month=None):
     current_date_time = datetime.now()
     # current_date_time = datetime.strptime(f"2023-02-01T00:00:00Z", TIME_FORMAT)
     if from_year and from_month:
@@ -122,9 +122,8 @@ def get_dataframe(station, from_year=None, from_month=None):
         from_date_time = datetime(START_YEAR, 1, 1)
 
     column_data = {}
-    for station_index, station in enumerate(stations):
-        print("-" * 40)
-        print(f"--- {station['name']} ----")
+    for station in stations:
+        logger.info(f"Fetchin data for station {station['name']}")
         for parameter in OBSERVABLE_PARAMETERS:
             data = {}
             tmp_data = []
@@ -141,38 +140,27 @@ def get_dataframe(station, from_year=None, from_month=None):
 
                 response = requests.get(URL, params=params)
 
-                print(response.url)
+                logger.info(f"Requested data from: {response.url}")
                 if response.status_code == 200:
                     root = Et.fromstring(response.content)
                     observation_series = root.findall(
                         ".//omso:PointTimeSeriesObservation",
                         {"omso": "http://inspire.ec.europa.eu/schemas/omso/3.0"},
                     )
-                    print("len observations", len(observation_series))
                     if len(observation_series) != 1:
-                        print("Error!, Observation series != 1")
+                        logger.error(
+                            f"Observation series length not 1, it is {len(observation_series)} "
+                        )
                         start_date_time += relativedelta(years=1)
                         continue
 
-                    for serie in observation_series:
-                        # feature = serie.find(
-                        #     ".//sams:SF_SpatialSamplingFeature", NAMESPACES
-                        # )
-                        # time_serie = serie.findall(
-                        #     ".//wml2:MeasurementTimeseries", NAMESPACES
-                        # )
-                        measurements = root.findall(
-                            ".//wml2:MeasurementTVP", NAMESPACES
-                        )
-                        logger.info(len(measurements))
-                        for measurement in measurements:
-                            time = measurement.find("wml2:time", NAMESPACES).text
-                            value = float(
-                                measurement.find("wml2:value", NAMESPACES).text
-                            )
-                            # print(f"time: {time} value: {value}")
-                            data[time] = value
-                            tmp_data.append(value)
+                    measurements = root.findall(".//wml2:MeasurementTVP", NAMESPACES)
+                    logger.info(len(measurements))
+                    for measurement in measurements:
+                        time = measurement.find("wml2:time", NAMESPACES).text
+                        value = float(measurement.find("wml2:value", NAMESPACES).text)
+                        data[time] = value
+                        tmp_data.append(value)
                 else:
                     logger.error(
                         f"Could not fetch data from {response.url}, {response.status_code} {response.content}"
@@ -193,10 +181,6 @@ def get_dataframe(station, from_year=None, from_month=None):
     # Fill missing cells with the value 0
     df = df.fillna(0)
     return df
-
-
-def hashable_dict(d):
-    return dict(sorted(d.items()))
 
 
 def get_or_create_row(model, filter):
@@ -235,6 +219,24 @@ def get_year(station, year_number):
         return None
 
 
+@lru_cache(maxsize=256)
+def get_month(station, year, month_number):
+    qs = Month.objects.filter(station=station, year=year, month_number=month_number)
+    if qs.exists():
+        return qs.first()
+    else:
+        return None
+
+
+@lru_cache(maxsize=512)
+def get_week(station, years, week_number):
+    qs = Week.objects.filter(station=station, years=years, week_number=week_number)
+    if qs.exists():
+        return qs.first()
+    else:
+        return None
+
+
 def get_measurements(mean_series, station_name):
     values = {}
     for parameter in OBSERVABLE_PARAMETERS:
@@ -251,13 +253,13 @@ def get_parameter(name):
         return None
 
 
-def save_measurement_values(measurements, dst_obj):
-    for item in measurements.items():
-        parameter = get_parameter(item[0])
-        measurement, _ = get_or_create_row(
-            Measurement, {"value": item[1], "parameter": parameter}
-        )
-        dst_obj.measurements.add(measurement)
+# def save_measurement_values(measurements, dst_obj):
+#     for item in measurements.items():
+#         parameter = get_parameter(item[0])
+#         measurement, _ = get_or_create_row(
+#             Measurement, {"value": item[1], "parameter": parameter}
+#         )
+#         dst_obj.measurements.add(measurement)
 
 
 def get_measurement_objects(measurements):
@@ -269,60 +271,76 @@ def get_measurement_objects(measurements):
     return measurement_rows
 
 
+def bulk_create_rows(data_model, model_objs, measurements, datas):
+    logger.info(f"Bulk creating {len(model_objs)} {data_model.__name__} rows")
+    data_model.objects.bulk_create(model_objs)
+    logger.info(f"Bulk creating {len(measurements)} Measurement rows")
+    Measurement.objects.bulk_create(measurements)
+    for key in datas:
+        data = datas[key]
+        [data["data"].measurements.add(m) for m in data["measurements"]]
+
+
 def save_years(df, stations):
     logger.info("Saving years...")
     years = df.groupby(df.index.year)
-    for index, row in years:
-        logger.info(f"Saving year {index}")
-        mean_series = row.mean()
-        for station in stations:
+    for station in stations:
+        measurements = []
+        year_datas = {}
+        year_data_objs = []
+        for index, row in years:
+            logger.info(f"Processing year {index}")
+            mean_series = row.mean()
             year, _ = get_or_create_row(
                 Year, {"station": station, "year_number": index}
             )
-            measurements = get_measurements(mean_series, station.name)
-            year_data, _ = get_or_create_row(
-                YearData, {"station": station, "year": year}
-            )
-            save_measurement_values(measurements, year_data)
+            values = get_measurements(mean_series, station.name)
+            year_data = YearData(station=station, year=year)
+            year_data_objs.append(year_data)
+            ret_mes = get_measurement_objects(values)
+            measurements += ret_mes
+            year_datas[index] = {"data": year_data, "measurements": ret_mes}
+        bulk_create_rows(YearData, year_data_objs, measurements, year_datas)
 
 
 def save_months(df, stations):
     logger.info("Saving months...")
     months = df.groupby([df.index.year, df.index.month])
-    for index, row in months:
-        year_number, month_number = index
-        logger.info(f"Saving month {month_number} of year {year_number}")
-        mean_series = row.mean()
-        for station in stations:
-            # year = get_row(Year, hashable_dict({"station": station, "year_number": year_number}))
-            # year = get_row_cached(
-            #     Year, (("station", station), ("year_number", year_number))
-            # )
+    for station in stations:
+        measurements = []
+        month_datas = {}
+        month_data_objs = []
+        for index, row in months:
+            year_number, month_number = index
+            logger.info(f"Processing month {month_number} of year {year_number}")
+            mean_series = row.mean()
             year = get_year(station, year_number)
             month, _ = get_or_create_row(
                 Month, {"station": station, "year": year, "month_number": month_number}
             )
-            measurements = get_measurements(mean_series, station.name)
-            month_data, _ = get_or_create_row(
-                MonthData, {"station": station, "year": year, "month": month}
-            )
-            save_measurement_values(measurements, month_data)
+            values = get_measurements(mean_series, station.name)
+
+            month_data = MonthData(station=station, year=year, month=month)
+            month_data_objs.append(month_data)
+            ret_mes = get_measurement_objects(values)
+            measurements += ret_mes
+            month_datas[index] = {"data": month_data, "measurements": ret_mes}
+        bulk_create_rows(MonthData, month_data_objs, measurements, month_datas)
 
 
 def save_weeks(df, stations):
     logger.info("Saving weeks...")
     weeks = df.groupby([df.index.year, df.index.isocalendar().week])
-    for index, row in weeks:
-        year_number, week_number = index
-        logger.info(f"Saving week number {week_number} of year {year_number}")
-        mean_series = row.mean()
-        for station in stations:
-            # year = get_row(Year, {"station": station, "year_number": year_number})
-            # year = get_row_cached(
-            #     Year, (("station", station), ("year_number", year_number))
-            # )
+    for station in stations:
+        measurements = []
+        week_datas = {}
+        week_data_objs = []
+
+        for index, row in weeks:
+            year_number, week_number = index
+            logger.info(f"Processing week number {week_number} of year {year_number}")
+            mean_series = row.mean()
             year = get_year(station, year_number)
-            # week = get_or_create_row(Week, {"station": station,"years": year_number, "week_number": week_number})
             week, _ = Week.objects.get_or_create(
                 station=station,
                 week_number=week_number,
@@ -330,15 +348,17 @@ def save_weeks(df, stations):
             )
             if week.years.count() == 0:
                 week.years.add(year)
-            measurements = get_measurements(mean_series, station.name)
-            week_data, _ = get_or_create_row(
-                WeekData, {"station": station, "week": week}
-            )
-            save_measurement_values(measurements, week_data)
+            values = get_measurements(mean_series, station.name)
+            week_data = WeekData(station=station, week=week)
+            week_data_objs.append(week_data)
+            ret_mes = get_measurement_objects(values)
+            measurements += ret_mes
+            week_datas[index] = {"data": week_data, "measurements": ret_mes}
+        bulk_create_rows(WeekData, week_data_objs, measurements, week_datas)
 
 
 def save_days(df, stations):
-    logger.info("Saving days...")
+    logger.info("Processing days...")
     days = df.groupby(
         [df.index.year, df.index.month, df.index.isocalendar().week, df.index.day]
     )
@@ -351,27 +371,9 @@ def save_days(df, stations):
             year_number, month_number, week_number, day_number = index
             date = datetime(year_number, month_number, day_number)
             mean_series = row.mean()
-
-            # year = get_row(Year, {"station": station, "year_number": year_number})
-            # year = get_row_cached(
-            #     Year, (("station", station), ("year_number", year_number))
-            # )
             year = get_year(station, year_number)
-
-            # month = get_row(
-            #     Month, {"station": station, "year": year, "month_number": month_number}
-            # )
-            month = get_row_cached(
-                Month,
-                (("station", station), ("year", year), ("month_number", month_number)),
-            )
-            # week = get_row(
-            #     Week, {"station": station, "years": year, "week_number": week_number}
-            # )
-            week = get_row_cached(
-                Week,
-                (("station", station), ("years", year), ("week_number", week_number)),
-            )
+            month = get_month(station, year, month_number)
+            week = get_week(station, year, week_number)
             day, _ = get_or_create_row(
                 Day,
                 {
@@ -384,26 +386,16 @@ def save_days(df, stations):
                 },
             )
             values = get_measurements(mean_series, station.name)
-            # day_data, _ = get_or_create_row(DayData, {"station": station, "day": day})
             day_data = DayData(station=station, day=day)
             day_data_objs.append(day_data)
             ret_mes = get_measurement_objects(values)
             measurements += ret_mes
-            day_datas[index] = {"day_data": day_data, "measurements": ret_mes}
-            # if not prev_week_number or prev_week_number != week_number:
-            #     prev_week_number = week_number
-            #     logger.info(f"Saved days for week {week_number} of year {year_number}")
-        logger.info(f"Bulk creating {len(measurements)} DayData rows")
-        DayData.objects.bulk_create(day_data_objs)
-        logger.info(f" Bulk creating {len(measurements)} Measurement rows")
-        Measurement.objects.bulk_create(measurements)
-        for key in day_datas:
-            day_data = day_datas[key]
-            [day_data["day_data"].measurements.add(m) for m in day_data["measurements"]]
+            day_datas[index] = {"data": day_data, "measurements": ret_mes}
+        bulk_create_rows(DayData, day_data_objs, measurements, day_datas)
 
 
 def save_hours(df, stations):
-    logger.info("Saving hours...")
+    logger.info("Processing hours... ")
     hours = df.groupby([df.index.year, df.index.month, df.index.day, df.index.hour])
     for station in stations:
         measurements = []
@@ -419,27 +411,13 @@ def save_hours(df, stations):
                 Hour, {"station": station, "day": day, "hour_number": hour_number}
             )
             values = get_measurements(mean_series, station.name)
-            # hour_data, _ = get_or_create_row(
-            #     HourData, {"station": station, "hour": hour}
-            # )
-
             hour_data = HourData(station=station, hour=hour)
             hour_data_objs.append(hour_data)
             ret_mes = get_measurement_objects(values)
             measurements += ret_mes
-            hour_datas[index] = {"hour_data": hour_data, "measurements": ret_mes}
+            hour_datas[index] = {"data": hour_data, "measurements": ret_mes}
 
-        logger.info(f"Bulk creating {len(measurements)} HourData rows")
-        HourData.objects.bulk_create(hour_data_objs)
-        logger.info(f"Bulk creating {len(measurements)} Measurement rows")
-        Measurement.objects.bulk_create(measurements)
-
-        for key in hour_datas:
-            hour_data = hour_datas[key]
-            [
-                hour_data["hour_data"].measurements.add(m)
-                for m in hour_data["measurements"]
-            ]
+        bulk_create_rows(HourData, hour_data_objs, measurements, hour_datas)
 
 
 def save_measurements(df):
@@ -480,9 +458,6 @@ def save_stations(stations):
                 "geo_id": station["geoId"],
             },
         )
-        # Station.objects.get_or_create(
-        #     name=station["name"], location=station["location"], geo_id=station["geoId"]
-        # )
         if obj.id in object_ids:
             object_ids.remove(obj.id)
         if created:
