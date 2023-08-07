@@ -52,9 +52,7 @@ class Year(models.Model):
 
     class Meta:
         ordering = ["-year_number"]
-        # indexes = [
-        #     models.Index(fields=["station", "year_number"])
-        # ]
+        indexes = [models.Index(fields=["station", "year_number"])]
 
     @property
     def num_days(self):
@@ -109,7 +107,6 @@ class Day(models.Model):
         "Station", on_delete=models.CASCADE, related_name="days", null=True
     )
     date = models.DateField(default=now)
-    # , db_index=True)
     weekday_number = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(7)], default=1
     )
@@ -125,6 +122,7 @@ class Day(models.Model):
 
     class Meta:
         ordering = ["-date"]
+        indexes = [models.Index(fields=["station", "date"])]
 
 
 class Hour(models.Model):
@@ -132,11 +130,15 @@ class Hour(models.Model):
         "Station", on_delete=models.CASCADE, related_name="hours", null=True
     )
     day = models.ForeignKey(
-        "Day", on_delete=models.CASCADE, related_name="hours", null=True
+        "Day", on_delete=models.CASCADE, related_name="hours", null=True, db_index=True
     )
     hour_number = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(23)], default=0
     )
+
+    class Meta:
+        ordering = ["-day__date", "-hour_number"]
+        indexes = [models.Index(fields=["station", "day", "hour_number"])]
 
 
 class YearData(models.Model):
@@ -205,4 +207,5 @@ class HourData(models.Model):
     measurements = models.ManyToManyField("Measurement", related_name="hour_datas")
 
     class Meta:
-        ordering = ["-hour__day__date"]
+        ordering = ["-hour__day__date", "-hour__hour_number"]
+        indexes = [models.Index(fields=["hour"])]
