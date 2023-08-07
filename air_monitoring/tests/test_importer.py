@@ -1,3 +1,5 @@
+import logging
+
 import dateutil.parser
 import pandas as pd
 import pytest
@@ -8,6 +10,7 @@ from air_monitoring.models import (  # ImportState,; Measurement,; HourData,
     Day,
     DayData,
     Hour,
+    HourData,
     Month,
     MonthData,
     Parameter,
@@ -17,6 +20,9 @@ from air_monitoring.models import (  # ImportState,; Measurement,; HourData,
     Year,
     YearData,
 )
+
+logger = logging.getLogger(__name__)
+
 
 OBSERVABLE_PARAMETERS = [AQINDEX_PT1H_AVG, PM10_PT1H_AVG]
 KAARINA_STATION = "Kaarina Kaarina"
@@ -46,7 +52,7 @@ def get_test_dataframe(
     for col in columns:
         vals = []
         for i in range(len(timestamps)):
-            if i % 2:
+            if i % 2 == 0:
                 vals.append(min_value)
             else:
                 vals.append(max_value)
@@ -71,7 +77,7 @@ def test_importer():
     stations = get_stations()
     save_stations(stations)
     start_time = dateutil.parser.parse("2021-01-01T00:00:00Z")
-    end_time = dateutil.parser.parse("2022-01-31T23:45:00Z")
+    end_time = dateutil.parser.parse("2021-02-28T23:45:00Z")
     columns = []
     for station_name in STATION_NAMES:
         for parameter in OBSERVABLE_PARAMETERS:
@@ -93,15 +99,15 @@ def test_importer():
     assert measurement.parameter.name == AQINDEX_PT1H_AVG
 
     # Test month data
-    august = Month.objects.get(station=kaarina_station, year=year, month_number=8)
+    august = Month.objects.get(station=kaarina_station, year=year, month_number=2)
     month_data = MonthData.objects.get(station=kaarina_station, month=august)
     measurement = month_data.measurements.get(parameter=aqindex_parameter)
     assert round(measurement.value, 1) == 3.0
     assert measurement.parameter.name == AQINDEX_PT1H_AVG
 
     # Test week data
-    week_34 = Week.objects.get(station=kaarina_station, week_number=34, years=year)
-    week_data = WeekData.objects.get(station=kaarina_station, week=week_34)
+    week_5 = Week.objects.get(station=kaarina_station, week_number=5, years=year)
+    week_data = WeekData.objects.get(station=kaarina_station, week=week_5)
     measurement = week_data.measurements.get(parameter=aqindex_parameter)
     assert round(measurement.value, 1) == 3.0
     assert measurement.parameter.name == AQINDEX_PT1H_AVG
@@ -115,6 +121,13 @@ def test_importer():
     assert round(measurement.value, 1) == 3.0
     assert measurement.parameter.name == AQINDEX_PT1H_AVG
     # Test hours
-    # hour = Hour.objects.get(station=kaarina_station, day=day, hour_number=0)
-    # hour_data = HourData.objects.get(hour=hour)
-    # breakpoint()
+    hour = Hour.objects.get(station=kaarina_station, day=day, hour_number=0)
+    hour_data = HourData.objects.get(hour=hour)
+    measurement = hour_data.measurements.get(parameter=aqindex_parameter)
+    assert round(measurement.value, 1) == 2.0
+    assert measurement.parameter.name == AQINDEX_PT1H_AVG
+    hour = Hour.objects.get(station=kaarina_station, day=day, hour_number=1)
+    hour_data = HourData.objects.get(hour=hour)
+    measurement = hour_data.measurements.get(parameter=aqindex_parameter)
+    assert round(measurement.value, 1) == 4.0
+    assert measurement.parameter.name == AQINDEX_PT1H_AVG
