@@ -47,7 +47,7 @@ PM10_PT1H_AVG = "PM10_PT1H_avg"
 SO2_PT1H_AVG = "SO2_PT1H_avg"
 
 OBSERVABLE_PARAMETERS = [AQINDEX_PT1H_AVG, PM10_PT1H_AVG, SO2_PT1H_AVG]
-OBSERVABLE_PARAMETERS = [AQINDEX_PT1H_AVG, PM10_PT1H_AVG]
+# OBSERVABLE_PARAMETERS = [AQINDEX_PT1H_AVG, PM10_PT1H_AVG]
 
 
 PARAMS = {
@@ -106,7 +106,7 @@ def get_stations():
         )
 
     logger.info(f"Fetched {len(stations)} stations in Southwest Finland.")
-    # return stations[0:1]
+    # return stations[0:3]
 
     return stations
 
@@ -191,6 +191,54 @@ def get_or_create_row(model, filter):
         return model.objects.create(**filter), True
 
 
+@lru_cache(maxsize=4069)
+def get_or_create_row_cached(model, filter: tuple):
+    filter = {key: value for key, value in filter}
+    results = model.objects.filter(**filter)
+    if results.exists():
+        return results.first(), False
+    else:
+        return model.objects.create(**filter), True
+
+
+@lru_cache(maxsize=4096)
+def get_or_create_hour_row_cached(station, day, hour_number):
+    results = Hour.objects.filter(station=station, day=day, hour_number=hour_number)
+    if results.exists():
+        return results.first(), False
+    else:
+        return (
+            Hour.objects.create(station=station, day=day, hour_number=hour_number),
+            True,
+        )
+
+
+@lru_cache(maxsize=4096)
+def get_or_create_day_row_cached(station, date, year, month, week):
+    results = Day.objects.filter(
+        station=station,
+        date=date,
+        weekday_number=date.weekday(),
+        year=year,
+        month=month,
+        week=week,
+    )
+    if results.exists():
+        return results.first(), False
+    else:
+        return (
+            Day.objects.create(
+                station=station,
+                date=date,
+                weekday_number=date.weekday(),
+                year=year,
+                month=month,
+                week=week,
+            ),
+            True,
+        )
+
+
 @lru_cache(maxsize=4096)
 # Use tuple as it is immutable and is hashable for lru_cache
 def get_row_cached(model, filter: tuple):
@@ -211,7 +259,7 @@ def get_row_cached(model, filter: tuple):
 
 
 @lru_cache(maxsize=64)
-def get_year(station, year_number):
+def get_year_cached(station, year_number):
     qs = Year.objects.filter(station=station, year_number=year_number)
     if qs.exists():
         return qs.first()
@@ -220,7 +268,7 @@ def get_year(station, year_number):
 
 
 @lru_cache(maxsize=256)
-def get_month(station, year, month_number):
+def get_month_cached(station, year, month_number):
     qs = Month.objects.filter(station=station, year=year, month_number=month_number)
     if qs.exists():
         return qs.first()
@@ -228,9 +276,18 @@ def get_month(station, year, month_number):
         return None
 
 
-@lru_cache(maxsize=512)
-def get_week(station, years, week_number):
+@lru_cache(maxsize=1024)
+def get_week_cached(station, years, week_number):
     qs = Week.objects.filter(station=station, years=years, week_number=week_number)
+    if qs.exists():
+        return qs.first()
+    else:
+        return None
+
+
+@lru_cache(maxsize=2048)
+def get_day_cached(station, date):
+    qs = Day.objects.filter(station=station, date=date)
     if qs.exists():
         return qs.first()
     else:
@@ -291,8 +348,11 @@ def save_years(df, stations):
         for index, row in years:
             logger.info(f"Processing year {index}")
             mean_series = row.mean()
-            year, _ = get_or_create_row(
-                Year, {"station": station, "year_number": index}
+            # year, _ = get_or_create_row(
+            #     Year, {"station": station, "year_number": index}
+            # )
+            year, _ = get_or_create_row_cached(
+                Year, (("station", station), ("year_number", index))
             )
             values = get_measurements(mean_series, station.name)
             year_data = YearData(station=station, year=year)
@@ -314,10 +374,14 @@ def save_months(df, stations):
             year_number, month_number = index
             logger.info(f"Processing month {month_number} of year {year_number}")
             mean_series = row.mean()
-            year = get_year(station, year_number)
+            year = get_year_cached(station, year_number)
             month, _ = get_or_create_row(
                 Month, {"station": station, "year": year, "month_number": month_number}
             )
+            # month, _ = get_or_create_row_cached(
+            #     Month,
+            #     (("station", station), ("year", year), ("month_number", month_number)),
+            # )
             values = get_measurements(mean_series, station.name)
 
             month_data = MonthData(station=station, year=year, month=month)
@@ -340,7 +404,7 @@ def save_weeks(df, stations):
             year_number, week_number = index
             logger.info(f"Processing week number {week_number} of year {year_number}")
             mean_series = row.mean()
-            year = get_year(station, year_number)
+            year = get_year_cached(station, year_number)
             week, _ = Week.objects.get_or_create(
                 station=station,
                 week_number=week_number,
@@ -362,7 +426,6 @@ def save_days(df, stations):
     days = df.groupby(
         [df.index.year, df.index.month, df.index.isocalendar().week, df.index.day]
     )
-    # prev_week_number = None
     for station in stations:
         measurements = []
         day_datas = {}
@@ -371,20 +434,32 @@ def save_days(df, stations):
             year_number, month_number, week_number, day_number = index
             date = datetime(year_number, month_number, day_number)
             mean_series = row.mean()
-            year = get_year(station, year_number)
-            month = get_month(station, year, month_number)
-            week = get_week(station, year, week_number)
-            day, _ = get_or_create_row(
-                Day,
-                {
-                    "station": station,
-                    "date": date,
-                    "weekday_number": date.weekday(),
-                    "year": year,
-                    "month": month,
-                    "week": week,
-                },
-            )
+            year = get_year_cached(station, year_number)
+            month = get_month_cached(station, year, month_number)
+            week = get_week_cached(station, year, week_number)
+            # day, _ = get_or_create_row(
+            #     Day,
+            #     {
+            #         "station": station,
+            #         "date": date,
+            #         "weekday_number": date.weekday(),
+            #         "year": year,
+            #         "month": month,
+            #         "week": week,
+            #     },
+            # )
+            # day, _ = get_or_create_row_cached(
+            #     Day,
+            #     (
+            #         ("station", station),
+            #         ("date", date),
+            #         ("weekday_number", date.weekday()),
+            #         ("year", year),
+            #         ("month", month),
+            #         ("week", week),
+            #     ),
+            # )
+            day, _ = get_or_create_day_row_cached(station, date, year, month, week)
             values = get_measurements(mean_series, station.name)
             day_data = DayData(station=station, day=day)
             day_data_objs.append(day_data)
@@ -406,10 +481,13 @@ def save_hours(df, stations):
             year_number, month_number, day_number, hour_number = index
             mean_series = row.mean()
             date = datetime(year_number, month_number, day_number)
-            day = get_row_cached(Day, (("date", date), ("station", station)))
-            hour, _ = get_or_create_row(
-                Hour, {"station": station, "day": day, "hour_number": hour_number}
-            )
+            # day = get_row_cached(Day, (("date", date), ("station", station)))
+            day = get_day_cached(station, date)
+            # hour, _ = get_or_create_row(
+            #     Hour, {"station": station, "day": day, "hour_number": hour_number}
+            # )
+            # hour, _ = get_or_create_row_cached(Hour,(("station",station),("day", day), ("hour_number", hour_number)))
+            hour, _ = get_or_create_hour_row_cached(station, day, hour_number)
             values = get_measurements(mean_series, station.name)
             hour_data = HourData(station=station, hour=hour)
             hour_data_objs.append(hour_data)
@@ -430,11 +508,27 @@ def save_measurements(df):
     save_weeks(df, stations)
     save_days(df, stations)
     save_hours(df, stations)
-    queries_time = sum([float(s["time"]) for s in connection.queries])
-    logger.info(
-        f"queries total execution time: {queries_time} Num queries: {len(connection.queries)}"
-    )
-    reset_queries()
+    if logger.level <= logging.DEBUG:
+        queries_time = sum([float(s["time"]) for s in connection.queries])
+        logger.debug(
+            f"queries total execution time: {queries_time} Num queries: {len(connection.queries)}"
+        )
+        reset_queries()
+        logger.debug(
+            f"get_or_create_row_cached {get_or_create_row_cached.cache_info()}"
+        )
+        logger.debug(
+            f"get_or_create_hour_row_cached {get_or_create_hour_row_cached.cache_info()}"
+        )
+        logger.debug(
+            f"get_or_create_day_row_cached {get_or_create_day_row_cached.cache_info()}"
+        )
+        logger.debug(f"get_row_cached  {get_row_cached.cache_info()}")
+        logger.debug(f"get_year_cached {get_year_cached.cache_info()}")
+        logger.debug(f"get_month_cached {get_month_cached.cache_info()}")
+        logger.debug(f"get_week_cached {get_week_cached.cache_info()}")
+        logger.debug(f"get_day_cached {get_day_cached.cache_info()}")
+        logger.debug(f"get_parameter {get_parameter.cache_info()}")
 
 
 def save_parameter_types(df):
@@ -485,7 +579,7 @@ class Command(BaseCommand):
         # Note station on initial import
         stations = get_stations()
         save_stations(stations)
-        df = get_dataframe(stations, 2023, 1)
+        df = get_dataframe(stations, 2022, 1)
         save_parameter_types(df)
         save_measurements(df)
         end_time = datetime.now()
