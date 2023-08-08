@@ -78,6 +78,7 @@ env = environ.Env(
     MOBILITY_DATA_LOG_LEVEL=(str, "INFO"),
     BICYCLE_NETWORK_LOG_LEVEL=(str, "INFO"),
     STREET_MAINTENANCE_LOG_LEVEL=(str, "INFO"),
+    AIR_MONITORING_LOG_LEVEL=(str, "DEBUG"),
 )
 
 
@@ -101,7 +102,7 @@ ECO_COUNTER_LOG_LEVEL = env("ECO_COUNTER_LOG_LEVEL")
 MOBILITY_DATA_LOG_LEVEL = env("MOBILITY_DATA_LOG_LEVEL")
 BICYCLE_NETWORK_LOG_LEVEL = env("BICYCLE_NETWORK_LOG_LEVEL")
 STREET_MAINTENANCE_LOG_LEVEL = env("STREET_MAINTENANCE_LOG_LEVEL")
-
+AIR_MONITORING_LOG_LEVEL = env("AIR_MONITORING_LOG_LEVEL")
 # Application definition
 INSTALLED_APPS = [
     "polymorphic",
@@ -330,7 +331,7 @@ LOGGING = {
             "handlers": ["console"],
             "level": STREET_MAINTENANCE_LOG_LEVEL,
         },
-        "air_monitoring": {"handlers": ["console"], "level": "INFO"},
+        "air_monitoring": {"handlers": ["console"], "level": AIR_MONITORING_LOG_LEVEL},
     },
 }
 logging.config.dictConfig(LOGGING)
