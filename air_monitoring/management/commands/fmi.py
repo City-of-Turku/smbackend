@@ -15,6 +15,7 @@ from air_monitoring.models import (  # ImportState,
     DayData,
     Hour,
     HourData,
+    ImportState,
     Measurement,
     Month,
     MonthData,
@@ -30,49 +31,18 @@ from mobility_data.importers.constants import (
     SOUTHWEST_FINLAND_BOUNDARY_SRID,
 )
 
-logger = logging.getLogger(__name__)
-
-START_YEAR = 2021
-TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
-
-SRID = 4326
-# URL = "https://data.fmi.fi/fmi-apikey/0fe6aa7c-de21-4f68-81d0-ed49c0409295/
-# wfs?request=getFeature&storedquery_id=urban::observations::airquality::hourly::timevaluepair
-# &geoId=-100823&parameters=AQINDEX_PT1H_avg&parameters=PM10_PT1H_avg&parameters=SO2_PT1H_avg&who=fmi&startTime=2023-01-01T12:20Z&endTime=2023-02-01T12:20Z"
-# NOTE, No more than 10000 hours is allowed per request.
-
-URL = "https://data.fmi.fi/fmi-apikey/0fe6aa7c-de21-4f68-81d0-ed49c0409295/wfs"
-AQINDEX_PT1H_AVG = "AQINDEX_PT1H_avg"
-PM10_PT1H_AVG = "PM10_PT1H_avg"
-SO2_PT1H_AVG = "SO2_PT1H_avg"
-
-OBSERVABLE_PARAMETERS = [AQINDEX_PT1H_AVG, PM10_PT1H_AVG, SO2_PT1H_AVG]
-# OBSERVABLE_PARAMETERS = [AQINDEX_PT1H_AVG, PM10_PT1H_AVG]
-
-
-PARAMS = {
-    "request": "getFeature",
-    "storedquery_id": "urban::observations::airquality::hourly::timevaluepair",
-    "geoId": None,
-    "parameters": None,
-    "who": "fmi",
-    "startTime": None,
-    "endTime": None,
-}
-NAMESPACES = {
-    "wfs": "http://www.opengis.net/wfs/2.0",
-    "om": "http://www.opengis.net/om/2.0",
-    "omso": "http://inspire.ec.europa.eu/schemas/omso/3.0",
-    "sams": "http://www.opengis.net/samplingSpatial/2.0",
-    "wml2": "http://www.opengis.net/waterml/2.0",
-    "ef": "http://inspire.ec.europa.eu/schemas/ef/4.0",
-    "xlink": "http://www.w3.org/1999/xlink",
-    "gml": "http://www.opengis.net/gml/3.2",
-}
-STATION_URL = (
-    "https://data.fmi.fi/fmi-apikey/0fe6aa7c-de21-4f68-81d0-ed49c0409295/"
-    "wfs?request=getFeature&storedquery_id=fmi::ef::stations"
+from .constants import (
+    DATA_URL,
+    NAMESPACES,
+    OBSERVABLE_PARAMETERS,
+    PARAMS,
+    SOURCE_DATA_SRID,
+    START_YEAR,
+    STATION_URL,
+    TIME_FORMAT,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def get_stations():
@@ -94,7 +64,9 @@ def get_stations():
             if title in match_str:
                 station = {}
                 positions = mf.find(".//gml:pos", NAMESPACES).text.split(" ")
-                location = Point(float(positions[1]), float(positions[0]), srid=SRID)
+                location = Point(
+                    float(positions[1]), float(positions[0]), srid=SOURCE_DATA_SRID
+                )
                 if polygon.covers(location):
                     station["name"] = mf.find("gml:name", NAMESPACES).text
                     station["location"] = location
@@ -111,15 +83,13 @@ def get_stations():
     return stations
 
 
-def get_dataframe(stations, from_year=None, from_month=None):
+def get_dataframe(stations, from_year=START_YEAR, from_month=1):
     current_date_time = datetime.now()
     # current_date_time = datetime.strptime(f"2023-02-01T00:00:00Z", TIME_FORMAT)
     if from_year and from_month:
         from_date_time = datetime.strptime(
             f"{from_year}-{from_month}-01T00:00:00Z", TIME_FORMAT
         )
-    else:
-        from_date_time = datetime(START_YEAR, 1, 1)
 
     column_data = {}
     for station in stations:
@@ -138,7 +108,7 @@ def get_dataframe(stations, from_year=None, from_month=None):
                 else:
                     params["endTime"] = f"{start_date_time.year}-12-31T23:59Z"
 
-                response = requests.get(URL, params=params)
+                response = requests.get(DATA_URL, params=params)
 
                 logger.info(f"Requested data from: {response.url}")
                 if response.status_code == 200:
@@ -298,7 +268,9 @@ def get_measurements(mean_series, station_name):
     values = {}
     for parameter in OBSERVABLE_PARAMETERS:
         key = f"{station_name} {parameter}"
-        values[parameter] = mean_series.get(key, 0)
+        value = mean_series.get(key, False)
+        if value:
+            values[parameter] = value
     return values
 
 
@@ -308,15 +280,6 @@ def get_parameter(name):
         return Parameter.objects.get(name=name)
     except Parameter.DoesNotExist:
         return None
-
-
-# def save_measurement_values(measurements, dst_obj):
-#     for item in measurements.items():
-#         parameter = get_parameter(item[0])
-#         measurement, _ = get_or_create_row(
-#             Measurement, {"value": item[1], "parameter": parameter}
-#         )
-#         dst_obj.measurements.add(measurement)
 
 
 def get_measurement_objects(measurements):
@@ -494,20 +457,31 @@ def save_hours(df, stations):
             ret_mes = get_measurement_objects(values)
             measurements += ret_mes
             hour_datas[index] = {"data": hour_data, "measurements": ret_mes}
-
         bulk_create_rows(HourData, hour_data_objs, measurements, hour_datas)
 
 
-def save_measurements(df):
+def save_current_year(df, stations, year_number, end_month_number):
+    logger.info(f"Saving current year {year_number}")
+    for station in stations:
+        pass
 
-    # import_state =
-    # If importstate save current year
+
+def save_measurements(df, initial_import=False):
     stations = [station for station in Station.objects.all()]
-    save_years(df, stations)
-    save_months(df, stations)
+    if initial_import:
+        save_years(df, stations)
+        save_months(df, stations)
+    else:
+        save_months(df, stations)
+        save_current_year()
     save_weeks(df, stations)
     save_days(df, stations)
     save_hours(df, stations)
+    end_date = df.index[-1]
+    import_state = ImportState.load()
+    import_state.year_number = end_date.year
+    import_state.month_number = end_date.month
+    import_state.save()
     if logger.level <= logging.DEBUG:
         queries_time = sum([float(s["time"]) for s in connection.queries])
         logger.debug(
@@ -531,7 +505,9 @@ def save_measurements(df):
         logger.debug(f"get_parameter {get_parameter.cache_info()}")
 
 
-def save_parameter_types(df):
+def save_parameter_types(df, initial_import=False):
+    if initial_import:
+        Parameter.objects.all().delete()
     for station in Station.objects.all():
         for parameter_name in OBSERVABLE_PARAMETERS:
             key = f"{station.name} {parameter_name}"
@@ -540,8 +516,11 @@ def save_parameter_types(df):
                 station.parameters.add(parameter)
 
 
-def save_stations(stations):
+def save_stations(stations, initial_import_stations=False):
+
     num_created = 0
+    if initial_import_stations:
+        Station.objects.all().delete()
     object_ids = list(Station.objects.all().values_list("id", flat=True))
     for station in stations:
         obj, created = get_or_create_row(
@@ -573,16 +552,42 @@ class Command(BaseCommand):
 
     """
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--initial-import",
+            action="store_true",
+            help="Delete all data and reset import state",
+        )
+        parser.add_argument(
+            "--initial-import-also-stations",
+            action="store_true",
+            help="Delete also all stations",
+        )
+
     def handle(self, *args, **options):
         start_time = datetime.now()
-        Year.objects.all().delete()
+        import_state = ImportState.load()
+
+        initial_import = options.get("initial_import", False)
+        initial_import_stations = options.get("initial_import_also_stations", False)
+        if initial_import_stations:
+            initial_import = True
+
+        if initial_import:
+            import_state.year_number = START_YEAR
+            import_state.month_number = 1
+            import_state.save()
+            Year.objects.all().delete()
+
         # Note station on initial import
-        stations = get_stations()
-        save_stations(stations)
-        df = get_dataframe(stations, 2022, 1)
-        save_parameter_types(df)
-        save_measurements(df)
+        stations = get_stations()[0:2]
+        save_stations(stations, initial_import_stations)
+        df = get_dataframe(
+            stations, import_state.year_number, import_state.month_number
+        )
+        save_parameter_types(df, initial_import)
+        save_measurements(df, initial_import)
         end_time = datetime.now()
         duration = end_time - start_time
-
-        logger.info(f"Importing of air monitoring data finnished in: {duration}")
+        logger.info(f"Imported observations until:{str(df.index[-1])}")
+        logger.info(f"Imported air monitoring data in: {duration}")
