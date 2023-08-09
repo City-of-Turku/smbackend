@@ -2,15 +2,31 @@ from django.contrib.gis.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.utils.timezone import now
 
+from air_monitoring.management.commands.constants import START_YEAR
 
-class ImportState(models.Model):
-    year_number = models.PositiveSmallIntegerField(null=True)
+
+class SingletonModel(models.Model):
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super(SingletonModel, self).save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        pass
+
+    @classmethod
+    def load(cls):
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
+
+
+class ImportState(SingletonModel):
+    year_number = models.PositiveSmallIntegerField(default=START_YEAR)
     month_number = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(12)],
-        null=True,
-    )
-    day_number = models.PositiveSmallIntegerField(
-        null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(31)]
+        default=1,
     )
 
 
