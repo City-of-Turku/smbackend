@@ -148,7 +148,7 @@ def get_dataframe(stations, from_year=START_YEAR, from_month=1):
     df = df.drop("index", axis=1)
     df = df.set_index("Date")
     # Fill missing cells with the value 0
-    df = df.fillna(0)
+    # df = df.fillna(0)
     return df
 
 
@@ -468,12 +468,11 @@ def save_current_year(stations, year_number, end_month_number):
         measurements = {}
         for month_number in range(1, end_month_number + 1):
             month = get_month_cached(year, month_number)
-            if not month:
+            month_data = get_month_data_cached(station, month)
+            if not month_data:
                 continue
             else:
-                logger.debug(month_number)
-            month_data = get_month_data_cached(station, month)
-            # logger.debug(month)
+                logger.debug(f"Month number {month_number} not found")
             for measurement in month_data.measurements.all():
                 key = measurement.parameter
                 measurements[key] = measurements.get(key, 0) + measurement.value
@@ -488,7 +487,22 @@ def save_current_year(stations, year_number, end_month_number):
             year_data.measurements.add(measurement)
 
 
+def clear_cache():
+    get_or_create_row_cached.cache_clear()
+    get_or_create_hour_row_cached.cache_clear()
+    get_or_create_day_row_cached.cache_clear()
+    get_row_cached.cache_clear()
+    get_year_cached.cache_clear()
+    get_year_data_cached.cache_clear()
+    get_month_cached.cache_clear()
+    get_month_data_cached.cache_clear()
+    get_week_cached.cache_clear()
+    get_day_cached.cache_clear()
+    get_parameter.cache_clear()
+
+
 def save_measurements(df, initial_import=False):
+    clear_cache()
     stations = [station for station in Station.objects.all()]
     end_date = df.index[-1]
     start_date = df.index[0]
