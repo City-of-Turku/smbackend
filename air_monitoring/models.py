@@ -61,14 +61,11 @@ class Station(models.Model):
 
 
 class Year(models.Model):
-    station = models.ForeignKey(
-        "Station", on_delete=models.CASCADE, related_name="years", null=True
-    )
     year_number = models.PositiveSmallIntegerField(default=2023)
 
     class Meta:
         ordering = ["-year_number"]
-        indexes = [models.Index(fields=["station", "year_number"])]
+        indexes = [models.Index(fields=["year_number"])]
 
     @property
     def num_days(self):
@@ -79,9 +76,6 @@ class Year(models.Model):
 
 
 class Month(models.Model):
-    station = models.ForeignKey(
-        "Station", on_delete=models.CASCADE, related_name="months", null=True
-    )
     year = models.ForeignKey("Year", on_delete=models.CASCADE, related_name="months")
     month_number = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(12)], default=1
@@ -99,9 +93,6 @@ class Month(models.Model):
 
 
 class Week(models.Model):
-    station = models.ForeignKey(
-        "Station", on_delete=models.CASCADE, related_name="weeks"
-    )
     week_number = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(53)]
     )
@@ -119,9 +110,6 @@ class Week(models.Model):
 
 
 class Day(models.Model):
-    station = models.ForeignKey(
-        "Station", on_delete=models.CASCADE, related_name="days", null=True
-    )
     date = models.DateField(default=now)
     weekday_number = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(7)], default=1
@@ -138,13 +126,10 @@ class Day(models.Model):
 
     class Meta:
         ordering = ["-date"]
-        indexes = [models.Index(fields=["station", "date"])]
+        indexes = [models.Index(fields=["date"])]
 
 
 class Hour(models.Model):
-    station = models.ForeignKey(
-        "Station", on_delete=models.CASCADE, related_name="hours", null=True
-    )
     day = models.ForeignKey(
         "Day", on_delete=models.CASCADE, related_name="hours", null=True, db_index=True
     )
@@ -154,7 +139,7 @@ class Hour(models.Model):
 
     class Meta:
         ordering = ["-day__date", "-hour_number"]
-        indexes = [models.Index(fields=["station", "day", "hour_number"])]
+        indexes = [models.Index(fields=["day", "hour_number"])]
 
 
 class YearData(models.Model):
@@ -184,6 +169,7 @@ class MonthData(models.Model):
 
     class Meta:
         ordering = ["-year__year_number", "-month__month_number"]
+        indexes = [models.Index(fields=["station", "month"])]
 
 
 class WeekData(models.Model):
@@ -197,6 +183,7 @@ class WeekData(models.Model):
 
     class Meta:
         ordering = ["-week__week_number"]
+        indexes = [models.Index(fields=["station", "week"])]
 
 
 class DayData(models.Model):
@@ -210,12 +197,13 @@ class DayData(models.Model):
 
     class Meta:
         ordering = ["-day__date"]
+        indexes = [models.Index(fields=["station", "day"])]
 
 
 # Hourly data for a day
 class HourData(models.Model):
     station = models.ForeignKey(
-        "Station", on_delete=models.CASCADE, related_name="hour_datas"
+        "Station", on_delete=models.CASCADE, related_name="hour_datas", null=True
     )
     hour = models.ForeignKey(
         "Hour", on_delete=models.CASCADE, related_name="hour_datas", null=True
@@ -224,4 +212,4 @@ class HourData(models.Model):
 
     class Meta:
         ordering = ["-hour__day__date", "-hour__hour_number"]
-        indexes = [models.Index(fields=["hour"])]
+        indexes = [models.Index(fields=["station", "hour"])]
