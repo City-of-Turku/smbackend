@@ -88,7 +88,6 @@ def get_dataframe(stations, from_year=START_YEAR, from_month=1):
         from_date_time = datetime.strptime(
             f"{from_year}-{from_month}-01T00:00:00Z", TIME_FORMAT
         )
-
     column_data = {}
     for station in stations:
         logger.info(f"Fetching data for station {station['name']}")
@@ -100,7 +99,9 @@ def get_dataframe(stations, from_year=START_YEAR, from_month=1):
                 params = PARAMS
                 params["geoId"] = f"-{station['geoId']}"
                 params["parameters"] = parameter
-                params["startTime"] = f"{start_date_time.year}-01-01T00:00Z"
+                params[
+                    "startTime"
+                ] = f"{start_date_time.year}-{from_date_time.month}-01T00:00Z"
                 if start_date_time.year == current_date_time.year:
                     params["endTime"] = current_date_time.strftime(TIME_FORMAT)
                 else:
@@ -141,7 +142,7 @@ def get_dataframe(stations, from_year=START_YEAR, from_month=1):
     start_date_time = datetime(START_YEAR, 1, 1, 0, 0)
 
     df = pd.DataFrame.from_dict(column_data)
-    # df.to_csv("fmi.csv")
+    df.to_csv("fmi.csv")
     df = df.reset_index()
     df["Date"] = pd.to_datetime(df["index"], format=TIME_FORMAT)
     df = df.drop("index", axis=1)
@@ -149,6 +150,12 @@ def get_dataframe(stations, from_year=START_YEAR, from_month=1):
     # Fill missing cells with the value 0
     df = df.fillna(0)
     return df
+
+
+def create_row(model, filter):
+    results = model.objects.filter(**filter)
+    if not results.exists():
+        model.objects.create(**filter)
 
 
 def get_or_create_row(model, filter):
@@ -233,9 +240,27 @@ def get_year_cached(year_number):
         return None
 
 
+@lru_cache(maxsize=128)
+def get_year_data_cached(station, year):
+    qs = YearData.objects.filter(station=station, year=year)
+    if qs.exists():
+        return qs.first()
+    else:
+        return None
+
+
 @lru_cache(maxsize=256)
 def get_month_cached(year, month_number):
     qs = Month.objects.filter(year=year, month_number=month_number)
+    if qs.exists():
+        return qs.first()
+    else:
+        return None
+
+
+@lru_cache(maxsize=256)
+def get_month_data_cached(station, month):
+    qs = MonthData.objects.filter(station=station, month=month)
     if qs.exists():
         return qs.first()
     else:
@@ -339,6 +364,8 @@ def save_months(df, stations):
                 Month,
                 (("year", year), ("month_number", month_number)),
             )
+            # breakpoint()
+
             values = get_measurements(mean_series, station.name)
             month_data = MonthData(station=station, year=year, month=month)
             month_data_objs.append(month_data)
@@ -349,13 +376,15 @@ def save_months(df, stations):
 
 
 def save_weeks(df, stations):
+    """
+    Note, weeks are stored in a different way, as a week can not be assigned
+    distinctly to a year or month. So when importing incrementally the week
+    or weeks in the dataframe can not be deleted before populating, thus the
+    use of get_or_create.
+    """
     logger.info("Saving weeks...")
     weeks = df.groupby([df.index.year, df.index.isocalendar().week])
     for station in stations:
-        measurements = []
-        week_datas = {}
-        week_data_objs = []
-
         for index, row in weeks:
             year_number, week_number = index
             logger.info(f"Processing week number {week_number} of year {year_number}")
@@ -368,12 +397,16 @@ def save_weeks(df, stations):
             if week.years.count() == 0:
                 week.years.add(year)
             values = get_measurements(mean_series, station.name)
-            week_data = WeekData(station=station, week=week)
-            week_data_objs.append(week_data)
-            ret_mes = get_measurement_objects(values)
-            measurements += ret_mes
-            week_datas[index] = {"data": week_data, "measurements": ret_mes}
-        bulk_create_rows(WeekData, week_data_objs, measurements, week_datas)
+            week_data, _ = WeekData.objects.get_or_create(station=station, week=week)
+            for item in values.items():
+                parameter = get_parameter(item[0])
+                if not week_data.measurements.filter(
+                    value=item[1], parameter=parameter
+                ):
+                    measurement = Measurement.objects.create(
+                        value=item[1], parameter=parameter
+                    )
+                    week_data.measurements.add(measurement)
 
 
 def save_days(df, stations):
@@ -395,7 +428,6 @@ def save_days(df, stations):
             day, _ = get_or_create_day_row_cached(date, year, month, week)
             values = get_measurements(mean_series, station.name)
             day_data = DayData(station=station, day=day)
-            # day_data = DayData(day=day)
             day_data_objs.append(day_data)
             ret_mes = get_measurement_objects(values)
             measurements += ret_mes
@@ -428,24 +460,71 @@ def save_hours(df, stations):
         bulk_create_rows(HourData, hour_data_objs, measurements, hour_datas)
 
 
-def save_current_year(df, stations, year_number, end_month_number):
+def save_current_year(stations, year_number, end_month_number):
     logger.info(f"Saving current year {year_number}")
+    year = get_year_cached(year_number)
+    # year, _ = get_or_create_row_cached(Year, (("year_number", year_number),))
     for station in stations:
-        pass
+        measurements = {}
+        for month_number in range(1, end_month_number + 1):
+            month = get_month_cached(year, month_number)
+            if not month:
+                continue
+            else:
+                logger.debug(month_number)
+            month_data = get_month_data_cached(station, month)
+            # logger.debug(month)
+            for measurement in month_data.measurements.all():
+                key = measurement.parameter
+                measurements[key] = measurements.get(key, 0) + measurement.value
+        year_data = get_year_data_cached(station, year)
+        year_data.measurements.all().delete()
+        for parameter in station.parameters.all():
+            try:
+                value = round(measurements[parameter] / 2, 2)
+            except KeyError:
+                continue
+            measurement = Measurement.objects.create(value=value, parameter=parameter)
+            year_data.measurements.add(measurement)
 
 
 def save_measurements(df, initial_import=False):
     stations = [station for station in Station.objects.all()]
+    end_date = df.index[-1]
+    start_date = df.index[0]
     if initial_import:
         save_years(df, stations)
         save_months(df, stations)
     else:
-        save_months(df, stations)
-        save_current_year()
+        create_row(Year, {"year_number": start_date.year})
+        year = get_year_cached(year_number=start_date.year)
+        # Handle year change in dataframe
+        if df.index[-1].year > df.index[0].year:
+            create_row(Year, {"year_number": end_date.year})
+            Month.objects.filter(
+                year=year, month_number__gte=start_date.month, month_number__lte=12
+            ).delete()
+            year = get_year_cached(year_number=end_date.year)
+            Month.objects.filter(
+                year=year, month_number__gte=1, month_number__lte=end_date.month
+            ).delete()
+            save_months(df, stations)
+            save_current_year(stations, start_date.year, 12)
+            save_current_year(stations, end_date.year, end_date.month)
+        else:
+            Month.objects.filter(
+                year=year,
+                month_number__gte=start_date.month,
+                month_number__lte=end_date.month,
+            ).delete()
+            save_months(df, stations)
+            save_current_year(stations, start_date.year, end_date.month)
+
+    # save_years(df, stations)
+    # save_months(df, stations)
     save_weeks(df, stations)
     save_days(df, stations)
     save_hours(df, stations)
-    end_date = df.index[-1]
     import_state = ImportState.load()
     import_state.year_number = end_date.year
     import_state.month_number = end_date.month
@@ -467,7 +546,9 @@ def save_measurements(df, initial_import=False):
         )
         logger.debug(f"get_row_cached  {get_row_cached.cache_info()}")
         logger.debug(f"get_year_cached {get_year_cached.cache_info()}")
+        logger.debug(f"get_year_cached {get_year_data_cached.cache_info()}")
         logger.debug(f"get_month_cached {get_month_cached.cache_info()}")
+        logger.debug(f"get_month_cached {get_month_data_cached.cache_info()}")
         logger.debug(f"get_week_cached {get_week_cached.cache_info()}")
         logger.debug(f"get_day_cached {get_day_cached.cache_info()}")
         logger.debug(f"get_parameter {get_parameter.cache_info()}")
@@ -546,6 +627,11 @@ class Command(BaseCommand):
             import_state.month_number = 1
             import_state.save()
             Year.objects.all().delete()
+            Month.objects.all().delete()
+            Week.objects.all().delete()
+            Day.objects.all().delete()
+            Hour.objects.all().delete()
+
         stations = get_stations()
         # import_state.year_number = 2023
         # import_state.month_number = 1
