@@ -463,20 +463,25 @@ def save_hours(df, stations):
 def save_current_year(stations, year_number, end_month_number):
     logger.info(f"Saving current year {year_number}")
     year = get_year_cached(year_number)
-    # year, _ = get_or_create_row_cached(Year, (("year_number", year_number),))
     for station in stations:
         measurements = {}
         for month_number in range(1, end_month_number + 1):
             month = get_month_cached(year, month_number)
             month_data = get_month_data_cached(station, month)
             if not month_data:
-                continue
-            else:
                 logger.debug(f"Month number {month_number} not found")
+                continue
             for measurement in month_data.measurements.all():
                 key = measurement.parameter
                 measurements[key] = measurements.get(key, 0) + measurement.value
-        year_data = get_year_data_cached(station, year)
+        # get_or_create, if year changed the year needs to be created
+        year_data, _ = get_or_create_row_cached(
+            YearData,
+            (
+                ("station", station),
+                ("year", year),
+            ),
+        )
         year_data.measurements.all().delete()
         for parameter in station.parameters.all():
             try:
@@ -502,7 +507,6 @@ def clear_cache():
 
 
 def save_measurements(df, initial_import=False):
-    clear_cache()
     stations = [station for station in Station.objects.all()]
     end_date = df.index[-1]
     start_date = df.index[0]
@@ -514,10 +518,10 @@ def save_measurements(df, initial_import=False):
         year = get_year_cached(year_number=start_date.year)
         # Handle year change in dataframe
         if df.index[-1].year > df.index[0].year:
-            create_row(Year, {"year_number": end_date.year})
             Month.objects.filter(
                 year=year, month_number__gte=start_date.month, month_number__lte=12
             ).delete()
+            create_row(Year, {"year_number": end_date.year})
             year = get_year_cached(year_number=end_date.year)
             Month.objects.filter(
                 year=year, month_number__gte=1, month_number__lte=end_date.month
