@@ -78,8 +78,6 @@ def get_stations():
         )
 
     logger.info(f"Fetched {len(stations)} stations in Southwest Finland.")
-    # return stations[0:3]
-
     return stations
 
 
@@ -93,7 +91,7 @@ def get_dataframe(stations, from_year=START_YEAR, from_month=1):
 
     column_data = {}
     for station in stations:
-        logger.info(f"Fetchin data for station {station['name']}")
+        logger.info(f"Fetching data for station {station['name']}")
         for parameter in OBSERVABLE_PARAMETERS:
             data = {}
             tmp_data = []
@@ -125,7 +123,7 @@ def get_dataframe(stations, from_year=START_YEAR, from_month=1):
                         continue
 
                     measurements = root.findall(".//wml2:MeasurementTVP", NAMESPACES)
-                    logger.info(len(measurements))
+                    logger.info(f"Fetched {len(measurements)} measurements.")
                     for measurement in measurements:
                         time = measurement.find("wml2:time", NAMESPACES).text
                         value = float(measurement.find("wml2:value", NAMESPACES).text)
@@ -172,21 +170,20 @@ def get_or_create_row_cached(model, filter: tuple):
 
 
 @lru_cache(maxsize=4096)
-def get_or_create_hour_row_cached(station, day, hour_number):
-    results = Hour.objects.filter(station=station, day=day, hour_number=hour_number)
+def get_or_create_hour_row_cached(day, hour_number):
+    results = Hour.objects.filter(day=day, hour_number=hour_number)
     if results.exists():
         return results.first(), False
     else:
         return (
-            Hour.objects.create(station=station, day=day, hour_number=hour_number),
+            Hour.objects.create(day=day, hour_number=hour_number),
             True,
         )
 
 
 @lru_cache(maxsize=4096)
-def get_or_create_day_row_cached(station, date, year, month, week):
+def get_or_create_day_row_cached(date, year, month, week):
     results = Day.objects.filter(
-        station=station,
         date=date,
         weekday_number=date.weekday(),
         year=year,
@@ -198,7 +195,6 @@ def get_or_create_day_row_cached(station, date, year, month, week):
     else:
         return (
             Day.objects.create(
-                station=station,
                 date=date,
                 weekday_number=date.weekday(),
                 year=year,
@@ -229,8 +225,8 @@ def get_row_cached(model, filter: tuple):
 
 
 @lru_cache(maxsize=64)
-def get_year_cached(station, year_number):
-    qs = Year.objects.filter(station=station, year_number=year_number)
+def get_year_cached(year_number):
+    qs = Year.objects.filter(year_number=year_number)
     if qs.exists():
         return qs.first()
     else:
@@ -238,8 +234,8 @@ def get_year_cached(station, year_number):
 
 
 @lru_cache(maxsize=256)
-def get_month_cached(station, year, month_number):
-    qs = Month.objects.filter(station=station, year=year, month_number=month_number)
+def get_month_cached(year, month_number):
+    qs = Month.objects.filter(year=year, month_number=month_number)
     if qs.exists():
         return qs.first()
     else:
@@ -247,8 +243,8 @@ def get_month_cached(station, year, month_number):
 
 
 @lru_cache(maxsize=1024)
-def get_week_cached(station, years, week_number):
-    qs = Week.objects.filter(station=station, years=years, week_number=week_number)
+def get_week_cached(years, week_number):
+    qs = Week.objects.filter(years=years, week_number=week_number)
     if qs.exists():
         return qs.first()
     else:
@@ -256,8 +252,8 @@ def get_week_cached(station, years, week_number):
 
 
 @lru_cache(maxsize=2048)
-def get_day_cached(station, date):
-    qs = Day.objects.filter(station=station, date=date)
+def get_day_cached(date):
+    qs = Day.objects.filter(date=date)
     if qs.exists():
         return qs.first()
     else:
@@ -311,12 +307,10 @@ def save_years(df, stations):
         for index, row in years:
             logger.info(f"Processing year {index}")
             mean_series = row.mean()
-            # year, _ = get_or_create_row(
-            #     Year, {"station": station, "year_number": index}
+            # year, _ = get_or_create_row_cached(
+            #     Year, (("station", station), ("year_number", index))
             # )
-            year, _ = get_or_create_row_cached(
-                Year, (("station", station), ("year_number", index))
-            )
+            year, _ = get_or_create_row_cached(Year, (("year_number", index),))
             values = get_measurements(mean_series, station.name)
             year_data = YearData(station=station, year=year)
             year_data_objs.append(year_data)
@@ -337,16 +331,15 @@ def save_months(df, stations):
             year_number, month_number = index
             logger.info(f"Processing month {month_number} of year {year_number}")
             mean_series = row.mean()
-            year = get_year_cached(station, year_number)
-            month, _ = get_or_create_row(
-                Month, {"station": station, "year": year, "month_number": month_number}
-            )
-            # month, _ = get_or_create_row_cached(
-            #     Month,
-            #     (("station", station), ("year", year), ("month_number", month_number)),
+            year = get_year_cached(year_number)
+            # month, _ = get_or_create_row(
+            #     Month, {"station": station, "year": year, "month_number": month_number}
             # )
+            month, _ = get_or_create_row_cached(
+                Month,
+                (("year", year), ("month_number", month_number)),
+            )
             values = get_measurements(mean_series, station.name)
-
             month_data = MonthData(station=station, year=year, month=month)
             month_data_objs.append(month_data)
             ret_mes = get_measurement_objects(values)
@@ -367,9 +360,8 @@ def save_weeks(df, stations):
             year_number, week_number = index
             logger.info(f"Processing week number {week_number} of year {year_number}")
             mean_series = row.mean()
-            year = get_year_cached(station, year_number)
+            year = get_year_cached(year_number)
             week, _ = Week.objects.get_or_create(
-                station=station,
                 week_number=week_number,
                 years__year_number=year_number,
             )
@@ -397,34 +389,13 @@ def save_days(df, stations):
             year_number, month_number, week_number, day_number = index
             date = datetime(year_number, month_number, day_number)
             mean_series = row.mean()
-            year = get_year_cached(station, year_number)
-            month = get_month_cached(station, year, month_number)
-            week = get_week_cached(station, year, week_number)
-            # day, _ = get_or_create_row(
-            #     Day,
-            #     {
-            #         "station": station,
-            #         "date": date,
-            #         "weekday_number": date.weekday(),
-            #         "year": year,
-            #         "month": month,
-            #         "week": week,
-            #     },
-            # )
-            # day, _ = get_or_create_row_cached(
-            #     Day,
-            #     (
-            #         ("station", station),
-            #         ("date", date),
-            #         ("weekday_number", date.weekday()),
-            #         ("year", year),
-            #         ("month", month),
-            #         ("week", week),
-            #     ),
-            # )
-            day, _ = get_or_create_day_row_cached(station, date, year, month, week)
+            year = get_year_cached(year_number)
+            month = get_month_cached(year, month_number)
+            week = get_week_cached(year, week_number)
+            day, _ = get_or_create_day_row_cached(date, year, month, week)
             values = get_measurements(mean_series, station.name)
             day_data = DayData(station=station, day=day)
+            # day_data = DayData(day=day)
             day_data_objs.append(day_data)
             ret_mes = get_measurement_objects(values)
             measurements += ret_mes
@@ -440,17 +411,14 @@ def save_hours(df, stations):
         hour_datas = {}
         hour_data_objs = []
         for index, row in hours:
-
             year_number, month_number, day_number, hour_number = index
             mean_series = row.mean()
             date = datetime(year_number, month_number, day_number)
-            # day = get_row_cached(Day, (("date", date), ("station", station)))
-            day = get_day_cached(station, date)
+            day = get_day_cached(date)
             # hour, _ = get_or_create_row(
             #     Hour, {"station": station, "day": day, "hour_number": hour_number}
             # )
-            # hour, _ = get_or_create_row_cached(Hour,(("station",station),("day", day), ("hour_number", hour_number)))
-            hour, _ = get_or_create_hour_row_cached(station, day, hour_number)
+            hour, _ = get_or_create_hour_row_cached(day, hour_number)
             values = get_measurements(mean_series, station.name)
             hour_data = HourData(station=station, hour=hour)
             hour_data_objs.append(hour_data)
@@ -578,9 +546,11 @@ class Command(BaseCommand):
             import_state.month_number = 1
             import_state.save()
             Year.objects.all().delete()
+        stations = get_stations()
+        # import_state.year_number = 2023
+        # import_state.month_number = 1
+        # import_state.save()
 
-        # Note station on initial import
-        stations = get_stations()[0:2]
         save_stations(stations, initial_import_stations)
         df = get_dataframe(
             stations, import_state.year_number, import_state.month_number
