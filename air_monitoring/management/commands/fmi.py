@@ -465,12 +465,15 @@ def save_current_year(stations, year_number, end_month_number):
     year = get_year_cached(year_number)
     for station in stations:
         measurements = {}
+        num_months = 0
         for month_number in range(1, end_month_number + 1):
             month = get_month_cached(year, month_number)
             month_data = get_month_data_cached(station, month)
             if not month_data:
                 logger.debug(f"Month number {month_number} not found")
                 continue
+            else:
+                num_months += 1
             for measurement in month_data.measurements.all():
                 key = measurement.parameter
                 measurements[key] = measurements.get(key, 0) + measurement.value
@@ -485,7 +488,7 @@ def save_current_year(stations, year_number, end_month_number):
         year_data.measurements.all().delete()
         for parameter in station.parameters.all():
             try:
-                value = round(measurements[parameter] / 2, 2)
+                value = round(measurements[parameter] / num_months, 2)
             except KeyError:
                 continue
             measurement = Measurement.objects.create(value=value, parameter=parameter)
@@ -506,11 +509,30 @@ def clear_cache():
     get_parameter.cache_clear()
 
 
+def delete_months(months_qs):
+    month_datas_qs = MonthData.objects.filter(month__in=months_qs)
+    [m.measurements.all().delete() for m in month_datas_qs]
+    days_qs = Day.objects.filter(month__in=months_qs)
+    day_datas_qs = DayData.objects.filter(day__in=days_qs)
+    [m.measurements.all().delete() for m in day_datas_qs]
+    hours_qs = Hour.objects.filter(day__in=days_qs)
+    hour_datas_qs = HourData.objects.filter(hour__in=hours_qs)
+    [m.measurements.all().delete() for m in hour_datas_qs]
+    months_qs.delete()
+    days_qs.delete()
+    hours_qs.delete()
+
+
 def save_measurements(df, initial_import=False):
     stations = [station for station in Station.objects.all()]
     end_date = df.index[-1]
     start_date = df.index[0]
     if initial_import:
+        Year.objects.all().delete()
+        Month.objects.all().delete()
+        Week.objects.all().delete()
+        Day.objects.all().delete()
+        Hour.objects.all().delete()
         save_years(df, stations)
         save_months(df, stations)
     else:
@@ -518,28 +540,28 @@ def save_measurements(df, initial_import=False):
         year = get_year_cached(year_number=start_date.year)
         # Handle year change in dataframe
         if df.index[-1].year > df.index[0].year:
-            Month.objects.filter(
+            months_qs = Month.objects.filter(
                 year=year, month_number__gte=start_date.month, month_number__lte=12
-            ).delete()
+            )
+            delete_months(months_qs)
             create_row(Year, {"year_number": end_date.year})
             year = get_year_cached(year_number=end_date.year)
             Month.objects.filter(
                 year=year, month_number__gte=1, month_number__lte=end_date.month
-            ).delete()
+            )
             save_months(df, stations)
             save_current_year(stations, start_date.year, 12)
             save_current_year(stations, end_date.year, end_date.month)
         else:
-            Month.objects.filter(
+            months_qs = Month.objects.filter(
                 year=year,
                 month_number__gte=start_date.month,
                 month_number__lte=end_date.month,
-            ).delete()
+            )
+            delete_months(months_qs)
             save_months(df, stations)
             save_current_year(stations, start_date.year, end_date.month)
 
-    # save_years(df, stations)
-    # save_months(df, stations)
     save_weeks(df, stations)
     save_days(df, stations)
     save_hours(df, stations)
@@ -644,17 +666,8 @@ class Command(BaseCommand):
             import_state.year_number = START_YEAR
             import_state.month_number = 1
             import_state.save()
-            Year.objects.all().delete()
-            Month.objects.all().delete()
-            Week.objects.all().delete()
-            Day.objects.all().delete()
-            Hour.objects.all().delete()
 
         stations = get_stations()
-        # import_state.year_number = 2023
-        # import_state.month_number = 1
-        # import_state.save()
-
         save_stations(stations, initial_import_stations)
         df = get_dataframe(
             stations, import_state.year_number, import_state.month_number
