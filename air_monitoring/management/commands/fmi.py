@@ -330,11 +330,7 @@ def save_years(df, stations):
         year_datas = {}
         year_data_objs = []
         for index, row in years:
-            logger.info(f"Processing year {index}")
             mean_series = row.mean()
-            # year, _ = get_or_create_row_cached(
-            #     Year, (("station", station), ("year_number", index))
-            # )
             year, _ = get_or_create_row_cached(Year, (("year_number", index),))
             values = get_measurements(mean_series, station.name)
             year_data = YearData(station=station, year=year)
@@ -354,18 +350,12 @@ def save_months(df, stations):
         month_data_objs = []
         for index, row in months:
             year_number, month_number = index
-            logger.info(f"Processing month {month_number} of year {year_number}")
             mean_series = row.mean()
             year = get_year_cached(year_number)
-            # month, _ = get_or_create_row(
-            #     Month, {"station": station, "year": year, "month_number": month_number}
-            # )
             month, _ = get_or_create_row_cached(
                 Month,
                 (("year", year), ("month_number", month_number)),
             )
-            # breakpoint()
-
             values = get_measurements(mean_series, station.name)
             month_data = MonthData(station=station, year=year, month=month)
             month_data_objs.append(month_data)
@@ -447,9 +437,6 @@ def save_hours(df, stations):
             mean_series = row.mean()
             date = datetime(year_number, month_number, day_number)
             day = get_day_cached(date)
-            # hour, _ = get_or_create_row(
-            #     Hour, {"station": station, "day": day, "hour_number": hour_number}
-            # )
             hour, _ = get_or_create_hour_row_cached(day, hour_number)
             values = get_measurements(mean_series, station.name)
             hour_data = HourData(station=station, hour=hour)
@@ -606,7 +593,6 @@ def save_parameter_types(df, initial_import=False):
 
 
 def save_stations(stations, initial_import_stations=False):
-
     num_created = 0
     if initial_import_stations:
         Station.objects.all().delete()
@@ -633,14 +619,6 @@ def save_stations(stations, initial_import_stations=False):
 
 
 class Command(BaseCommand):
-
-    """
-    Algo:
-    Fetch one parameter per station,
-    as there is limt of how many hours can be fetched, fetch one year.
-
-    """
-
     def add_arguments(self, parser):
         parser.add_argument(
             "--initial-import",
@@ -656,7 +634,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         start_time = datetime.now()
         import_state = ImportState.load()
-
         initial_import = options.get("initial_import", False)
         initial_import_stations = options.get("initial_import_also_stations", False)
         if initial_import_stations:
