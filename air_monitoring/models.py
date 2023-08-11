@@ -72,7 +72,7 @@ class Year(models.Model):
         return self.days.count()
 
     def __str__(self):
-        return "%s, %s" % (self.year_number, self.station.name)
+        return "%s" % (self.year_number)
 
 
 class Month(models.Model):
