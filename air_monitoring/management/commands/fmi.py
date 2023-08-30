@@ -1,6 +1,6 @@
 import logging
 import xml.etree.ElementTree as Et
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import lru_cache
 
 import pandas as pd
@@ -81,45 +81,51 @@ def get_stations():
     return stations
 
 
-def get_dataframe(stations, from_year=START_YEAR, from_month=1):
+def get_dataframe(stations, from_year=START_YEAR, from_month=1, initial_import=False):
     current_date_time = datetime.now()
     # current_date_time = datetime.strptime(f"2023-02-01T00:00:00Z", TIME_FORMAT)
     if from_year and from_month:
-        from_date_time = datetime.strptime(
-            f"{from_year}-{from_month}-01T00:00:00Z", TIME_FORMAT
-        )
+        from_date_time = datetime.strptime(f"{from_year}-01-01T00:00:00Z", TIME_FORMAT)
     column_data = {}
     for station in stations:
         logger.info(f"Fetching data for station {station['name']}")
         for parameter in OBSERVABLE_PARAMETERS:
             data = {}
-            tmp_data = []
             start_date_time = from_date_time
             while start_date_time.year <= current_date_time.year:
                 params = PARAMS
                 params["geoId"] = f"-{station['geoId']}"
                 params["parameters"] = parameter
-                params[
-                    "startTime"
-                ] = f"{start_date_time.year}-{from_date_time.month}-01T00:00Z"
+
+                if not initial_import and from_year == current_date_time.year:
+                    params["startTime"] = f"{from_year}-{from_month}-01T00:00Z"
+                else:
+                    params["startTime"] = f"{start_date_time.year}-01-01T00:00Z"
                 if start_date_time.year == current_date_time.year:
+
                     params["endTime"] = current_date_time.strftime(TIME_FORMAT)
                 else:
                     params["endTime"] = f"{start_date_time.year}-12-31T23:59Z"
 
                 response = requests.get(DATA_URL, params=params)
-
                 logger.info(f"Requested data from: {response.url}")
                 if response.status_code == 200:
                     root = Et.fromstring(response.content)
                     observation_series = root.findall(
                         ".//omso:PointTimeSeriesObservation",
-                        {"omso": "http://inspire.ec.europa.eu/schemas/omso/3.0"},
+                        NAMESPACES,
                     )
                     if len(observation_series) != 1:
                         logger.error(
                             f"Observation series length not 1, it is {len(observation_series)} "
                         )
+                        if start_date_time.year < current_date_time.year:
+                            timestamp = start_date_time
+                            end_timestamp = start_date_time + relativedelta(years=1)
+                            while timestamp <= end_timestamp:
+                                datetime_str = datetime.strftime(timestamp, TIME_FORMAT)
+                                data[datetime_str] = None
+                                timestamp += timedelta(hours=1)
                         start_date_time += relativedelta(years=1)
                         continue
 
@@ -129,7 +135,6 @@ def get_dataframe(stations, from_year=START_YEAR, from_month=1):
                         time = measurement.find("wml2:time", NAMESPACES).text
                         value = float(measurement.find("wml2:value", NAMESPACES).text)
                         data[time] = value
-                        tmp_data.append(value)
                 else:
                     logger.error(
                         f"Could not fetch data from {response.url}, {response.status_code} {response.content}"
@@ -139,16 +144,10 @@ def get_dataframe(stations, from_year=START_YEAR, from_month=1):
             column_name = f"{station['name']} {params['parameters']}"
             column_data[column_name] = data
 
-    start_date_time = datetime(START_YEAR, 1, 1, 0, 0)
-
     df = pd.DataFrame.from_dict(column_data)
-    df.to_csv("fmi.csv")
-    df = df.reset_index()
-    df["Date"] = pd.to_datetime(df["index"], format=TIME_FORMAT)
-    df = df.drop("index", axis=1)
+    df["Date"] = pd.to_datetime(df.index, format=TIME_FORMAT)
     df = df.set_index("Date")
-    # Fill missing cells with the value 0
-    # df = df.fillna(0)
+    # df.to_csv("fmi.csv")
     return df
 
 
@@ -330,7 +329,7 @@ def save_years(df, stations):
         year_datas = {}
         year_data_objs = []
         for index, row in years:
-            mean_series = row.mean()
+            mean_series = row.mean().dropna()
             year, _ = get_or_create_row_cached(Year, (("year_number", index),))
             values = get_measurements(mean_series, station.name)
             year_data = YearData(station=station, year=year)
@@ -350,7 +349,7 @@ def save_months(df, stations):
         month_data_objs = []
         for index, row in months:
             year_number, month_number = index
-            mean_series = row.mean()
+            mean_series = row.mean().dropna()
             year = get_year_cached(year_number)
             month, _ = get_or_create_row_cached(
                 Month,
@@ -378,7 +377,7 @@ def save_weeks(df, stations):
         for index, row in weeks:
             year_number, week_number = index
             logger.info(f"Processing week number {week_number} of year {year_number}")
-            mean_series = row.mean()
+            mean_series = row.mean().dropna()
             year = get_year_cached(year_number)
             week, _ = Week.objects.get_or_create(
                 week_number=week_number,
@@ -411,7 +410,7 @@ def save_days(df, stations):
         for index, row in days:
             year_number, month_number, week_number, day_number = index
             date = datetime(year_number, month_number, day_number)
-            mean_series = row.mean()
+            mean_series = row.mean().dropna()
             year = get_year_cached(year_number)
             month = get_month_cached(year, month_number)
             week = get_week_cached(year, week_number)
@@ -434,7 +433,7 @@ def save_hours(df, stations):
         hour_data_objs = []
         for index, row in hours:
             year_number, month_number, day_number, hour_number = index
-            mean_series = row.mean()
+            mean_series = row.mean().dropna()
             date = datetime(year_number, month_number, day_number)
             day = get_day_cached(date)
             hour, _ = get_or_create_hour_row_cached(day, hour_number)
@@ -626,7 +625,7 @@ class Command(BaseCommand):
             help="Delete all data and reset import state",
         )
         parser.add_argument(
-            "--initial-import-also-stations",
+            "--initial-import-with-stations",
             action="store_true",
             help="Delete also all stations",
         )
@@ -647,7 +646,10 @@ class Command(BaseCommand):
         stations = get_stations()
         save_stations(stations, initial_import_stations)
         df = get_dataframe(
-            stations, import_state.year_number, import_state.month_number
+            stations,
+            import_state.year_number,
+            import_state.month_number,
+            initial_import,
         )
         save_parameter_types(df, initial_import)
         save_measurements(df, initial_import)
