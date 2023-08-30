@@ -9,7 +9,7 @@ AQINDEX_PT1H_AVG = "AQINDEX_PT1H_avg"  # Ilmanlaatuindeksi
 PM10_PT1H_AVG = "PM10_PT1H_avg"  # Hengitettävät hiukkaset
 SO2_PT1H_AVG = "SO2_PT1H_avg"  # rikkidioksiidi
 O3_PT1H_avg = "O3_PT1H_avg"  # otsooni
-PM25_PT1H_avg = "PM25_PT1H_av"  # pienhiukkaset
+PM25_PT1H_avg = "PM25_PT1H_avg"  # pienhiukkaset
 NO2_PT1H_avg = "NO2_PT1H_avg"  # typpidioksiidi
 
 OBSERVABLE_PARAMETERS = [
@@ -20,7 +20,6 @@ OBSERVABLE_PARAMETERS = [
     PM25_PT1H_avg,
     NO2_PT1H_avg,
 ]
-
 
 PARAMS = {
     "request": "getFeature",
