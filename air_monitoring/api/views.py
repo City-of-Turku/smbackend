@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 
@@ -20,20 +21,36 @@ from air_monitoring.models import (
     YearData,
 )
 
-from .constants import DATA_TYPES
+from .constants import AIR_MONITORING_DATA_PARAMS, DATA_TYPES, DATETIME_FORMATS
 from .utils import get_start_and_end_and_year
 
 
+@extend_schema_view(
+    list=extend_schema(
+        description="Air monitoring stations",
+    )
+)
 class StationViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Station.objects.all()
     serializer_class = StationSerializer
 
 
+@extend_schema_view(
+    list=extend_schema(
+        description="Air monitoring parameters",
+    )
+)
 class ParameterViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Parameter.objects.all()
     serializer_class = ParameterSerializer
 
 
+@extend_schema_view(
+    list=extend_schema(
+        parameters=AIR_MONITORING_DATA_PARAMS,
+        description="Air monitoring data. Retrieve different types of data at a given time interval",
+    )
+)
 class DataViewSet(viewsets.GenericViewSet):
     def get_queryset(self):
         pass
@@ -93,6 +110,11 @@ class DataViewSet(viewsets.GenericViewSet):
                     station_id=station_id,
                     year__year_number__gte=start,
                     year__year_number__lte=end,
+                )
+            case _:
+                return Response(
+                    f"Provide a valid 'type' parameters. Valid types are: {', '.join([f for f in DATETIME_FORMATS])}",
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
         page = self.paginate_queryset(queryset)
         serializer = serializer_class(page, many=True)
