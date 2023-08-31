@@ -13,5 +13,5 @@ router.register("stations", views.StationViewSet, basename="stations")
 router.register("parameters", views.ParameterViewSet, basename="parameters")
 
 urlpatterns = [
-    path("v1/", include(router.urls), name="air_monitoring"),
+    path("api/v1/", include(router.urls), name="air_monitoring"),
 ]
