@@ -341,6 +341,9 @@ DOC_ENDPOINTS = [
     "/street_maintenance/geometry_history/",
     "/street_maintenance/maintenance_works/",
     "/street_maintenance/maintenance_units/",
+    "/air_monitoring/api/v1/stations/",
+    "/air_monitoring/api/v1/parameters/",
+    "/air_monitoring/api/v1/data/",
 ]
 
 
