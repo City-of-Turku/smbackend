@@ -1,5 +1,7 @@
 import types
 
+from drf_spectacular.utils import OpenApiParameter
+
 DATA_TYPES = types.SimpleNamespace()
 HOUR = "hour"
 DAY = "day"
@@ -18,3 +20,53 @@ DATETIME_FORMATS = {
     MONTH: "%m",
     YEAR: "%Y",
 }
+
+YEAR_PARAM = OpenApiParameter(
+    name="year",
+    location=OpenApiParameter.QUERY,
+    description=("Year of the data, not required when retrieving year data."),
+    required=False,
+    type=int,
+)
+TYPE_PARAM = OpenApiParameter(
+    name="type",
+    location=OpenApiParameter.QUERY,
+    description=(
+        f"Type of the data, types are: {', '.join([f for f in DATETIME_FORMATS])}"
+    ),
+    required=True,
+    type=str,
+)
+TIME_FORMATS_STR = ", ".join([f"{f[0]}: {f[1]}" for f in DATETIME_FORMATS.items()])
+START_PARAM = OpenApiParameter(
+    name="start",
+    location=OpenApiParameter.QUERY,
+    description=(
+        f"Start of the interval. Formats for different types are: {TIME_FORMATS_STR}"
+    ),
+    required=True,
+    type=str,
+)
+END_PARAM = OpenApiParameter(
+    name="end",
+    location=OpenApiParameter.QUERY,
+    description=(
+        f"End of the interval. Formats for different types are: {TIME_FORMATS_STR}"
+    ),
+    required=True,
+    type=str,
+)
+STATION_PARAM = OpenApiParameter(
+    name="station_id",
+    location=OpenApiParameter.QUERY,
+    description=("Id of the air monitoring station"),
+    required=True,
+    type=str,
+)
+AIR_MONITORING_DATA_PARAMS = [
+    TYPE_PARAM,
+    YEAR_PARAM,
+    START_PARAM,
+    END_PARAM,
+    STATION_PARAM,
+]
