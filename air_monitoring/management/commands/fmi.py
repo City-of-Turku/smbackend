@@ -124,7 +124,7 @@ def get_dataframe(stations, from_year=START_YEAR, from_month=1, initial_import=F
                             end_timestamp = start_date_time + relativedelta(years=1)
                             while timestamp <= end_timestamp:
                                 datetime_str = datetime.strftime(timestamp, TIME_FORMAT)
-                                data[datetime_str] = None
+                                data[datetime_str] = float("nan")
                                 timestamp += timedelta(hours=1)
                         start_date_time += relativedelta(years=1)
                         continue
@@ -634,7 +634,7 @@ class Command(BaseCommand):
         start_time = datetime.now()
         import_state = ImportState.load()
         initial_import = options.get("initial_import", False)
-        initial_import_stations = options.get("initial_import_also_stations", False)
+        initial_import_stations = options.get("initial_import_with_stations", False)
         if initial_import_stations:
             initial_import = True
 
