@@ -78,7 +78,7 @@ env = environ.Env(
     MOBILITY_DATA_LOG_LEVEL=(str, "INFO"),
     BICYCLE_NETWORK_LOG_LEVEL=(str, "INFO"),
     STREET_MAINTENANCE_LOG_LEVEL=(str, "INFO"),
-    AIR_MONITORING_LOG_LEVEL=(str, "DEBUG"),
+    AIR_MONITORING_LOG_LEVEL=(str, "INFO"),
 )
 
 
