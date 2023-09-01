@@ -153,6 +153,7 @@ class YearData(models.Model):
 
     class Meta:
         ordering = ["-year__year_number"]
+        indexes = [models.Index(fields=["year"])]
 
 
 class MonthData(models.Model):
