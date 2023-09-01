@@ -7,6 +7,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from munigeo.api import all_views as munigeo_views
 from rest_framework import routers
 
+import air_monitoring.api.urls
 import bicycle_network.api.urls
 import eco_counter.api.urls
 import mobility_data.api.urls
@@ -62,6 +63,9 @@ urlpatterns = [
     re_path(r"^api/v2/redirect/unit/", UnitRedirectViewSet.as_view({"get": "list"})),
     re_path(r"^mobility_data/", include(mobility_data.api.urls), name="mobility_data"),
     re_path(r"^eco-counter/", include(eco_counter.api.urls), name="eco_counter"),
+    re_path(
+        r"^air_monitoring/", include(air_monitoring.api.urls), name="air_monitoring"
+    ),
     re_path(
         r"^bicycle_network/", include(bicycle_network.api.urls), name="bicycle_network"
     ),
