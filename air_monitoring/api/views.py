@@ -48,7 +48,9 @@ class ParameterViewSet(viewsets.ReadOnlyModelViewSet):
 @extend_schema_view(
     list=extend_schema(
         parameters=AIR_MONITORING_DATA_PARAMS,
-        description="Air monitoring data. Retrieve different types of data at a given time interval",
+        description="Returns yearly, monthly, weekly or daily means of measured parameters."
+        " Returns also the hourly measured parameters from which the means are calculated."
+        " Provide the 'type' parameter to choose what type of data to return.",
     )
 )
 class DataViewSet(viewsets.GenericViewSet):
