@@ -11,8 +11,8 @@ from air_monitoring.management.commands.constants import (
     PM10_PT1H_AVG,
     START_YEAR,
 )
-from air_monitoring.management.commands.fmi import clear_cache
-from air_monitoring.models import (  # ImportState,; Measurement,; HourData,
+from air_monitoring.management.commands.import_air_monitoring_data import clear_cache
+from air_monitoring.models import (
     Day,
     DayData,
     Hour,
@@ -73,7 +73,7 @@ def get_test_dataframe(
 
 @pytest.mark.django_db
 def test_importer():
-    from air_monitoring.management.commands.fmi import (
+    from air_monitoring.management.commands.import_air_monitoring_data import (
         save_measurements,
         save_parameter_types,
         save_stations,
