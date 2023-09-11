@@ -32,7 +32,7 @@ TYPE_PARAM = OpenApiParameter(
     name="type",
     location=OpenApiParameter.QUERY,
     description=(
-        f"Type of the data, types are: {', '.join([f for f in DATETIME_FORMATS])}"
+        f"Type of the data to be returned, types are: {', '.join([f for f in DATETIME_FORMATS])}"
     ),
     required=True,
     type=str,
