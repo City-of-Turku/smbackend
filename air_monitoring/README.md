@@ -12,11 +12,11 @@ The imported parameters are:
 ## Initial import
 To import initial data and stations:
 ```
-./manage.py import_air_monitoring_data --inital-import-with-stations
+./manage.py import_air_monitoring_data --initial-import-with-stations
 ```
 Initial importing without deleting stations:
 ```
-./manage.py import_air_monitoring_data --inital-import
+./manage.py import_air_monitoring_data --initial-import
 ```
 Note, inital import deletes all previously imported data.
 
