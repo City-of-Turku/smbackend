@@ -512,5 +512,8 @@ features:
     create_multipolygon: True
     extra_fields:
       speed_limit:
-        wfs_field: voimassa_a
+        wfs_field: rajoitus
         wfs_type: int
+
+  - content_type_name: BicycleStand
+    wfs:layer: GIS:Polkupyoraparkki
