@@ -9,7 +9,7 @@ DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
 
 @pytest.mark.django_db
-def test_situations_list(api_client, situations, inactive_situations):
+def test_situations_list(api_client, situations, inactive_situations, locations):
     response = api_client.get(SITUATION_LIST_URL)
     assert response.status_code == 200
     json_data = response.json()
@@ -37,10 +37,10 @@ def test_situations_list(api_client, situations, inactive_situations):
         "start_time",
         "end_time",
         "additional_info",
-        "location",
+        "locations",
     }
-    location = announcement["location"]
-    assert location.keys() == {"id", "location", "geometry", "details"}
+    location = announcement["locations"][0]
+    assert location.keys() == {"id", "location", "geometry", "details", "announcement"}
 
 
 @pytest.mark.django_db
@@ -102,12 +102,12 @@ def test_situation_filter_by_end_time(api_client, situations):
         SITUATION_LIST_URL
         + f"?end_time__gt={datetime.strftime(end_time, DATETIME_FORMAT)}"
     )
-    assert response.json()["count"] == 1
+    assert response.json()["count"] == 2
     response = api_client.get(
         SITUATION_LIST_URL
         + f"?end_time__lt={datetime.strftime(end_time, DATETIME_FORMAT)}"
     )
-    assert response.json()["count"] == 1
+    assert response.json()["count"] == 0
 
     end_time = timezone.now() - timedelta(days=2)
     response = api_client.get(
@@ -146,7 +146,7 @@ def test_situation_types_retrieve(api_client, situation_types):
 
 
 @pytest.mark.django_db
-def test_announcement_list(api_client, announcements):
+def test_announcement_list(api_client, announcements, locations):
     response = api_client.get(
         reverse("exceptional_situations:situation_announcement-list")
     )
@@ -162,10 +162,10 @@ def test_announcement_list(api_client, announcements):
         "start_time",
         "end_time",
         "additional_info",
-        "location",
+        "locations",
     }
-    location = result_data["location"]
-    assert location.keys() == {"id", "location", "geometry", "details"}
+    location = result_data["locations"][0]
+    assert location.keys() == {"id", "location", "geometry", "details", "announcement"}
 
 
 @pytest.mark.django_db
@@ -185,7 +185,7 @@ def test_announcement_retrieve(api_client, announcements):
         "start_time",
         "end_time",
         "additional_info",
-        "location",
+        "locations",
     }
     assert json_data["id"] == announcements[0].pk
 
@@ -198,7 +198,13 @@ def test_location_list(api_client, locations):
     assert json_data.keys() == {"count", "next", "previous", "results"}
     assert json_data["count"] == locations.count()
     result_data = json_data["results"][0]
-    assert result_data.keys() == {"id", "location", "geometry", "details"}
+    assert result_data.keys() == {
+        "id",
+        "location",
+        "geometry",
+        "details",
+        "announcement",
+    }
 
 
 @pytest.mark.django_db
@@ -211,5 +217,5 @@ def test_location_retrieve(api_client, locations):
     )
     assert response.status_code == 200
     json_data = response.json()
-    assert json_data.keys() == {"id", "location", "geometry", "details"}
+    assert json_data.keys() == {"id", "location", "geometry", "details", "announcement"}
     assert json_data["id"] == locations[0].pk
