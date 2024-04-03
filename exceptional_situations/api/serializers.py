@@ -11,11 +11,11 @@ from exceptional_situations.models import (
 class SituationLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = SituationLocation
-        fields = ["id", "location", "geometry", "details"]
+        fields = ["id", "location", "geometry", "details", "announcement"]
 
 
 class SituationAnnouncementSerializer(serializers.ModelSerializer):
-    location = SituationLocationSerializer()
+    locations = SituationLocationSerializer(many=True, read_only=True)
 
     class Meta:
         model = SituationAnnouncement
@@ -26,7 +26,7 @@ class SituationAnnouncementSerializer(serializers.ModelSerializer):
             "start_time",
             "end_time",
             "additional_info",
-            "location",
+            "locations",
         ]
 
     def __init__(self, *args, **kwargs):
