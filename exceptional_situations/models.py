@@ -17,34 +17,35 @@ class SituationType(models.Model):
         return "%s (%s)" % (self.type_name, self.id)
 
 
-class SituationLocation(models.Model):
-    location = models.PointField(null=True, blank=True, srid=PROJECTION_SRID)
-    geometry = models.GeometryField(null=True, blank=True, srid=PROJECTION_SRID)
-    details = models.JSONField(null=True, blank=True)
-
-    class Meta:
-        ordering = ["id"]
-
-
 class SituationAnnouncement(models.Model):
-    title = models.CharField(max_length=128)
+    title = models.CharField(max_length=128, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField(null=True, blank=True)
     additional_info = models.JSONField(null=True, blank=True)
-    location = models.OneToOneField(
-        SituationLocation,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="announcement",
-    )
 
     class Meta:
         ordering = ["start_time"]
 
     def __str__(self):
         return "%s (%s)" % (self.title, self.id)
+
+
+class SituationLocation(models.Model):
+    location = models.PointField(null=True, blank=True, srid=PROJECTION_SRID)
+    geometry = models.GeometryField(null=True, blank=True, srid=PROJECTION_SRID)
+    details = models.JSONField(null=True, blank=True)
+
+    announcement = models.ForeignKey(
+        SituationAnnouncement,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="locations",
+    )
+
+    class Meta:
+        ordering = ["id"]
 
 
 class Situation(models.Model):
