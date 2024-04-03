@@ -44,19 +44,21 @@ class Command(BaseCommand):
     def get_geos_geometry(self, feature_data):
         return GEOSGeometry(str(feature_data["geometry"]), srid=PROJECTION_SRID)
 
-    def create_location(self, geometry, announcement_data):
+    def create_location(self, geometry, announcement_data, announcement):
         location = None
         details = announcement_data["locationDetails"].get("roadAddressLocation", None)
-        details.update(announcement_data.get("location", None))
+        if details:
+            details.update(announcement_data.get("location", None))
         filter = {
             "geometry": geometry,
             "location": location,
             "details": details,
+            "announcement": announcement,
         }
         situation_location = SituationLocation.objects.create(**filter)
         return situation_location
 
-    def create_announcement(self, announcement_data, situation_location):
+    def create_announcement(self, announcement_data):
         title = announcement_data.get("title", "")
         description = announcement_data["location"].get("description", "")
         additional_info = {}
@@ -81,7 +83,6 @@ class Command(BaseCommand):
         if end_time:
             end_time = parser.parse(end_time)
         filter = {
-            "location": situation_location,
             "title": title,
             "description": description,
             "additional_info": additional_info,
@@ -127,18 +128,18 @@ class Command(BaseCommand):
                     "situation_id": situation_id,
                     "situation_type": situation_type,
                 }
-                situation, _ = Situation.objects.get_or_create(**filter)
+                situation, created = Situation.objects.get_or_create(**filter)
                 situation.release_time = release_time
                 situation.save()
-
-                SituationAnnouncement.objects.filter(situation=situation).delete()
-                situation.announcements.clear()
+                if not created:
+                    SituationAnnouncement.objects.filter(situation=situation).delete()
+                    situation.announcements.clear()
                 for announcement_data in properties.get("announcements", []):
-                    situation_location = self.create_location(
-                        geometry, announcement_data
-                    )
                     situation_announcement = self.create_announcement(
-                        deepcopy(announcement_data), situation_location
+                        deepcopy(announcement_data)
+                    )
+                    self.create_location(
+                        geometry, announcement_data, situation_announcement
                     )
                     situation.announcements.add(situation_announcement)
                 num_imported += 1
