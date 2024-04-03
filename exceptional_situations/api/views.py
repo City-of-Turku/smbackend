@@ -50,12 +50,12 @@ class SituationFilter(django_filters.FilterSet):
         ids = [obj.id for obj in queryset if obj.start_time < start_time]
         return queryset.filter(id__in=ids)
 
-    def filter_end_time__gt(self, queryset, fields, start_time):
-        ids = [obj.id for obj in queryset if obj.start_time > start_time]
+    def filter_end_time__gt(self, queryset, fields, end_time):
+        ids = [obj.id for obj in queryset if obj.end_time > end_time]
         return queryset.filter(id__in=ids)
 
-    def filter_end_time__lt(self, queryset, fields, start_time):
-        ids = [obj.id for obj in queryset if obj.start_time < start_time]
+    def filter_end_time__lt(self, queryset, fields, end_time):
+        ids = [obj.id for obj in queryset if obj.end_time < end_time]
         return queryset.filter(id__in=ids)
 
 
