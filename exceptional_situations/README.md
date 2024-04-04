@@ -7,6 +7,11 @@ Imports road works and traffic announcements in Southwest Finland from digitraff
 To import type:
 `./manage.py import_traffic_situations`
 
+### Excavation permits
+Imports excavation permits in the Turku area. 
+To import type:
+`./manage.py import_excavation_permits`
+
 ### Delete inactive situations
 `./manage.py delete_inactive_situations`
 Deletes also the related announcements and locations.
