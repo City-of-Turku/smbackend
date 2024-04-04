@@ -21,8 +21,15 @@ class SituationFilter(django_filters.FilterSet):
     situation_type_str = django_filters.CharFilter(method="filter_situation_type_str")
     start_time__gt = django_filters.DateTimeFilter(method="filter_start_time__gt")
     start_time__lt = django_filters.DateTimeFilter(method="filter_start_time__lt")
+    start_time__gte = django_filters.DateTimeFilter(method="filter_start_time__gte")
+    start_time__lte = django_filters.DateTimeFilter(method="filter_start_time__lte")
+    start_time = django_filters.DateTimeFilter(method="filter_start_time")
+
     end_time__gt = django_filters.DateTimeFilter(method="filter_end_time__gt")
     end_time__lt = django_filters.DateTimeFilter(method="filter_end_time__lt")
+    end_time__gte = django_filters.DateTimeFilter(method="filter_end_time__gte")
+    end_time__lte = django_filters.DateTimeFilter(method="filter_end_time__lte")
+    end_time = django_filters.DateTimeFilter(method="filter_end_time")
 
     class Meta:
         model = Situation
@@ -50,12 +57,36 @@ class SituationFilter(django_filters.FilterSet):
         ids = [obj.id for obj in queryset if obj.start_time < start_time]
         return queryset.filter(id__in=ids)
 
+    def filter_start_time__lte(self, queryset, fields, start_time):
+        ids = [obj.id for obj in queryset if obj.start_time <= start_time]
+        return queryset.filter(id__in=ids)
+
+    def filter_start_time__gte(self, queryset, fields, start_time):
+        ids = [obj.id for obj in queryset if obj.start_time >= start_time]
+        return queryset.filter(id__in=ids)
+
+    def filter_start_time(self, queryset, fields, start_time):
+        ids = [obj.id for obj in queryset if obj.start_time == start_time]
+        return queryset.filter(id__in=ids)
+
     def filter_end_time__gt(self, queryset, fields, end_time):
         ids = [obj.id for obj in queryset if obj.end_time > end_time]
         return queryset.filter(id__in=ids)
 
     def filter_end_time__lt(self, queryset, fields, end_time):
         ids = [obj.id for obj in queryset if obj.end_time < end_time]
+        return queryset.filter(id__in=ids)
+
+    def filter_end_time__gte(self, queryset, fields, end_time):
+        ids = [obj.id for obj in queryset if obj.end_time >= end_time]
+        return queryset.filter(id__in=ids)
+
+    def filter_end_time__lte(self, queryset, fields, end_time):
+        ids = [obj.id for obj in queryset if obj.end_time <= end_time]
+        return queryset.filter(id__in=ids)
+
+    def filter_end_time(self, queryset, fields, end_time):
+        ids = [obj.id for obj in queryset if obj.end_time == end_time]
         return queryset.filter(id__in=ids)
 
 
