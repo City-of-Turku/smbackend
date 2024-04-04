@@ -12,7 +12,7 @@ from exceptional_situations.models import (
     SituationType,
 )
 
-NOW = timezone.now()
+NOW = timezone.now().replace(microsecond=0)
 
 
 @pytest.fixture
