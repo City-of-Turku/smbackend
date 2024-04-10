@@ -18,6 +18,8 @@ attrs==21.2.0
     #   jsonschema
     #   pytest
     #   requests-cache
+beautifulsoup4==4.12.3
+    # via -r requirements.in
 billiard==3.6.4.0
     # via celery
 black==22.6.0
@@ -228,6 +230,8 @@ six==1.16.0
     #   python-dateutil
     #   requests-mock
     #   url-normalize
+soupsieve==2.5
+    # via beautifulsoup4
 sqlparse==0.4.4
     # via django
 toml==0.10.2
