@@ -107,6 +107,18 @@ def fetch_json(url):
     return response.json()
 
 
+def is_image_url(url):
+    try:
+        response = requests.head(url)
+        if response.status_code == 200 and response.headers.get(
+            "Content-Type", ""
+        ).startswith("image/"):
+            return True
+    except Exception:
+        return False
+    return False
+
+
 @db.transaction.atomic
 def delete_mobile_units(type_name):
     MobileUnit.objects.filter(content_types__type_name=type_name).delete()
