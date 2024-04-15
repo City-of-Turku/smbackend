@@ -3,6 +3,7 @@ import re
 
 import lxml
 import requests
+from bs4 import BeautifulSoup
 from django import db
 from django.conf import settings
 from django.contrib.gis.geos import LineString, Point
@@ -10,7 +11,11 @@ from pykml import parser
 
 from mobility_data.models import GroupType, MobileUnit, MobileUnitGroup
 
-from .utils import get_or_create_content_type_from_config, MobileUnitDataBase
+from .utils import (
+    get_or_create_content_type_from_config,
+    is_image_url,
+    MobileUnitDataBase,
+)
 
 logger = logging.getLogger("mobility_data")
 # Regexps used to remove html, & tags and css.
@@ -18,6 +23,7 @@ CLEANR_HTML = re.compile(
     r"<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});", flags=re.DOTALL
 )
 CLEANR_CSS = re.compile(r".*\{.*\}", flags=re.DOTALL)
+
 CLEANR_STAR = re.compile(r"^.*/")
 LANGUAGES = ["fi", "sv", "en"]
 ROUTE_CONTENT_TYPE_NAME = "CultureRouteUnit"
@@ -97,9 +103,9 @@ class Route:
             if trailing_number:
                 self.name[lang] += f" {trailing_number}"
             if documents[lang].description.text:
-                description = re.sub(CLEANR_HTML, "", documents[lang].description.text)
-                description = re.sub(CLEANR_CSS, "", description)
-                description = description.strip()
+                description = BeautifulSoup(
+                    documents[lang].description.text, "html.parser"
+                ).text
             else:
                 # Some routes do not have a description.
                 description = ""
@@ -113,6 +119,7 @@ class Placemark(MobileUnitDataBase):
         self.content_type = None
 
     def set_data(self, placemark, lang, add_geometry=False):
+
         """
         :param placemark: The placemark element
         :param lang: The language to be set
@@ -125,11 +132,26 @@ class Placemark(MobileUnitDataBase):
         self.name[lang] = name
         description = getattr(placemark, "description", None)
         if description:
-            description = re.sub(CLEANR_HTML, "", description.text)
-            description = re.sub(CLEANR_CSS, "", description)
-            description = re.sub(CLEANR_STAR, "", description)
-            description = description.strip()
-        self.description[lang] = description
+            soup = BeautifulSoup(description.text, "html.parser")
+
+            # Find all hyperlinks
+            for a_tag in soup.find_all("a"):
+                url = a_tag["href"]
+                if is_image_url(url):
+                    a_tag.replace_with(f"image:{a_tag['href']}\n")
+                else:
+                    a_tag.replace_with(f"audio:{a_tag['href']}\n")
+
+            for p_tag in soup.find_all("p", "image-caption"):
+                tag = p_tag.previous_sibling.previous_sibling
+                tag.replace_with(f"image:{tag['src']}\n")
+
+            # Extract all hyperlink tags
+            [a.extract() for a in soup.find_all("a")]
+            self.description[lang] = soup.text
+        else:
+            self.description[lang] = None
+
         if add_geometry:
             geom = None
             if hasattr(placemark, "Point"):
