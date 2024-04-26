@@ -80,6 +80,8 @@ env = environ.Env(
     STREET_MAINTENANCE_LOG_LEVEL=(str, "INFO"),
     ENVIRONMENT_DATA_LOG_LEVEL=(str, "INFO"),
     EXCEPTIONAL_SITUATIONS_LOG_LEVEL=(str, "INFO"),
+    PLM_USER=(str, None),
+    PLM_PASSWORD=(str, None),
 )
 
 
@@ -249,6 +251,9 @@ OPEN311 = {
 # Shortcut generation URL template
 SHORTCUTTER_UNIT_URL = env("SHORTCUTTER_UNIT_URL")
 
+PLM_USER = env("PLM_USER")
+PLM_PASSWORD = env("PLM_PASSWORD")
+
 
 EMAIL_BACKEND = env("EMAIL_BACKEND")
 EMAIL_HOST = env("EMAIL_HOST")
@@ -357,7 +362,6 @@ DOC_ENDPOINTS = [
     "/environment_data/api/v1/data/",
     "/exceptional_situations/api/v1/situation/",
     "/exceptional_situations/api/v1/situation_type/",
-    "/api/v2/search",
 ]
 
 
