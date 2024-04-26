@@ -1,5 +1,6 @@
 import datetime
 import hashlib
+import json
 import os
 import re
 from functools import lru_cache
@@ -26,6 +27,7 @@ from services.models import Service, ServiceNode, Unit, UnitServiceDetails
 
 # TODO: Change to production endpoint when available
 TURKU_BASE_URL = "https://digiaurajoki.turku.fi:9443/kuntapalvelut/api/v1/"
+TURKU_PLM_BASE_URL = "http://10.16.18.4/testaus/"
 ACCESSIBILITY_BASE_URL = "https://asiointi.hel.fi/kapaesteettomyys/api/v1/"
 UTC_TIMEZONE = pytz.timezone("UTC")
 
@@ -67,10 +69,62 @@ def clean_text(text, default=None):
     return text
 
 
+def get_plm_token():
+    url = f"{TURKU_PLM_BASE_URL}oauthserver/connect/token"
+    assert settings.PLM_USER, "PLM_USER not set in environment"
+    assert settings.PLM_PASSWORD, "PLM_PASSWORD not set in environment"
+
+    payload = {
+        "grant_type": "password",
+        "scope": "Innovator",
+        "client_id": "IOMApp",
+        "username": settings.PLM_USER,
+        "password": settings.PLM_PASSWORD,
+        "database": "Testausympäristö",
+    }
+    headers = {}
+    response = requests.request("POST", url, headers=headers, data=payload)
+    return response.json().get("access_token", None)
+
+
+def get_plm_resource(headers=None, tyyppi="Palvelupiste", muutospaiva=None):
+    access_token = get_plm_token()
+
+    url = f"{TURKU_PLM_BASE_URL}server/odata/method.f_palvelukartta_API"
+
+    payload = json.dumps({"tyyppi": tyyppi, "muutospaiva": muutospaiva})
+
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+        "Cookie": "ASP.NET_SessionId=kuauxs32yiahkj2h1gxuam1b",
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+    clean_data = str(response.content.decode("utf-8"))
+    clean_data = clean_data[1:-1]
+    clean_data = clean_data.replace('\\"', '"')
+    json_data = json.loads(clean_data)
+    # filename = "palvelupisteet_plm.json"
+    # if tyyppi == "Palvelu":
+    #     filename = "palvelu_plm.json"
+    # elif tyyppi == "Palveluluokka":
+    #     filename = "palveluluokka_plm.json"
+
+    # with open(filename, "w") as outfile:
+    #     json.dump(json_data, outfile)
+    return json_data
+
+
 def get_resource(url, headers=None):
     print("CALLING URL >>> ", url)
     resp = requests.get(url, headers=headers)
     assert resp.status_code == 200, "status code {}".format(resp.status_code)
+    # import json
+    # filename = ""
+    # breakpoint()
+    # with open(filename, "w") as outfile:
+    #     json.dump(resp.json(), outfile)
     return resp.json()
 
 
@@ -257,6 +311,8 @@ def get_weekday_str(index, lang="fi"):
 
 
 def get_localized_value(data, preferred_language="fi"):
+    if not data:
+        return ""
     assert preferred_language in ("fi", "sv", "en")
     return data.get(preferred_language) or ""
 
