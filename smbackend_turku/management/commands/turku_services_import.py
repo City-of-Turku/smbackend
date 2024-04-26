@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import sys
+from datetime import datetime
 
 from django import db
 from django.conf import settings
@@ -50,6 +51,7 @@ class Command(BaseCommand):
 
     # Umbrella source that imports all external_sources
     EXTERNAL_SOURCES = "external_sources"
+    MUUTOSPAIVA_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
     external_sources = get_configured_external_sources_names()
     importer_types = [
@@ -78,6 +80,7 @@ class Command(BaseCommand):
         self.services = {}
         self.options = None
         self.verbosity = 1
+        self.muutospaiva = None
 
     def add_arguments(self, parser):
         # parser.set_conflict_handler("resolve")
@@ -110,6 +113,12 @@ class Command(BaseCommand):
             default=False,
             help="If parameter is set when importing, deletes the external \
                  sources given as arguments.",
+        )
+
+        parser.add_argument(
+            "--muutospaiva",
+            type=str,
+            help=f"Date time in {self.MUUTOSPAIVA_FORMAT} format",
         )
 
     @db.transaction.atomic
@@ -163,7 +172,12 @@ class Command(BaseCommand):
         self.delete_external_sources = options.get("delete_external_sources", False)
         # if set delete external sources in arguments
         self.delete_external_source = options.get("delete_external_source", False)
-
+        self.muutospaiva = options.get("muutospaiva", None)
+        if self.muutospaiva:
+            try:
+                datetime.strptime(self.muutospaiva, self.MUUTOSPAIVA_FORMAT)
+            except ValueError:
+                raise (f"'muutospaiva' must be in format {self.MUUTOSPAIVA_FORMAT}")
         if self.delete_external_source:
             delete_count = 0
             for imp in self.external_sources:
