@@ -11,6 +11,7 @@ import yaml
 from django import db
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from munigeo.importer.sync import ModelSyncher
 from munigeo.models import (
     AdministrativeDivision,
     AdministrativeDivisionGeometry,
@@ -33,6 +34,20 @@ UTC_TIMEZONE = pytz.timezone("UTC")
 
 data_path = os.path.join(os.path.dirname(__file__), "data")
 EXTERNAL_SOURCES_CONFIG_FILE = f"{data_path}/external_sources_config.yml"
+
+
+class PLMModelSyncher(ModelSyncher):
+    """
+    Extend ModelSyncher constructor with parameter objects_to_mark, this allows us to specify
+    objects to be marked as 'found' after the super class constructor has marked all objects 'found' to
+    be false. This feature allows importing only partial parts of the Model as the
+    marked objects are excluded from the deletion.
+    """
+
+    def __init__(self, queryset, generate_obj_id, objects_to_mark):
+        super().__init__(queryset, generate_obj_id)
+        for obj in objects_to_mark:
+            self.get(obj.id)._found = True
 
 
 def get_external_sources_yaml_config():
