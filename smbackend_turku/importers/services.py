@@ -8,10 +8,10 @@ from services.management.commands.services_import.services import (
     update_service_root_service_nodes,
 )
 from services.models import Service, ServiceNode
-from smbackend_turku.importers.utils import (
+from smbackend_turku.importers.utils import (  # get_turku_resource,
     convert_code_to_int,
     get_external_sources_yaml_config,
-    get_turku_resource,
+    get_plm_resource,
     set_syncher_object_field,
     set_syncher_tku_translated_field,
 )
@@ -40,8 +40,8 @@ class ServiceImporter:
         self._import_service_nodes(keyword_handler)
 
     def _import_service_nodes(self, keyword_handler):
-        service_classes = get_turku_resource("palveluluokat")
-
+        # service_classes = get_turku_resource("palveluluokat")
+        service_classes = get_plm_resource(tyyppi="Palveluluokka")
         tree = self._build_servicetree(service_classes)
         for parent_node in tree:
             if parent_node["koodi"] in BLACKLISTED_SERVICE_NODES:
@@ -69,8 +69,8 @@ class ServiceImporter:
             pass
 
     def _import_services(self, keyword_handler):
-        services = get_turku_resource("palvelut")
-
+        # services = get_turku_resource("palvelut")
+        services = get_plm_resource(tyyppi="Palvelu")
         for service in services:
             self._handle_service(service, keyword_handler)
 
