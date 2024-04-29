@@ -12,18 +12,18 @@ from smbackend_turku.tests.utils import get_test_resource
 
 
 @pytest.mark.django_db
-@patch("smbackend_turku.importers.utils.get_turku_resource")
-def test_turku_services_import(get_turku_resource_mock):
+@patch("smbackend_turku.importers.utils.get_plm_resource")
+def test_turku_services_import(get_plm_resource_mock):
     from smbackend_turku.importers.services import ServiceImporter
 
     logger = logging.getLogger(__name__)
     importer = ServiceImporter(logger=logger)
     keyword_handler = KeywordHandler(logger=importer.logger)
 
-    get_turku_resource_mock.return_value = get_test_resource(resource_name="palvelut")
+    get_plm_resource_mock.return_value = get_test_resource(resource_name="palvelut")
     importer._import_services(keyword_handler)
 
-    get_turku_resource_mock.return_value = get_test_resource(
+    get_plm_resource_mock.return_value = get_test_resource(
         resource_name="palveluluokat"
     )
     importer._import_service_nodes(keyword_handler)

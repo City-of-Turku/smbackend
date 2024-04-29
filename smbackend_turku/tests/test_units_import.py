@@ -18,7 +18,7 @@ from smbackend_turku.tests.utils import (
 
 
 @pytest.mark.django_db
-@patch("smbackend_turku.importers.utils.get_turku_resource")
+@patch("smbackend_turku.importers.utils.get_plm_resource")
 def test_unit_import(resource):
     from smbackend_turku.importers.units import UnitImporter
 
