@@ -7,7 +7,6 @@ from django.contrib.gis.gdal import GDAL_VERSION
 from django.contrib.gis.geos import Point, Polygon
 from django.utils import formats, translation
 from django.utils.dateparse import parse_date
-from munigeo.importer.sync import ModelSyncher
 
 from services.management.commands.services_import.services import (
     remove_empty_service_nodes,
@@ -24,13 +23,14 @@ from services.models import (
     UnitServiceDetails,
 )
 from services.utils import AccessibilityShortcomingCalculator
-from smbackend_turku.importers.utils import (
+from smbackend_turku.importers.utils import (  # get_turku_resource,
     get_external_sources_yaml_config,
     get_localized_value,
     get_municipality,
     get_municipality_name_by_point,
-    get_turku_resource,
+    get_plm_resource,
     get_weekday_str,
+    PLMModelSyncher,
     set_syncher_object_field,
     set_syncher_service_names_field,
     set_syncher_tku_translated_field,
@@ -106,11 +106,30 @@ class UnitImporter:
         self.logger = logger
         self.importer = importer
         self.delete_external_source = delete_external_sources
-        self.unitsyncher = ModelSyncher(Unit.objects.all(), lambda obj: obj.id)
+        self.unitsyncher = None
+        if importer:
+            self.muutospaiva = importer.muutospaiva
+        else:
+            self.muutospaiva = None
+
+    def get_ids(self, units):
+        # Get all the IDs (koodi) in JSON data
+        return [unit["koodi"] for unit in units if type(unit["koodi"]) == int]
 
     def import_units(self):
-        units = get_turku_resource("palvelupisteet")
+        # units = get_turku_resource("palvelupisteet")
+        units = get_plm_resource(tyyppi="Palvelupiste", muutospaiva=self.muutospaiva)
+        print("len units", len(units))
+        # Get the IDs of the units
+        ids = self.get_ids(units)
+        # Mark objects that are Not in the payload
+        # If not marked the objects are deleted.
+        objects_to_mark = Unit.objects.exclude(id__in=ids)
+        # objects_to_mark = Unit.objects.none()
 
+        self.unitsyncher = PLMModelSyncher(
+            Unit.objects.all(), lambda obj: obj.id, objects_to_mark
+        )
         for unit in units:
             self._handle_unit(unit)
         if not self.delete_external_source:
@@ -123,7 +142,10 @@ class UnitImporter:
         remove_empty_service_nodes(self.logger)
 
     def _handle_unit(self, unit_data):
-        unit_id = int(unit_data["koodi"])
+        try:
+            unit_id = int(unit_data["koodi"])
+        except ValueError:
+            return
         state = unit_data["tila"].get("koodi")
 
         if state != "1":
@@ -230,10 +252,9 @@ class UnitImporter:
             )
             set_syncher_tku_translated_field(obj, "street_address", street)
             set_syncher_object_field(obj, "address_zip", zip)
-
-            municipality = get_municipality(
-                address_data.get("kunta", {}).get("nimi_fi")
-            )
+            municipality_data = address_data.get("kunta", {})
+            if municipality_data:
+                municipality = get_municipality(municipality_data.get("nimi_fi"))
             if not municipality:
                 municipality = get_municipality(post_office_fi)
         # If no municipality found, find the municipality by location. The Search filters units
@@ -325,10 +346,13 @@ class UnitImporter:
 
     def _handle_service_descriptions(self, obj, unit_data):
         description_data = unit_data.get("kuvaus_kieliversiot", {})
-        descriptions = {
-            lang: description_data.get(lang, "") for lang in ("fi", "sv", "en")
-        }
-        set_syncher_tku_translated_field(obj, "description", descriptions, clean=False)
+        if description_data:
+            descriptions = {
+                lang: description_data.get(lang, "") for lang in ("fi", "sv", "en")
+            }
+            set_syncher_tku_translated_field(
+                obj, "description", descriptions, clean=False
+            )
 
     def _handle_provider_type(self, obj):
         # NOTE, this is a temp solution when the provider_type is not available.
@@ -368,7 +392,7 @@ class UnitImporter:
         #       ...
         #   }
         all_opening_hours = defaultdict(OrderedDict)
-
+        print(opening_hours_data)
         for opening_hours_datum in sorted(
             opening_hours_data, key=lambda x: x.get("voimassaoloAlkamishetki")
         ):
@@ -503,7 +527,7 @@ class UnitImporter:
         if not phone_number_datum:
             return ""
 
-        code = phone_number_datum["maakoodi"]
+        code = phone_number_datum.get("maakoodi", None)
         number = phone_number_datum["numero"]
         return "+{}{}".format(code, number) if code else number
 
