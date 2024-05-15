@@ -1,6 +1,9 @@
 import logging
 from datetime import datetime
+from tempfile import NamedTemporaryFile
 
+import requests
+from django.conf import settings
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.management import BaseCommand
@@ -14,10 +17,9 @@ from exceptional_situations.models import (
 )
 
 logger = logging.getLogger(__name__)
-# TODO, NOTE, change the URL when the source data is available in the production environment
 URL = (
-    "http://tkuikp/TeklaOGCWeb/WFS.ashx?service="
-    "WFS&request=GetFeature&typeName=GIS:Kaivuluvat&srsName=EPSG:4326&outputFormat=GML3&maxFeatures=10000"
+    "http://opaskartta.turku.fi/TeklaOGCWeb/WFS.ashx?service="
+    "WFS&request=GetFeature&typeName=GIS:Kaivuluvat&srsName=EPSG:4326&outputFormat=GML3&maxFeatures=10000&GDAL"
 )
 PERMISSION_START = "853"
 LUPA_MYONNETTY = "Lupa myönnetty"
@@ -25,10 +27,26 @@ JATKOLUPA = "Jatkolupa"
 NOW = timezone.now()
 DATE_FORMAT = "%d.%m.%Y"
 SITUATION_TYPE_NAME = "TURKU_ROAD_WORK"
+HEADERS = {
+    "Content-Type": "application/json",
+}
 
 
-def get_layer():
-    ds = DataSource(URL)
+def get_wfs_content():
+    auth = (settings.TURKU_WFS_USER, settings.TURKU_WFS_PASSWORD)
+    response = requests.get(URL, auth=auth, headers=HEADERS)
+    assert response.status_code == 200, response.text
+    return response.content
+
+
+def get_layer(content):
+    ds = None
+    with NamedTemporaryFile() as temp_file:
+        # temp_file.write(wfs_data.encode("utf-8"))
+        temp_file.write(content)
+        # temp_file.flush()
+        # breakpoint()
+        ds = DataSource(temp_file.name)
     assert len(ds) == 1, "Invalid number of layers"
     return ds[0]
 
@@ -40,6 +58,7 @@ def get_filtered_features(layer) -> dict:
     * Käsittely vaihe is 'Lupa myönnetty' or 'Jatkolupa'
     * start date <= current date
     * end_date >= current_date or end date is None
+
     Saisiko tuosta eroteltua esimerkiksi ne, missä käsittelyvaihe on Myönnetty tai Jatkolupa ja
     päivämäärätieto ei ole tyhjä tai nykyinen päivä osuu annetulle aikavälille
     tai jos ei ole loppupäivää niin aloituspäivä on jo mennyt.
@@ -92,6 +111,7 @@ def get_filtered_features(layer) -> dict:
             features[key] = {
                 "Id": feature["Id"].as_string(),
                 "HakijaNimi": feature["HakijaNimi"].as_string(),
+                "Lupanumero": feature["Lupanumero"].as_string(),
                 "Lupatyyppi": feature["Lupatyyppi"].as_string(),
                 "geometries": [geometry],
                 "start_time": start_time,
@@ -118,11 +138,14 @@ def save_features_to_database(features):
         if not created:
             SituationAnnouncement.objects.filter(situation=situation).delete()
             situation.announcements.clear()
-
         announcement = SituationAnnouncement.objects.create(
-            start_time=feature["start_time"], end_time=feature["end_time"]
+            start_time=feature["start_time"],
+            end_time=feature["end_time"],
         )
-        announcement.additional_info = {"HakijaNimi": feature["HakijaNimi"]}
+        announcement.additional_info = {
+            "HakijaNimi": feature["HakijaNimi"],
+            "Lupanumero": feature["Lupanumero"],
+        }
         announcement.save()
 
         for geometry in feature["geometries"]:
@@ -138,6 +161,7 @@ def save_features_to_database(features):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        layer = get_layer()
+        wfs_content = get_wfs_content()
+        layer = get_layer(wfs_content)
         features = get_filtered_features(layer)
         save_features_to_database(features)
