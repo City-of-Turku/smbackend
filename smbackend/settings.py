@@ -80,6 +80,8 @@ env = environ.Env(
     STREET_MAINTENANCE_LOG_LEVEL=(str, "INFO"),
     ENVIRONMENT_DATA_LOG_LEVEL=(str, "INFO"),
     EXCEPTIONAL_SITUATIONS_LOG_LEVEL=(str, "INFO"),
+    TURKU_WFS_USER=(str, None),
+    TURKU_WFS_PASSWORD=(str, None),
 )
 
 
@@ -223,7 +225,7 @@ LEVELS = {
             991,  # health stations
             1097,  # basic education
             2125,  # pre school education
-            869  # municipal day care
+            869,  # municipal day care
             #  25344, # recycling
             #  25480, # public libraries
         ],
@@ -448,3 +450,5 @@ YIT_CONTRACTS_URL = env("YIT_CONTRACTS_URL")
 YIT_TOKEN_URL = env("YIT_TOKEN_URL")
 KUNTEC_KEY = env("KUNTEC_KEY")
 TELRAAM_TOKEN = env("TELRAAM_TOKEN")
+TURKU_WFS_USER = env("TURKU_WFS_USER")
+TURKU_WFS_PASSWORD = env("TURKU_WFS_PASSWORD")
