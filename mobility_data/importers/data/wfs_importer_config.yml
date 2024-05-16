@@ -1,4 +1,18 @@
 features:
+  - content_type_name: Greenspace
+    wfs_layer: GIS:Viheralueet
+    max_features: 1000
+    fields:
+      name:
+        fi: Tunnus
+    extra_fields:
+      haltija:
+        wfs-field: Haltija
+      kayttotyyppi:
+        wfs_field: Kayttotyyppi
+      pintamateriaali:
+        wfs_field: Pintamateriaali
+
   - content_type_name: StreetAreaInformation
     wfs_layer: GIS:Katualueet
     max_features: 100000
