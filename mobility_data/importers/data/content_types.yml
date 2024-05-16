@@ -139,6 +139,12 @@ content_types:
   # End of lounaistieto shapefile importer content types
   
   # Content types importer from opaskarta.turku.fi
+  - content_type_name: Greenspace
+    name:
+      fi: Viheralue
+      sv: Grönområde
+      en: Greenspace
+
   - content_type_name: GuestMarina
     name:
       fi: Vierasvenesatama
