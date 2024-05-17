@@ -16,9 +16,10 @@ features:
     municipality: muni_field
     # Optional, if set, include only if geometry is inside the boundarys of Turku, default=False
     locates_in_turku: True
-    # Optional, include only if 'field_name' contains the given string.
+    # Optional, include only if 'field_name' and/or 'field_name_list' contains the given string(s).
     include:
       field_name: this_must_be_in_field_name
+      filed_names_list: ["define", "multiple","field names", "as", "list"]
     # Optional, exclude if 'field_name' contains given string.
     exclude:
       field_name: if_this_is_in_field_name_exclude

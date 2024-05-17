@@ -51,8 +51,12 @@ class MobilityData(MobileUnitDataBase):
                 # None value returns False as they are not the include value.
                 if not feature[attr].as_string():
                     return False
-                if value not in feature[attr].as_string():
-                    return False
+                if type(value) == list:
+                    if feature[attr].as_string() not in value:
+                        return False
+                else:
+                    if value not in feature[attr].as_string():
+                        return False
         if "exclude" in config:
             for attr, value in config["exclude"].items():
                 if attr not in feature.fields:
