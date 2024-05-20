@@ -42,10 +42,7 @@ def get_wfs_content():
 def get_layer(content):
     ds = None
     with NamedTemporaryFile() as temp_file:
-        # temp_file.write(wfs_data.encode("utf-8"))
         temp_file.write(content)
-        # temp_file.flush()
-        # breakpoint()
         ds = DataSource(temp_file.name)
     assert len(ds) == 1, "Invalid number of layers"
     return ds[0]
