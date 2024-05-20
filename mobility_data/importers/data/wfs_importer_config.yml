@@ -1,17 +1,16 @@
 features:
   - content_type_name: Greenspace
     wfs_layer: GIS:Viheralueet
-    max_features: 1000
+    max_features: 64000
     fields:
       name:
         fi: Tunnus
+    include:
+      Viheralueosalaji: Viheralue
+      Kayttotyyppi: [Puisto, Historiallinen puisto]     
     extra_fields:
-      haltija:
-        wfs-field: Haltija
-      kayttotyyppi:
+      Kayttotyyppi:
         wfs_field: Kayttotyyppi
-      pintamateriaali:
-        wfs_field: Pintamateriaali
 
   - content_type_name: StreetAreaInformation
     wfs_layer: GIS:Katualueet
