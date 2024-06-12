@@ -2,6 +2,8 @@ import uuid
 
 from django.conf import settings
 from django.contrib.gis.db import models
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.search import SearchVectorField
 from munigeo.models import Municipality
 
 from . import ContentType, GroupType
@@ -46,6 +48,13 @@ class MobileUnit(BaseUnit):
     data that are specific for a data source.
     """
 
+    class Meta(BaseUnit.Meta):
+        indexes = (
+            GinIndex(fields=["search_column_fi"]),
+            GinIndex(fields=["search_column_sv"]),
+            GinIndex(fields=["search_column_en"]),
+        )
+
     geometry = models.GeometryField(srid=settings.DEFAULT_SRID, null=True)
     address = models.CharField(max_length=100, null=True)
     municipality = models.ForeignKey(
@@ -65,3 +74,6 @@ class MobileUnit(BaseUnit):
         related_name="mobile_units",
     )
     extra = models.JSONField(null=True)
+    search_column_fi = SearchVectorField(null=True)
+    search_column_sv = SearchVectorField(null=True)
+    search_column_en = SearchVectorField(null=True)
