@@ -75,9 +75,13 @@ class MobileUnit(BaseUnit):
         related_name="mobile_units",
     )
     extra = models.JSONField(null=True)
+
     search_column_fi = SearchVectorField(null=True)
     search_column_sv = SearchVectorField(null=True)
     search_column_en = SearchVectorField(null=True)
+
     content_type_names_fi = ArrayField(models.CharField(max_length=200), default=list)
     content_type_names_sv = ArrayField(models.CharField(max_length=200), default=list)
     content_type_names_en = ArrayField(models.CharField(max_length=200), default=list)
+
+    syllables_fi = ArrayField(models.CharField(max_length=16), default=list)
