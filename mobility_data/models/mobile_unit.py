@@ -2,6 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.contrib.gis.db import models
+from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVectorField
 from munigeo.models import Municipality
@@ -77,3 +78,6 @@ class MobileUnit(BaseUnit):
     search_column_fi = SearchVectorField(null=True)
     search_column_sv = SearchVectorField(null=True)
     search_column_en = SearchVectorField(null=True)
+    content_type_names_fi = ArrayField(models.CharField(max_length=200), default=list)
+    content_type_names_sv = ArrayField(models.CharField(max_length=200), default=list)
+    content_type_names_en = ArrayField(models.CharField(max_length=200), default=list)
