@@ -23,7 +23,6 @@ class Migration(migrations.Migration):
             SELECT concat('mobileunit_', id) AS id,  name_fi ,name_sv, name_en, search_column_fi, search_column_sv, search_column_en, 'MobileUnit' AS type_name from mobility_data_mobileunit;
             """,
             reverse_sql="""
-            DROP VIEW search_view;
             CREATE OR REPLACE VIEW search_view as
             SELECT concat('unit_', services_unit.id) AS id, name_fi, name_sv, name_en, search_column_fi, search_column_sv, search_column_en, 'Unit' AS type_name from services_unit
             UNION
@@ -34,7 +33,7 @@ class Migration(migrations.Migration):
             SELECT concat('administrativedivision_', id) AS id,  name_fi, name_sv, name_en, search_column_fi, search_column_sv, search_column_en, 'AdministrativeDivision' AS type_name from munigeo_administrativedivision
             UNION
             SELECT concat('address_', id) AS id,  full_name_fi as name_fi, full_name_sv as name_sv, full_name_en as name_en, search_column_fi, search_column_sv, search_column_en, 'Address' AS type_name from munigeo_address;
-            
+          
             """,
         ),
     ]
