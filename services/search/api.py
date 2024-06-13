@@ -34,6 +34,8 @@ from rest_framework.exceptions import ParseError
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
+from mobility_data.api.serializers.content_type import ContentTypeBaseSerializer
+from mobility_data.models.mobile_unit import MobileUnit
 from services.api import (
     TranslatedModelSerializer,
     UnitConnectionSerializer,
@@ -98,6 +100,8 @@ class SearchSerializer(serializers.Serializer):
             object_type = "address"
         elif isinstance(obj, AdministrativeDivision):
             object_type = "administrativedivision"
+        elif isinstance(obj, MobileUnit):
+            object_type = "mobileunit"
         else:
             return representation
 
@@ -148,7 +152,10 @@ class SearchSerializer(serializers.Serializer):
                     )
                 else:
                     representation["geometry"] = None
-
+        if object_type == "mobileunit":
+            representation["content_types"] = ContentTypeBaseSerializer(
+                obj.content_types, many=True
+            ).data
         if object_type == "address":
             set_address_fields(obj, representation)
         if object_type == "service":
@@ -156,10 +163,16 @@ class SearchSerializer(serializers.Serializer):
             representation["root_service_node"] = RootServiceNodeSerializer(
                 obj.root_service_node
             ).data
-        if object_type == "unit" or object_type == "address":
-            if obj.location:
+        if (
+            object_type == "unit"
+            or object_type == "address"
+            or object_type == "mobileunit"
+        ):
+            location_field = "geometry" if object_type == "mobileunit" else "location"
+            location = getattr(obj, location_field, None)
+            if location:
                 representation["location"] = munigeo_api.geom_to_json(
-                    obj.location, DEFAULT_SRS
+                    location, DEFAULT_SRS
                 )
 
         for include in self.context["include"]:
@@ -306,6 +319,13 @@ class SearchSerializer(serializers.Serializer):
             name="address_limit",
             location=OpenApiParameter.QUERY,
             description="Limit the number of addresses in the search results.",
+            required=False,
+            type=int,
+        ),
+        OpenApiParameter(
+            name="mobileunit_limit",
+            location=OpenApiParameter.QUERY,
+            description="Limit the number of mobile units in the search results.",
             required=False,
             type=int,
         ),
@@ -489,6 +509,17 @@ class SearchViewSet(GenericAPIView):
 
         administrative_division_ids = all_ids["AdministrativeDivision"]
         address_ids = all_ids["Address"]
+        mobile_unit_ids = all_ids["MobileUnit"]
+
+        if "mobileunit" in types:
+            preserved = get_preserved_order(mobile_unit_ids)
+            mobile_units_qs = MobileUnit.objects.filter(
+                id__in=mobile_unit_ids
+            ).order_by(preserved)
+            mobile_units_qs = mobile_units_qs.all().distinct()
+            mobile_units_qs = mobile_units_qs[: model_limits["mobileunit"]]
+        else:
+            mobile_units_qs = MobileUnit.objects.none()
 
         if "service" in types:
             preserved = get_preserved_order(service_ids)
@@ -647,6 +678,7 @@ class SearchViewSet(GenericAPIView):
         queryset = list(
             chain(
                 units_qs,
+                mobile_units_qs,
                 services_qs,
                 service_nodes_qs,
                 administrative_divisions_qs,
