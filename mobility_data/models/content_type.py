@@ -1,6 +1,8 @@
 import uuid
 
 from django.contrib.gis.db import models
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.search import SearchVectorField
 
 
 class BaseType(models.Model):
@@ -22,7 +24,16 @@ class BaseType(models.Model):
 
 
 class ContentType(BaseType):
-    pass
+    class Meta(BaseType.Meta):
+        indexes = (
+            GinIndex(fields=["search_column_fi"]),
+            GinIndex(fields=["search_column_sv"]),
+            GinIndex(fields=["search_column_en"]),
+        )
+
+    search_column_fi = SearchVectorField(null=True)
+    search_column_sv = SearchVectorField(null=True)
+    search_column_en = SearchVectorField(null=True)
 
 
 class GroupType(BaseType):
