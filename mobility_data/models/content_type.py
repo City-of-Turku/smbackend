@@ -1,6 +1,7 @@
 import uuid
 
 from django.contrib.gis.db import models
+from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVectorField
 
@@ -34,6 +35,8 @@ class ContentType(BaseType):
     search_column_fi = SearchVectorField(null=True)
     search_column_sv = SearchVectorField(null=True)
     search_column_en = SearchVectorField(null=True)
+
+    syllables_fi = ArrayField(models.CharField(max_length=16), default=list)
 
 
 class GroupType(BaseType):
