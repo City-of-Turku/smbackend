@@ -98,24 +98,18 @@ class MobileUnit(BaseUnit):
                 ("syllables_fi", "finnish", "A"),
                 ("content_type_names_fi", "finnish", "A"),
                 ("description_fi", "finnish", "B"),
-                ("extra", None, "C"),
-                ("address_zip", None, "D"),
             ]
         elif lang == "sv":
             return [
                 ("name_sv", "swedish", "A"),
                 ("content_type_names_sv", "swedish", "A"),
                 ("description_sv", "swedish", "B"),
-                ("extra", None, "C"),
-                ("address_zip", None, "D"),
             ]
         elif lang == "en":
             return [
                 ("name_en", "english", "A"),
                 ("content_type_names_en", "english", "A"),
                 ("description_en", "english", "B"),
-                ("extra", None, "C"),
-                ("address_zip", None, "D"),
             ]
         else:
             return []
