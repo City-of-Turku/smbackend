@@ -2,6 +2,7 @@ import uuid
 
 import pytest
 from django.contrib.gis.geos import Point
+from django.core.cache import cache
 from django.utils.timezone import now
 from munigeo.models import (
     Address,
@@ -37,6 +38,11 @@ from services.models import (
 @pytest.fixture
 def api_client():
     return APIClient()
+
+
+@pytest.fixture(autouse=True)
+def clear_cache():
+    cache.clear()
 
 
 @pytest.fixture
@@ -358,11 +364,11 @@ def mobile_units(content_types):
     )
     mobile_unit.content_types.add(content_types[0])
     mobile_unit = MobileUnit.objects.create(
-        name="extra unit",
-        extra={"key": "extra value"},
+        name="unit2",
         content_type_names_fi=[content_types[0].name_fi],
         geometry=Point(22.22, 60.24, srid=4326),
     )
     mobile_unit.content_types.add(content_types[0])
+    generate_syllables(MobileUnit)
     MobileUnit.objects.update(search_column_fi=get_search_column(MobileUnit, "fi"))
     return MobileUnit.objects.all()
