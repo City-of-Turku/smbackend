@@ -56,6 +56,7 @@ from .constants import (
     DEFAULT_SEARCH_SQL_LIMIT_VALUE,
     DEFAULT_SRS,
     DEFAULT_TRIGRAM_THRESHOLD,
+    EXCLUDE_CONTENT_TYPES,
     LANGUAGES,
     QUERY_PARAM_TYPE_NAMES,
 )
@@ -510,13 +511,15 @@ class SearchViewSet(GenericAPIView):
         administrative_division_ids = all_ids["AdministrativeDivision"]
         address_ids = all_ids["Address"]
         mobile_unit_ids = all_ids["MobileUnit"]
-
         if "mobileunit" in types:
             preserved = get_preserved_order(mobile_unit_ids)
             mobile_units_qs = MobileUnit.objects.filter(
                 id__in=mobile_unit_ids
             ).order_by(preserved)
             mobile_units_qs = mobile_units_qs.all().distinct()
+            mobile_units_qs = mobile_units_qs.exclude(
+                content_types__in=EXCLUDE_CONTENT_TYPES
+            )
             mobile_units_qs = mobile_units_qs[: model_limits["mobileunit"]]
         else:
             mobile_units_qs = MobileUnit.objects.none()
