@@ -274,11 +274,6 @@ def test_search_mobile_unit(api_client, content_types, mobile_units):
     response = api_client.get(url)
     results = response.json()["results"]
     assert results[0]["name"]["fi"] == "mobile unit"
-    # Test mobile unit search by extra field
-    url = reverse("search") + "?q=extra&type=mobileunit"
-    response = api_client.get(url)
-    results = response.json()["results"]
-    assert results[0]["name"]["fi"] == "extra unit"
     # Test mobileunit_limit param
     url = reverse("search") + "?q=unit&type=mobileunit"
     response = api_client.get(url)
@@ -288,6 +283,18 @@ def test_search_mobile_unit(api_client, content_types, mobile_units):
     assert len(response.json()["results"]) == 1
     # Test mobile unit search by non existing value
     url = reverse("search") + "?q=notfound&type=mobileunit"
+    response = api_client.get(url)
+    results = response.json()["results"]
+    assert len(results) == 0
+
+
+@pytest.mark.django_db
+def test_search_exclude_mobile_unit(
+    monkeypatch, api_client, content_types, mobile_units
+):
+    import services.search.api
+    monkeypatch.setattr(services.search.api, "EXCLUDE_CONTENT_TYPES", content_types)
+    url = reverse("search") + "?q=content&type=mobileunit"
     response = api_client.get(url)
     results = response.json()["results"]
     assert len(results) == 0
