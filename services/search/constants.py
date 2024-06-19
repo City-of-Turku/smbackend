@@ -12,6 +12,7 @@ SEARCHABLE_MODEL_TYPE_NAMES = (
     "AdministrativeDivision",
     "Address",
     "MobileUnit",
+    "ContentType",
 )
 QUERY_PARAM_TYPE_NAMES = [m.lower() for m in SEARCHABLE_MODEL_TYPE_NAMES]
 # None will slice to the end of list, i.e., no limit.
