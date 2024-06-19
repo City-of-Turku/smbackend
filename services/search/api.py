@@ -35,7 +35,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
 from mobility_data.api.serializers.content_type import ContentTypeBaseSerializer
-from mobility_data.models.mobile_unit import MobileUnit
+from mobility_data.models.mobile_unit import ContentType, MobileUnit
 from services.api import (
     TranslatedModelSerializer,
     UnitConnectionSerializer,
@@ -103,6 +103,8 @@ class SearchSerializer(serializers.Serializer):
             object_type = "administrativedivision"
         elif isinstance(obj, MobileUnit):
             object_type = "mobileunit"
+        elif isinstance(obj, ContentType):
+            object_type = "contenttype"
         else:
             return representation
 
@@ -217,7 +219,7 @@ class SearchSerializer(serializers.Serializer):
             name="type",
             location=OpenApiParameter.QUERY,
             description="Comma separated list of types to search for. Valid values are: unit, service, servicenode, "
-            "address, administrativedivision. If not given defaults to all.",
+            "address, administrativedivision, mobileunit and contenttype. If not given defaults to all.",
             required=False,
             type=str,
         ),
@@ -327,6 +329,13 @@ class SearchSerializer(serializers.Serializer):
             name="mobileunit_limit",
             location=OpenApiParameter.QUERY,
             description="Limit the number of mobile units in the search results.",
+            required=False,
+            type=int,
+        ),
+        OpenApiParameter(
+            name="contenttype_limit",
+            location=OpenApiParameter.QUERY,
+            description="Limit the number of content types in the search results.",
             required=False,
             type=int,
         ),
@@ -507,10 +516,11 @@ class SearchViewSet(GenericAPIView):
         unit_ids = all_ids["Unit"]
         service_ids = all_ids["Service"]
         service_node_ids = get_service_node_results(all_results)
-
         administrative_division_ids = all_ids["AdministrativeDivision"]
         address_ids = all_ids["Address"]
+        content_type_ids = all_ids["ContentType"]
         mobile_unit_ids = all_ids["MobileUnit"]
+
         if "mobileunit" in types:
             preserved = get_preserved_order(mobile_unit_ids)
             mobile_units_qs = MobileUnit.objects.filter(
@@ -523,6 +533,18 @@ class SearchViewSet(GenericAPIView):
             mobile_units_qs = mobile_units_qs[: model_limits["mobileunit"]]
         else:
             mobile_units_qs = MobileUnit.objects.none()
+
+        if "contenttype" in types:
+            preserved = get_preserved_order(content_type_ids)
+            content_types_qs = ContentType.objects.filter(
+                id__in=content_type_ids
+            ).order_by(preserved)
+            content_types_qs = content_types_qs.all().distinct()
+            # Currently do not exclude any content types
+            # content_types_qs = content_types_qs.exclude(id__in=EXCLUDE_CONTENT_TYPES)
+            content_types_qs = content_types_qs[: model_limits["contenttype"]]
+        else:
+            content_types_qs = ContentType.objects.none()
 
         if "service" in types:
             preserved = get_preserved_order(service_ids)
@@ -684,6 +706,7 @@ class SearchViewSet(GenericAPIView):
                 mobile_units_qs,
                 services_qs,
                 service_nodes_qs,
+                content_types_qs,
                 administrative_divisions_qs,
                 addresses_qs,
             )
