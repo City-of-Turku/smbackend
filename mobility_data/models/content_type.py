@@ -38,6 +38,41 @@ class ContentType(BaseType):
 
     syllables_fi = ArrayField(models.CharField(max_length=16), default=list)
 
+    @classmethod
+    def get_search_column_indexing(cls, lang):
+        """
+        Defines the columns to be to_tsvector to the search_column
+        ,config language and weight.
+        """
+        if lang == "fi":
+            return [
+                ("name_fi", "finnish", "A"),
+                ("syllables_fi", "finnish", "A"),
+                ("description_fi", "finnish", "B"),
+            ]
+        elif lang == "sv":
+            return [
+                ("name_sv", "swedish", "A"),
+                ("description_sv", "swedish", "B"),
+            ]
+        elif lang == "en":
+            return [
+                ("name_en", "english", "A"),
+                ("description_en", "english", "B"),
+            ]
+        else:
+            return []
+
+    @classmethod
+    def get_syllable_fi_columns(cls):
+        """
+        Defines the columns that will be used when populating
+        finnish syllables to syllables_fi column. The content
+        will be tokenized to lexems(to_tsvector) and added to
+        the search_column.
+        """
+        return ["name_fi"]
+
 
 class GroupType(BaseType):
     pass
