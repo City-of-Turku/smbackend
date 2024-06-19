@@ -298,3 +298,16 @@ def test_search_exclude_mobile_unit(
     response = api_client.get(url)
     results = response.json()["results"]
     assert len(results) == 0
+
+
+@pytest.mark.django_db
+def test_search_content_type(api_client, content_types):
+    # Test mobile unit search by content type
+    url = reverse("search") + "?q=content&type=contenttype"
+    response = api_client.get(url)
+    results = response.json()["results"]
+    assert results[0]["id"] == str(content_types.first().id)
+    assert results[0]["object_type"] == "contenttype"
+    assert results[0]["name"]["fi"] == content_types.first().name_fi
+    assert results[0]["name"]["sv"] == content_types.first().name_sv
+    assert results[0]["name"]["en"] == content_types.first().name_en

@@ -352,6 +352,8 @@ def exclusion_words():
 @pytest.fixture
 def content_types():
     ContentType.objects.create(type_name="ContentType", name_fi="content type name")
+    generate_syllables(ContentType)
+    ContentType.objects.update(search_column_fi=get_search_column(ContentType, "fi"))
     return ContentType.objects.all()
 
 
