@@ -6,6 +6,11 @@ Add the TURKU_WFS_URL for the WFS server to the env, e.g.
 TURKU_WFS_URL=https://opaskartta.turku.fi/TeklaOGCWeb/WFS.ashx
 ```
 
+##  Indexing mobility data search columns
+```
+./manage.py index_mobility_data_search_columns
+```
+
 ## importers
 It is recommended to use Celery tasks to import the mobility data,
 see: https://github.com/City-of-Turku/smbackend/wiki/Celery-Tasks
