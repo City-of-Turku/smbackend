@@ -5,6 +5,11 @@ from smbackend.utils import shared_task_email
 
 
 @shared_task_email
+def index_mobility_data_search_columns(name="index_mobility_data_search_columns"):
+    management.call_command("index_mobility_data_search_columns")
+
+
+@shared_task_email
 def import_culture_routes(args=None, name="import_culture_routes"):
     if args:
         management.call_command("import_culture_routes", args)
