@@ -3,7 +3,7 @@ from rest_framework import serializers
 from ...models import ContentType
 
 
-class ContentTypeSerializer(serializers.ModelSerializer):
+class ContentTypeBaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContentType
         fields = [
@@ -12,6 +12,13 @@ class ContentTypeSerializer(serializers.ModelSerializer):
             "name",
             "name_sv",
             "name_en",
+        ]
+
+
+class ContentTypeSerializer(ContentTypeBaseSerializer):
+    class Meta:
+        model = ContentTypeBaseSerializer.Meta.model
+        fields = ContentTypeBaseSerializer.Meta.fields + [
             "description",
             "description_sv",
             "description_en",
