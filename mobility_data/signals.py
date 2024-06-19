@@ -4,7 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from mobility_data.constants import DATA_SOURCE_IMPORTERS
-from mobility_data.models import DataSource, MobileUnit
+from mobility_data.models import ContentType, DataSource, MobileUnit
 from services.signals import generate_syllables, populate_search_column
 
 
@@ -21,6 +21,14 @@ def data_source_on_save(sender, **kwargs):
 
 @receiver(post_save, sender=MobileUnit)
 def mobile_unit_on_save(sender, **kwargs):
+    obj = kwargs["instance"]
+    generate_syllables(obj)
+    # Do transaction after successfull commit.
+    transaction.on_commit(populate_search_column(obj))
+
+
+@receiver(post_save, sender=ContentType)
+def content_type_on_save(sender, **kwargs):
     obj = kwargs["instance"]
     generate_syllables(obj)
     # Do transaction after successfull commit.
