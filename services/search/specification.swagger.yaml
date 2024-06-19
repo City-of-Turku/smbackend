@@ -54,7 +54,7 @@ components:
     use_trigram_param:
       name: use_trigram
       in: query
-      description: A comma-separeted list of resource types that will include trigram results in search if no results are found. Possible values are *service*, *unit*, *servicenode*, *address* and *administrative_division*. If not present, defualts to unit and service. If list is empty trigram  will not be used.
+      description: A comma-separeted list of resource types that will include trigram results in search if no results are found. Possible values are *service*, *unit*, *servicenode*, *address*, *administrative_division*, *contenttype* and *mobileunit*. If not present, defualts to unit and service. If list is empty trigram  will not be used.
       schema:
         type: string
         example: unit,address
