@@ -15,9 +15,7 @@ def delete_external_source(source, name="delete_external_source"):
 
 @shared_task_email
 def import_mds_data(name="import_mds_data"):
-    management.call_command(
-        "turku_services_import", "services", "accessibility", "units"
-    )
+    management.call_command("turku_services_import", "services", "units")
 
 
 @shared_task_email
