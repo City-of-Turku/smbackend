@@ -19,7 +19,7 @@ from munigeo.models import (
     Municipality,
 )
 
-from mobility_data.importers.utils import create_mobile_units_as_unit_references, get_root_dir
+from mobility_data.importers.utils import create_mobile_units_as_unit_references
 from services.management.commands.services_import.services import (
     update_service_counts,
     update_service_node_counts,
@@ -84,7 +84,7 @@ def clean_text(text, default=None):
 
 
 def get_plm_token():
-    url = f"{TURKU_PLM_BASE_URL}oauthserver/connect/token"
+    url = f"{settings.PLM_BASE_URL}oauthserver/connect/token"
     assert settings.PLM_USER, "PLM_USER not set in environment"
     assert settings.PLM_PASSWORD, "PLM_PASSWORD not set in environment"
 
@@ -104,7 +104,7 @@ def get_plm_token():
 def get_plm_resource(headers=None, tyyppi="Palvelupiste", muutospaiva=None):
     access_token = get_plm_token()
 
-    url = f"{TURKU_PLM_BASE_URL}server/odata/method.f_palvelukartta_API"
+    url = f"{settings.PLM_BASE_URL}server/odata/method.f_palvelukartta_API"
 
     payload = json.dumps({"tyyppi": tyyppi, "muutospaiva": muutospaiva})
 
@@ -209,6 +209,7 @@ def get_ar_servicepoint_accessibility_resource(resource_name=None):
     url = url_template.format(*template_vars)
     return get_resource(url)
 
+
 def get_resource_from_file(file_name):
     """
     file_name : str
@@ -219,8 +220,9 @@ def get_resource_from_file(file_name):
             json_data = json.loads(json_file.read())
     except FileExistsError as e:
         return e
-   
+
     return json_data
+
 
 def get_turku_resource(resource_name):
     url = "{}{}".format(TURKU_BASE_URL, resource_name)

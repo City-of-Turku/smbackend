@@ -82,6 +82,7 @@ env = environ.Env(
     EXCEPTIONAL_SITUATIONS_LOG_LEVEL=(str, "INFO"),
     PLM_USER=(str, None),
     PLM_PASSWORD=(str, None),
+    PLM_BASE_URL=(str, None),
 )
 
 
@@ -253,6 +254,7 @@ SHORTCUTTER_UNIT_URL = env("SHORTCUTTER_UNIT_URL")
 
 PLM_USER = env("PLM_USER")
 PLM_PASSWORD = env("PLM_PASSWORD")
+PLM_BASE_URL = env("PLM_BASE_URL")
 
 
 EMAIL_BACKEND = env("EMAIL_BACKEND")
