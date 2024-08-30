@@ -19,7 +19,7 @@ from munigeo.models import (
     Municipality,
 )
 
-from mobility_data.importers.utils import create_mobile_units_as_unit_references
+from mobility_data.importers.utils import create_mobile_units_as_unit_references, get_root_dir
 from services.management.commands.services_import.services import (
     update_service_counts,
     update_service_node_counts,
@@ -210,6 +210,18 @@ def get_ar_servicepoint_accessibility_resource(resource_name=None):
     url = url_template.format(*template_vars)
     return get_resource(url)
 
+def get_resource_from_file(file_name):
+    """
+    file_name : str
+    The path to the file to be read. The file name must be included.
+    """
+    try:
+        with open(file_name, "r") as json_file:
+            json_data = json.loads(json_file.read())
+    except FileExistsError as e:
+        return e
+   
+    return json_data
 
 def get_turku_resource(resource_name):
     url = "{}{}".format(TURKU_BASE_URL, resource_name)
