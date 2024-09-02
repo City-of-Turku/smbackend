@@ -46,7 +46,7 @@ class PLMModelSyncher(ModelSyncher):
     def __init__(self, queryset, generate_obj_id, objects_to_mark):
         super().__init__(queryset, generate_obj_id)
         for obj in objects_to_mark:
-            self.get(obj.id)._found = True
+            self.mark(self.get(obj.id))
 
 
 def get_external_sources_yaml_config():
