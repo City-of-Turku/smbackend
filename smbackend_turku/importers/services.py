@@ -3,6 +3,7 @@ from datetime import datetime
 import pytz
 from munigeo.importer.sync import ModelSyncher
 
+from mobility_data.importers.utils import get_root_dir
 from services.management.commands.services_import.keyword import KeywordHandler
 from services.management.commands.services_import.services import (
     update_service_root_service_nodes,
@@ -12,6 +13,7 @@ from smbackend_turku.importers.utils import (  # get_turku_resource,
     convert_code_to_int,
     get_external_sources_yaml_config,
     get_plm_resource,
+    get_resource_from_file,
     set_syncher_object_field,
     set_syncher_tku_translated_field,
 )
@@ -40,8 +42,14 @@ class ServiceImporter:
         self._import_service_nodes(keyword_handler)
 
     def _import_service_nodes(self, keyword_handler):
-        # service_classes = get_turku_resource("palveluluokat")
-        service_classes = get_plm_resource(tyyppi="Palveluluokka")
+        file_name = (
+            f"{get_root_dir()}/smbackend_turku/importers/data/MDS_palveluluokat.json"
+        )
+        service_classes = get_resource_from_file(file_name)
+        if isinstance(service_classes, FileNotFoundError):
+            self.logger.error(service_classes)
+            return
+        # service_classes = get_plm_resource(tyyppi="Palveluluokka")
         tree = self._build_servicetree(service_classes)
         for parent_node in tree:
             if parent_node["koodi"] in BLACKLISTED_SERVICE_NODES:
@@ -166,9 +174,12 @@ class ServiceImporter:
                 service = Service.objects.get(id=service_id)
             except Service.DoesNotExist:
                 # TODO fail the service node completely here?
-                self.logger.warning('Service "{}" does not exist!'.format(service_id))
+                self.logger.warning(
+                    'When adding related service to ServiceNode "{}", Service "{}" does not exist!'.format(
+                        obj.id, service_id
+                    )
+                )
                 continue
-
             obj.related_services.add(service)
 
         new_service_ids = set(obj.related_services.values_list("id", flat=True))
