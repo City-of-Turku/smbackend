@@ -114,7 +114,7 @@ class UnitImporter:
 
     def get_ids(self, units):
         # Get all the IDs (koodi) in JSON data
-        return [unit["koodi"] for unit in units if type(unit["koodi"]) == int]
+        return [int(unit["koodi"]) for unit in units if type(unit["koodi"]) == str]
 
     def import_units(self):
         # units = get_turku_resource("palvelupisteet")
@@ -124,12 +124,14 @@ class UnitImporter:
         ids = self.get_ids(units)
         # Mark objects that are Not in the payload
         # If not marked the objects are deleted.
+        # This allows incremental import using the "muutospaiva" parameter.
         objects_to_mark = Unit.objects.exclude(id__in=ids)
         # objects_to_mark = Unit.objects.none()
 
         self.unitsyncher = PLMModelSyncher(
             Unit.objects.all(), lambda obj: obj.id, objects_to_mark
         )
+
         for unit in units:
             self._handle_unit(unit)
         if not self.delete_external_source:
@@ -166,7 +168,7 @@ class UnitImporter:
         self._handle_service_descriptions(obj, unit_data)
         self._handle_provider_type(obj)
         self._save_object(obj)
-        self._handle_opening_hours(obj, unit_data)
+        # self._handle_opening_hours(obj, unit_data)
         self._handle_email_and_phone_numbers(obj, unit_data)
         self._handle_services_and_service_nodes(obj, unit_data)
         self._handle_accessibility_shortcomings(obj)
@@ -310,7 +312,9 @@ class UnitImporter:
                 except Service.DoesNotExist:
                     # TODO fail the unit node completely here?
                     self.logger.warning(
-                        'Service "{}" does not exist!'.format(service_id)
+                        'Adding service to  Unit {}, Service "{}" does not exist!'.format(
+                            obj.id, service_id
+                        )
                     )
                     continue
 
@@ -392,7 +396,6 @@ class UnitImporter:
         #       ...
         #   }
         all_opening_hours = defaultdict(OrderedDict)
-        print(opening_hours_data)
         for opening_hours_datum in sorted(
             opening_hours_data, key=lambda x: x.get("voimassaoloAlkamishetki")
         ):
