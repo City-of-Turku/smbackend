@@ -176,8 +176,13 @@ class Command(BaseCommand):
         if self.muutospaiva:
             try:
                 datetime.strptime(self.muutospaiva, self.MUUTOSPAIVA_FORMAT)
-            except ValueError:
-                raise (f"'muutospaiva' must be in format {self.MUUTOSPAIVA_FORMAT}")
+            except ValueError as e:
+                sys.stdout.write(
+                    f"'muutospaiva' must be in format {self.MUUTOSPAIVA_FORMAT} "
+                    f"and both month and day must be zero-padded. \n {e} \n"
+                )
+                sys.exit(1)
+
         if self.delete_external_source:
             delete_count = 0
             for imp in self.external_sources:
