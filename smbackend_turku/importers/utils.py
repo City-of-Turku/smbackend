@@ -103,11 +103,8 @@ def get_plm_token():
 
 def get_plm_resource(headers=None, tyyppi="Palvelupiste", muutospaiva=None):
     access_token = get_plm_token()
-
     url = f"{settings.PLM_BASE_URL}server/odata/method.f_palvelukartta_API"
-
     payload = json.dumps({"tyyppi": tyyppi, "muutospaiva": muutospaiva})
-
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json",
