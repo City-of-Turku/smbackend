@@ -70,6 +70,9 @@ def save_data_to_db(source):
             return
 
     IoTData.objects.create(data_source=source, data=json_data)
+    logger.info(
+        f"Imported {source.source_full_name if source.source_full_name else source.source_name}"
+    )
 
 
 def clear_cache(source_name):
