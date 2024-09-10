@@ -109,8 +109,10 @@ class UnitImporter:
         self.unitsyncher = None
         if importer:
             self.muutospaiva = importer.muutospaiva
+            self.allow_deletion_of_all_items = importer.allow_deletion_of_all_items
         else:
             self.muutospaiva = None
+            self.allow_deletion_of_all_items = False
 
     def get_ids(self, units):
         # Get all the IDs (koodi) in JSON data
@@ -129,7 +131,10 @@ class UnitImporter:
         # objects_to_mark = Unit.objects.none()
 
         self.unitsyncher = PLMModelSyncher(
-            Unit.objects.all(), lambda obj: obj.id, objects_to_mark
+            Unit.objects.all(),
+            lambda obj: obj.id,
+            objects_to_mark,
+            allow_deletion_of_all_items=self.allow_deletion_of_all_items,
         )
 
         for unit in units:
