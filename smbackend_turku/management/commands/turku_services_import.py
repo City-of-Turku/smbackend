@@ -81,6 +81,7 @@ class Command(BaseCommand):
         self.options = None
         self.verbosity = 1
         self.muutospaiva = None
+        self.allow_deletion_of_all_items = False
 
     def add_arguments(self, parser):
         # parser.set_conflict_handler("resolve")
@@ -119,6 +120,12 @@ class Command(BaseCommand):
             "--muutospaiva",
             type=str,
             help=f"Date time in {self.MUUTOSPAIVA_FORMAT} format",
+        )
+
+        parser.add_argument(
+            "--allow-deletion-of-all-items",
+            action="store_true",
+            help="If parameter given, allow deleting of more than 40% of total items",
         )
 
     @db.transaction.atomic
@@ -173,6 +180,8 @@ class Command(BaseCommand):
         # if set delete external sources in arguments
         self.delete_external_source = options.get("delete_external_source", False)
         self.muutospaiva = options.get("muutospaiva", None)
+        self.allow_deletion_of_all_items = options.get("allow_deletion_of_all_items")
+
         if self.muutospaiva:
             try:
                 datetime.strptime(self.muutospaiva, self.MUUTOSPAIVA_FORMAT)
