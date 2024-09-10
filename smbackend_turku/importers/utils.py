@@ -1,6 +1,7 @@
 import datetime
 import hashlib
 import json
+import logging
 import os
 import re
 from functools import lru_cache
@@ -11,6 +12,7 @@ import yaml
 from django import db
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import ProtectedError
 from munigeo.importer.sync import ModelSyncher
 from munigeo.models import (
     AdministrativeDivision,
@@ -33,6 +35,7 @@ UTC_TIMEZONE = pytz.timezone("UTC")
 
 data_path = os.path.join(os.path.dirname(__file__), "data")
 EXTERNAL_SOURCES_CONFIG_FILE = f"{data_path}/external_sources_config.yml"
+logger = logging.getLogger(__name__)
 
 
 class PLMModelSyncher(ModelSyncher):
@@ -43,10 +46,35 @@ class PLMModelSyncher(ModelSyncher):
     marked objects are excluded from the deletion.
     """
 
-    def __init__(self, queryset, generate_obj_id, objects_to_mark):
+    def __init__(
+        self,
+        queryset,
+        generate_obj_id,
+        objects_to_mark,
+        allow_deletion_of_all_items=False,
+    ):
         super().__init__(queryset, generate_obj_id)
+        self.allow_deletion_of_all_items = allow_deletion_of_all_items
         for obj in objects_to_mark:
             self.mark(self.get(obj.id))
+
+    def finish(self):
+        delete_list = self.get_deleted_objects()
+        if (
+            self.allow_deletion_of_all_items is False
+            and len(delete_list) > 5
+            and len(delete_list) > len(self.obj_dict) * 0.4
+        ):
+            raise Exception("Attempting to delete more than 40% of total items")
+        for obj in delete_list:
+            logger.debug("Deleting object %s" % obj)
+            try:
+                obj.delete()
+            except ProtectedError:
+                logger.warning("Cannot delete object due to protection rules %s" % obj)
+                if getattr(obj, "soft_delete", None):
+                    logger.warning("Soft-deleting object %s" % obj)
+                    obj.soft_delete()
 
 
 def get_external_sources_yaml_config():
