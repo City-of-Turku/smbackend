@@ -12,8 +12,9 @@ from smbackend_turku.tests.utils import get_test_resource
 
 
 @pytest.mark.django_db
+@patch("smbackend_turku.importers.utils.get_resource_from_file")
 @patch("smbackend_turku.importers.utils.get_plm_resource")
-def test_turku_services_import(get_plm_resource_mock):
+def test_turku_services_import(get_plm_resource_mock, get_resource_from_file_mock):
     from smbackend_turku.importers.services import ServiceImporter
 
     logger = logging.getLogger(__name__)
@@ -23,18 +24,16 @@ def test_turku_services_import(get_plm_resource_mock):
     get_plm_resource_mock.return_value = get_test_resource(resource_name="palvelut")
     importer._import_services(keyword_handler)
 
-    get_plm_resource_mock.return_value = get_test_resource(
+    get_resource_from_file_mock.return_value = get_test_resource(
         resource_name="palveluluokat"
     )
     importer._import_service_nodes(keyword_handler)
 
     update_service_root_service_nodes()
-
     service_1 = Service.objects.get(id=11)
     service_2 = Service.objects.get(id=12)
     node = ServiceNode.objects.get(id=828322097)
     node_parent = ServiceNode.objects.get(id=828322096)
-
     assert Service.objects.count() == 2
     assert service_1.name == "Tontit"
     assert service_1.name_sv == "Tomter"
