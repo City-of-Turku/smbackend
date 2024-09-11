@@ -9,7 +9,7 @@ from services.management.commands.services_import.services import (
     update_service_root_service_nodes,
 )
 from services.models import Service, ServiceNode
-from smbackend_turku.importers.utils import (  # get_turku_resource,
+from smbackend_turku.importers.utils import (
     convert_code_to_int,
     get_external_sources_yaml_config,
     get_plm_resource,
@@ -77,7 +77,6 @@ class ServiceImporter:
             pass
 
     def _import_services(self, keyword_handler):
-        # services = get_turku_resource("palvelut")
         services = get_plm_resource(tyyppi="Palvelu")
         for service in services:
             self._handle_service(service, keyword_handler)
