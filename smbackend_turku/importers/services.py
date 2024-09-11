@@ -173,10 +173,11 @@ class ServiceImporter:
             try:
                 service = Service.objects.get(id=service_id)
             except Service.DoesNotExist:
-                # TODO fail the service node completely here?
+                # Currently the JSON file that contains the service nodes has services added that does exists
+                # in the "palvelut" list.
                 self.logger.warning(
-                    'When adding related service to ServiceNode "{}", Service "{}" does not exist!'.format(
-                        obj.id, service_id
+                    'When adding related service to ServiceNode "{}" ("{}"), Service "{}" does not exist!'.format(
+                        obj.name, obj.id, service_id
                     )
                 )
                 continue
