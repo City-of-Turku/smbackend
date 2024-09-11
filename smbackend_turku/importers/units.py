@@ -119,24 +119,20 @@ class UnitImporter:
         return [int(unit["koodi"]) for unit in units if type(unit["koodi"]) == str]
 
     def import_units(self):
-        # units = get_turku_resource("palvelupisteet")
         units = get_plm_resource(tyyppi="Palvelupiste", muutospaiva=self.muutospaiva)
-        print("len units", len(units))
+        self.logger.info(f"Fetched {len(units)} units (Palvelupiste)")
         # Get the IDs of the units
         ids = self.get_ids(units)
         # Mark objects that are Not in the payload
         # If not marked the objects are deleted.
         # This allows incremental import using the "muutospaiva" parameter.
         objects_to_mark = Unit.objects.exclude(id__in=ids)
-        # objects_to_mark = Unit.objects.none()
-
         self.unitsyncher = PLMModelSyncher(
             Unit.objects.all(),
             lambda obj: obj.id,
             objects_to_mark,
             allow_deletion_of_all_items=self.allow_deletion_of_all_items,
         )
-
         for unit in units:
             self._handle_unit(unit)
         if not self.delete_external_source:
@@ -324,7 +320,6 @@ class UnitImporter:
                     continue
 
                 UnitServiceDetails.objects.get_or_create(unit=obj, service=service)
-
                 service_nodes = ServiceNode.objects.filter(related_services=service)
                 obj.service_nodes.add(*service_nodes)
 
@@ -477,7 +472,7 @@ class UnitImporter:
                     unit=obj,
                     section_type=OPENING_HOURS_SECTION_TYPE,
                     order=index,
-                    **names
+                    **names,
                 )
                 index += 1
 
@@ -524,7 +519,7 @@ class UnitImporter:
                 section_type=PHONE_OR_EMAIL_SECTION_TYPE,
                 phone=self._generate_phone_number(phone_number_datum),
                 order=index,
-                **names
+                **names,
             )
             index += 1
 
