@@ -50,6 +50,8 @@ class ServiceImporter:
             self.logger.error(service_classes)
             return
         # service_classes = get_plm_resource(tyyppi="Palveluluokka")
+        self.logger.info(f"Fetched {len(service_classes)} services nodes")
+
         tree = self._build_servicetree(service_classes)
         for parent_node in tree:
             if parent_node["koodi"] in BLACKLISTED_SERVICE_NODES:
@@ -78,6 +80,7 @@ class ServiceImporter:
 
     def _import_services(self, keyword_handler):
         services = get_plm_resource(tyyppi="Palvelu")
+        self.logger.info(f"Fetched {len(services)} services")
         for service in services:
             self._handle_service(service, keyword_handler)
 
