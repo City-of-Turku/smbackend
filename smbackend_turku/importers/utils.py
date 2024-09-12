@@ -66,6 +66,7 @@ class PLMModelSyncher(ModelSyncher):
             and len(delete_list) > len(self.obj_dict) * 0.4
         ):
             raise Exception("Attempting to delete more than 40% of total items")
+
         for obj in delete_list:
             logger.debug("Deleting object %s" % obj)
             try:
@@ -122,15 +123,25 @@ def get_plm_token():
         "client_id": "IOMApp",
         "username": settings.PLM_USER,
         "password": settings.PLM_PASSWORD,
-        "database": "Testausympäristö",
+        # "database": "Testausympäristö",
+        "database": "Turku PLM Tuotantoympäristö",
     }
-    headers = {}
-    response = requests.request("POST", url, headers=headers, data=payload)
-    return response.json().get("access_token", None)
+    response = requests.request("POST", url, data=payload)
+    if response.status_code != 200:
+        return Exception(
+            f"POST request for access token failed with status code {response.status_code}: {response.text}"
+        )
+    try:
+        return response.json()["access_token"]
+    except KeyError as e:
+        return e
 
 
 def get_plm_resource(headers=None, tyyppi="Palvelupiste", muutospaiva=None):
     access_token = get_plm_token()
+    if isinstance(access_token, Exception):
+        logger.error(access_token)
+        return None
     url = f"{settings.PLM_BASE_URL}server/odata/method.f_palvelukartta_API"
     payload = json.dumps({"tyyppi": tyyppi, "muutospaiva": muutospaiva})
     headers = {
@@ -144,14 +155,6 @@ def get_plm_resource(headers=None, tyyppi="Palvelupiste", muutospaiva=None):
     clean_data = clean_data[1:-1]
     clean_data = clean_data.replace('\\"', '"')
     json_data = json.loads(clean_data)
-    # filename = "palvelupisteet_plm.json"
-    # if tyyppi == "Palvelu":
-    #     filename = "palvelu_plm.json"
-    # elif tyyppi == "Palveluluokka":
-    #     filename = "palveluluokka_plm.json"
-
-    # with open(filename, "w") as outfile:
-    #     json.dump(json_data, outfile)
     return json_data
 
 
@@ -159,11 +162,6 @@ def get_resource(url, headers=None):
     print("CALLING URL >>> ", url)
     resp = requests.get(url, headers=headers)
     assert resp.status_code == 200, "status code {}".format(resp.status_code)
-    # import json
-    # filename = ""
-    # breakpoint()
-    # with open(filename, "w") as outfile:
-    #     json.dump(resp.json(), outfile)
     return resp.json()
 
 
