@@ -23,7 +23,9 @@ from services.models import (
     UnitServiceDetails,
 )
 from services.utils import AccessibilityShortcomingCalculator
-from smbackend_turku.importers.utils import (  # get_turku_resource,
+from smbackend_turku.importers.utils import (
+    get_configured_external_sources_names,
+    get_external_source_config,
     get_external_sources_yaml_config,
     get_localized_value,
     get_municipality,
@@ -114,6 +116,20 @@ class UnitImporter:
             self.muutospaiva = None
             self.allow_deletion_of_all_items = False
 
+    def get_external_ids(self):
+        # Return the IDs of units imported from external sources
+        # e.g., gas filling stations
+        source_names = get_configured_external_sources_names()
+        ids = []
+        for source_name in source_names:
+            config = get_external_source_config(source_name)
+            try:
+                service = Service.objects.get(id=config["service"]["id"])
+            except Service.DoesNotExist:
+                continue
+            ids += Unit.objects.filter(services=service).values_list("id", flat=True)
+        return ids
+
     def get_ids(self, units):
         # Get all the IDs (koodi) in JSON data
         return [int(unit["koodi"]) for unit in units if type(unit["koodi"]) == str]
@@ -123,6 +139,7 @@ class UnitImporter:
         self.logger.info(f"Fetched {len(units)} units (Palvelupiste)")
         # Get the IDs of the units
         ids = self.get_ids(units)
+        ids += self.get_external_ids()
         # Mark objects that are Not in the payload
         # If not marked the objects are deleted.
         # This allows incremental import using the "muutospaiva" parameter.
