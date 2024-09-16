@@ -186,7 +186,7 @@ class UnitImporter:
         self._handle_service_descriptions(obj, unit_data)
         self._handle_provider_type(obj)
         self._save_object(obj)
-        # self._handle_opening_hours(obj, unit_data)
+        self._handle_opening_hours(obj, unit_data)
         self._handle_email_and_phone_numbers(obj, unit_data)
         self._handle_services_and_service_nodes(obj, unit_data)
         self._handle_accessibility_shortcomings(obj)
@@ -389,7 +389,7 @@ class UnitImporter:
         try:
             opening_hours_data = unit_data["fyysinenPaikka"]["aukioloajat"]
         except KeyError:
-            self.logger.debug(
+            self.logger.waring(
                 "Cannot find opening hours for unit {}".format(unit_data.get("koodi"))
             )
             return
@@ -413,63 +413,70 @@ class UnitImporter:
         #       ...
         #   }
         all_opening_hours = defaultdict(OrderedDict)
-        for opening_hours_datum in sorted(
-            opening_hours_data, key=lambda x: x.get("voimassaoloAlkamishetki")
-        ):
-            opening_hours_type = opening_hours_datum["aukiolotyyppi"]
-
-            start = parse_date(opening_hours_datum["voimassaoloAlkamishetki"])
-            end = parse_date(opening_hours_datum["voimassaoloPaattymishetki"])
-            today = date.today()
-            if start and start < today and end and end < today:
-                continue
-
-            opening_time = self._format_time(opening_hours_datum["avaamisaika"])
-            closing_time = self._format_time(opening_hours_datum["sulkemisaika"])
-
-            if (
-                not opening_time
-                and not closing_time
-                and not opening_hours_type == EXCEPTION_CLOSED
+        try:
+            for opening_hours_datum in sorted(
+                opening_hours_data, key=lambda x: x.get("voimassaoloAlkamishetki")
             ):
-                continue
+                opening_hours_type = opening_hours_datum["aukiolotyyppi"]
 
-            names = self._generate_name_for_opening_hours(opening_hours_datum)
-            weekday = opening_hours_datum["viikonpaiva"]
-            opening_hours_value = {}
+                start = parse_date(opening_hours_datum["voimassaoloAlkamishetki"])
+                end = parse_date(opening_hours_datum["voimassaoloPaattymishetki"])
+                today = date.today()
+                if start and start < today and end and end < today:
+                    continue
 
-            for language in LANGUAGES:
-                weekday_str = "–".join(
-                    [
-                        get_weekday_str(int(wd), language) if wd else ""
-                        for wd in weekday.split("-")
-                    ]
-                )
+                opening_time = self._format_time(opening_hours_datum["avaamisaika"])
+                closing_time = self._format_time(opening_hours_datum["sulkemisaika"])
 
-                if opening_hours_type == EXCEPTION_CLOSED:
-                    opening_hours_value[language] = " ".join(
-                        (weekday_str, CLOSED_STR[language])
+                if (
+                    not opening_time
+                    and not closing_time
+                    and not opening_hours_type == EXCEPTION_CLOSED
+                ):
+                    continue
+
+                names = self._generate_name_for_opening_hours(opening_hours_datum)
+                weekday = opening_hours_datum["viikonpaiva"]
+                opening_hours_value = {}
+
+                for language in LANGUAGES:
+                    weekday_str = "–".join(
+                        [
+                            get_weekday_str(int(wd), language) if wd else ""
+                            for wd in weekday.split("-")
+                        ]
                     )
+
+                    if opening_hours_type == EXCEPTION_CLOSED:
+                        opening_hours_value[language] = " ".join(
+                            (weekday_str, CLOSED_STR[language])
+                        )
+                    else:
+                        opening_hours_value[language] = "{} {}–{}".format(
+                            weekday_str, opening_time, closing_time
+                        )
+
+                # map exception open and exception closed to the same slot to get them
+                # sorted by start dates rather than first all open and then all closed
+                if EXCEPTION in opening_hours_type:
+                    opening_hours_type = EXCEPTION
+
+                # append new opening hours name and value to the complex structure
+                all_of_type = all_opening_hours.get(opening_hours_type, {})
+                data = all_of_type.get(names["fi"], ())
+                if not data:
+                    data = (names, [opening_hours_value])
                 else:
-                    opening_hours_value[language] = "{} {}–{}".format(
-                        weekday_str, opening_time, closing_time
-                    )
-
-            # map exception open and exception closed to the same slot to get them
-            # sorted by start dates rather than first all open and then all closed
-            if EXCEPTION in opening_hours_type:
-                opening_hours_type = EXCEPTION
-
-            # append new opening hours name and value to the complex structure
-            all_of_type = all_opening_hours.get(opening_hours_type, {})
-            data = all_of_type.get(names["fi"], ())
-            if not data:
-                data = (names, [opening_hours_value])
-            else:
-                if opening_hours_value not in data[1]:
-                    data[1].append(opening_hours_value)
-            all_opening_hours[opening_hours_type][names["fi"]] = data
-
+                    if opening_hours_value not in data[1]:
+                        data[1].append(opening_hours_value)
+                all_opening_hours[opening_hours_type][names["fi"]] = data
+        except Exception as e:
+            self.logger.warning(
+                "Cannot add opening hours for unit {}, reason: {}".format(
+                    unit_data.get("koodi"), e
+                )
+            )
+            return
         index = 0
 
         for opening_hours_type in (NORMAL, NORMAL_EXTRA, SPECIAL, EXCEPTION):
