@@ -389,7 +389,7 @@ class UnitImporter:
         try:
             opening_hours_data = unit_data["fyysinenPaikka"]["aukioloajat"]
         except KeyError:
-            self.logger.waring(
+            self.logger.warning(
                 "Cannot find opening hours for unit {}".format(unit_data.get("koodi"))
             )
             return
