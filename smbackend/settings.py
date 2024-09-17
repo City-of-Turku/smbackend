@@ -134,6 +134,7 @@ INSTALLED_APPS = [
     "bicycle_network.apps.BicycleNetworkConfig",
     "iot.apps.IotConfig",
     "street_maintenance.apps.StreetMaintenanceConfig",
+    "maintenance.apps.MaintenanceConfig",
     "environment_data.apps.EnvironmentDataConfig",
     "exceptional_situations.apps.ExceptionalSituationsConfig",
 ]
