@@ -10,7 +10,6 @@ from munigeo.models import (
 )
 from rest_framework.test import APIClient
 
-from mobility_data.tests.conftest import TURKU_WKT
 from maintenance.management.commands.constants import (
     AURAUS,
     INFRAROAD,
@@ -18,6 +17,7 @@ from maintenance.management.commands.constants import (
     LIUKKAUDENTORJUNTA,
 )
 from maintenance.models import DEFAULT_SRID, GeometryHistory
+from mobility_data.tests.conftest import TURKU_WKT
 
 UTC_TIMEZONE = pytz.timezone("UTC")
 
@@ -66,8 +66,9 @@ def geometry_historys():
         coordinates=geometry.coords,
         provider=KUNTEC,
         events=[AURAUS, LIUKKAUDENTORJUNTA],
-    )   
+    )
     return GeometryHistory.objects.all()
+
 
 @pytest.mark.django_db
 @pytest.fixture

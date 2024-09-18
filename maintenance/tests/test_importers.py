@@ -24,9 +24,7 @@ def test_yit_units(
     administrative_division,
     administrative_division_geometry,
 ):
-    from maintenance.management.commands.utils import (
-        create_yit_maintenance_units,
-    )
+    from maintenance.management.commands.utils import create_yit_maintenance_units
 
     get_yit_vehicles_mock.return_value = get_yit_vehicles_mock_data(2)
     num_created_units, num_del_units = create_yit_maintenance_units("test_access_token")

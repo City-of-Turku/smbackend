@@ -1,10 +1,6 @@
 from datetime import datetime
 
-from maintenance.management.commands.constants import (
-    DATE_FORMATS,
-    INFRAROAD,
-    YIT,
-)
+from maintenance.management.commands.constants import DATE_FORMATS, INFRAROAD, YIT
 
 
 def get_yit_vehicles_mock_data(num_elements):

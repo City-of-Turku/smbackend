@@ -17,7 +17,6 @@ from maintenance.management.commands.constants import (
 def test_geometry_history_list(api_client, geometry_historys):
     url = reverse("maintenance:geometry_history-list")
     response = api_client.get(url)
-    breakpoint()
     assert response.json()["count"] == 5
 
 
