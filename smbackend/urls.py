@@ -79,7 +79,7 @@ urlpatterns = [
         name="exceptional_situations",
     ),
     re_path(
-        "",
+        r"^maintenance/",
         include(maintenance.api.urls),
         name="maintenance",
     ),
