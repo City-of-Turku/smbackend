@@ -3,7 +3,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from street_maintenance.models import GeometryHistory, MaintenanceUnit, MaintenanceWork
+from maintenance.models import GeometryHistory, MaintenanceUnit, MaintenanceWork
 
 
 class GeometryHistorySerializer(serializers.ModelSerializer):

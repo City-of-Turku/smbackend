@@ -8,18 +8,18 @@ from rest_framework import mixins, viewsets
 from rest_framework.exceptions import ParseError
 from rest_framework.pagination import PageNumberPagination
 
-from street_maintenance.api.serializers import (
+from maintenance.api.serializers import (
     ActiveEventSerializer,
     GeometryHistorySerializer,
     MaintenanceUnitSerializer,
     MaintenanceWorkSerializer,
 )
-from street_maintenance.management.commands.constants import (
+from maintenance.management.commands.constants import (
     EVENT_CHOICES,
     PROVIDERS,
     START_DATE_TIME_FORMAT,
 )
-from street_maintenance.models import GeometryHistory, MaintenanceUnit, MaintenanceWork
+from maintenance.models import GeometryHistory, MaintenanceUnit, MaintenanceWork
 
 EXAMPLE_TIME_FORMAT = "YYYY-MM-DD HH:MM:SS"
 EXAMPLE_TIME = "2022-09-18 10:00:00"
@@ -133,7 +133,7 @@ class MaintenanceWorkViewSet(viewsets.ReadOnlyModelViewSet):
     list=extend_schema(
         description="MaintananceUnit objets are the entities that creates the MaintenanceWorks. Every MaintenanceWork "
         "has a relation to a MaintenanceUnit. The type of the MaintenanceUnit can vary depending on the provider. It "
-        "can be a machine or a event",
+        "can be a machine or an event.",
     ),
 )
 class MaintenanceUnitViewSet(viewsets.ReadOnlyModelViewSet):

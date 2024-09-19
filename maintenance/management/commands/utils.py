@@ -11,7 +11,7 @@ from django.conf import settings
 from django.contrib.gis.geos import LineString, Point
 from munigeo.models import AdministrativeDivision, AdministrativeDivisionGeometry
 
-from street_maintenance.models import (
+from maintenance.models import (
     DEFAULT_SRID,
     GeometryHistory,
     MaintenanceUnit,
@@ -34,7 +34,7 @@ from .constants import (
     YIT,
 )
 
-logger = logging.getLogger("street_maintenance")
+logger = logging.getLogger("maintenance")
 # In seconds
 MAX_WORK_LENGTH = 60
 VALID_LINESTRING_MAX_POINT_DISTANCE = 0.01

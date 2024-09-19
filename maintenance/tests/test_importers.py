@@ -2,8 +2,8 @@ from unittest.mock import patch
 
 import pytest
 
-from street_maintenance.management.commands.constants import DESTIA, INFRAROAD
-from street_maintenance.models import MaintenanceUnit, MaintenanceWork
+from maintenance.management.commands.constants import DESTIA, INFRAROAD
+from maintenance.models import MaintenanceUnit, MaintenanceWork
 
 from .utils import (
     get_fluentprogress_units_mock_data,
@@ -18,15 +18,13 @@ from .utils import (
 
 
 @pytest.mark.django_db
-@patch("street_maintenance.management.commands.utils.get_yit_vehicles")
+@patch("maintenance.management.commands.utils.get_yit_vehicles")
 def test_yit_units(
     get_yit_vehicles_mock,
     administrative_division,
     administrative_division_geometry,
 ):
-    from street_maintenance.management.commands.utils import (
-        create_yit_maintenance_units,
-    )
+    from maintenance.management.commands.utils import create_yit_maintenance_units
 
     get_yit_vehicles_mock.return_value = get_yit_vehicles_mock_data(2)
     num_created_units, num_del_units = create_yit_maintenance_units("test_access_token")
@@ -54,25 +52,25 @@ def test_yit_units(
 
 @pytest.mark.django_db
 @patch(
-    "street_maintenance.management.commands.utils.get_yit_vehicles",
+    "maintenance.management.commands.utils.get_yit_vehicles",
     return_value=get_yit_vehicles_mock_data(2),
 )
 @patch(
-    "street_maintenance.management.commands.utils.get_yit_contract",
+    "maintenance.management.commands.utils.get_yit_contract",
     return_value=get_yit_contract_mock_data(),
 )
 @patch(
-    "street_maintenance.management.commands.utils.get_yit_event_types",
+    "maintenance.management.commands.utils.get_yit_event_types",
     return_value=get_yit_event_types_mock_data(),
 )
-@patch("street_maintenance.management.commands.utils.get_yit_routes")
+@patch("maintenance.management.commands.utils.get_yit_routes")
 def test_yit_works(
     get_yit_routes_mock,
     get_yit_vechiles_mock,
     administrative_division,
     administrative_division_geometry,
 ):
-    from street_maintenance.management.commands.utils import (
+    from maintenance.management.commands.utils import (
         create_yit_maintenance_units,
         create_yit_maintenance_works,
     )
@@ -109,11 +107,11 @@ def test_yit_works(
 
 
 @pytest.mark.django_db
-@patch("street_maintenance.management.commands.utils.get_json_data")
+@patch("maintenance.management.commands.utils.get_json_data")
 def test_kuntec(
     get_json_data_mock, administrative_division, administrative_division_geometry
 ):
-    from street_maintenance.management.commands.utils import (
+    from maintenance.management.commands.utils import (
         create_kuntec_maintenance_units,
         create_kuntec_maintenance_works,
     )
@@ -169,11 +167,11 @@ def test_kuntec(
 
 
 @pytest.mark.django_db
-@patch("street_maintenance.management.commands.utils.get_json_data")
+@patch("maintenance.management.commands.utils.get_json_data")
 def test_infraroad(
     get_json_data_mock, administrative_division, administrative_division_geometry
 ):
-    from street_maintenance.management.commands.utils import (
+    from maintenance.management.commands.utils import (
         create_maintenance_units,
         create_maintenance_works,
     )
@@ -228,11 +226,11 @@ def test_infraroad(
 
 
 @pytest.mark.django_db
-@patch("street_maintenance.management.commands.utils.get_json_data")
+@patch("maintenance.management.commands.utils.get_json_data")
 def test_destia(
     get_json_data_mock, administrative_division, administrative_division_geometry
 ):
-    from street_maintenance.management.commands.utils import (
+    from maintenance.management.commands.utils import (
         create_maintenance_units,
         create_maintenance_works,
     )
