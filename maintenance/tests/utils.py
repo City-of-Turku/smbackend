@@ -1,4 +1,7 @@
+import os
 from datetime import datetime
+
+from django.contrib.gis.gdal import DataSource
 
 from maintenance.management.commands.constants import DATE_FORMATS, INFRAROAD, YIT
 
@@ -354,3 +357,19 @@ def get_kuntec_units_mock_data(num_elements):
     assert num_elements <= len(units)
     data = {"data": {"units": units[:num_elements]}}
     return data
+
+
+def get_data_source(file_name):
+    """
+    Returns the given file_name as a GDAL Datasource,
+    the file must be located in /maintenance/tests/data/
+    """
+    data_path = os.path.join(os.path.dirname(__file__), "data")
+    file = os.path.join(data_path, file_name)
+    return DataSource(file)
+
+
+def get_test_fixture_data_layer(file_name):
+    ds = get_data_source(file_name)
+    assert len(ds) == 1
+    return ds[0]
