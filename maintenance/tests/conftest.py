@@ -18,6 +18,7 @@ from maintenance.management.commands.constants import (
 )
 from maintenance.models import DEFAULT_SRID, GeometryHistory, UnitMaintenanceGeometry
 from mobility_data.tests.conftest import TURKU_WKT
+from services.models import Unit
 
 UTC_TIMEZONE = pytz.timezone("UTC")
 
@@ -102,3 +103,11 @@ def administrative_division_geometry(administrative_division):
 def unit_maintenance_geometry():
     geometry = GEOSGeometry("LINESTRING(0 0, 1 1, 2 2)")
     return UnitMaintenanceGeometry.objects.create(geometry_id=863, geometry=geometry)
+
+
+@pytest.fixture
+def unit():
+    now = datetime.now(UTC_TIMEZONE)
+    return Unit.objects.create(
+        id=801, name="Oriketo-Räntämäki -kuntorata", last_modified_time=now
+    )
