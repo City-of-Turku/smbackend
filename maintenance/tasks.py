@@ -4,6 +4,11 @@ from smbackend.utils import shared_task_email
 
 
 @shared_task_email
+def import_ski_trails_maintenance_history(name="import_ski_trails_maintenance_history"):
+    management.call_command("import_ski_trails_maintenance_history")
+
+
+@shared_task_email
 def import_ski_trails(*args, name="import_ski_trails"):
     management.call_command("import_ski_trails", *args)
 
