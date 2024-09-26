@@ -16,7 +16,7 @@ from maintenance.management.commands.constants import (
     KUNTEC,
     LIUKKAUDENTORJUNTA,
 )
-from maintenance.models import DEFAULT_SRID, GeometryHistory
+from maintenance.models import DEFAULT_SRID, GeometryHistory, UnitMaintenanceGeometry
 from mobility_data.tests.conftest import TURKU_WKT
 
 UTC_TIMEZONE = pytz.timezone("UTC")
@@ -96,3 +96,9 @@ def administrative_division_geometry(administrative_division):
         id=1, division_id=1, boundary=turku_multipoly
     )
     return adm_div_geom
+
+
+@pytest.fixture
+def unit_maintenance_geometry():
+    geometry = GEOSGeometry("LINESTRING(0 0, 1 1, 2 2)")
+    return UnitMaintenanceGeometry.objects.create(geometry_id=863, geometry=geometry)
