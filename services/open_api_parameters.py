@@ -203,5 +203,5 @@ MAINTENANCE_PARAMETER = OpenApiParameter(
     description="Display units maintenance information.",
     required=False,
     type=bool,
-    default=False,
+    default=True,
 )

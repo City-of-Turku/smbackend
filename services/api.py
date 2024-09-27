@@ -820,7 +820,7 @@ class UnitSerializer(
         if qparams.get("accessibility_description", "").lower() in ("true", "1"):
             ret["accessibility_description"] = shortcomings.accessibility_description
 
-        if qparams.get("maintenance", "").lower() in ("true", "1"):
+        if qparams.get("maintenance", "true").lower() in ("true", "1"):
             ret["maintenance"] = UnitMaintenanceSerializer(
                 obj.maintenance, many=True
             ).data
