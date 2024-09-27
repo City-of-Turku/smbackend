@@ -8,10 +8,10 @@ from django.core.management.base import BaseCommand
 from maintenance.models import UnitMaintenance, UnitMaintenanceGeometry
 from services.models import Unit
 
+from .constants import SKI_TRAILS_DATE_FIELD_FORMAT
 from .utils import get_json_data
 
 logger = logging.getLogger(__name__)
-DATE_FIELD_FORMAT = "%Y-%m-%d %H:%M"
 URL = (
     "https://api.paikannuspalvelu.fi/v1/public/location/lastvisit/"
     "?data_key=cftqHZ8mjwf3uYpXz9HAUH3nXY6IjrvrvYmRMnbZ&author=?&format=geojson&max_distance=50"
@@ -72,7 +72,9 @@ def save_maintenance_history(json_data):
         maintained_at = None
         try:
             maintained_at = TIMEZONE.localize(
-                datetime.strptime(properties.get("date", ""), DATE_FIELD_FORMAT)
+                datetime.strptime(
+                    properties.get("date", ""), SKI_TRAILS_DATE_FIELD_FORMAT
+                )
             )
         except ValueError as exp:
             logger.error(
