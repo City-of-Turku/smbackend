@@ -3,7 +3,46 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from maintenance.models import GeometryHistory, MaintenanceUnit, MaintenanceWork
+from maintenance.models import (
+    GeometryHistory,
+    MaintenanceUnit,
+    MaintenanceWork,
+    UnitMaintenance,
+    UnitMaintenanceGeometry,
+)
+
+
+class UnitMaintenanceGeometrySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UnitMaintenanceGeometry
+        fields = ["id", "geometry", "geometry_id", "unit_maintenance"]
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        # If nested in UnitMaintenanceSerializer
+        if (
+            self.context.get("request", False)
+            and "/maintenance/unit_maintenance/" in self.context.get("request", "").path
+        ):
+            ret.pop("unit_maintenance", None)
+        return ret
+
+
+class UnitMaintenanceSerializer(serializers.ModelSerializer):
+    geometries = UnitMaintenanceGeometrySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = UnitMaintenance
+        fields = [
+            "id",
+            "unit",
+            "target",
+            "condition",
+            "maintained_at",
+            "last_imported_time",
+            "geometries",
+        ]
 
 
 class GeometryHistorySerializer(serializers.ModelSerializer):
