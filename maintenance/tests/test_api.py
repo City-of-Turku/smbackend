@@ -16,6 +16,20 @@ from maintenance.models import UnitMaintenance
 
 
 @pytest.mark.django_db
+def test_unit_maintenance_geometry_list(api_client, unit_maintenance_geometries):
+    url = reverse("maintenance:unit_maintenance_geometry-list")
+    response = api_client.get(url)
+    assert response.json()["count"] == 2
+    unit_maintenance = response.json()["results"][0]
+    assert unit_maintenance.keys() == {
+        "id",
+        "geometry",
+        "geometry_id",
+        "unit_maintenance",
+    }
+
+
+@pytest.mark.django_db
 def test_unit_maintenance_list(api_client, unit_maintenances):
     url = reverse("maintenance:unit_maintenance-list")
     response = api_client.get(url)
@@ -44,7 +58,7 @@ def test_unit_maintenance_list_unit_parameter(api_client, unit_maintenances):
 def test_unit_maintenance_list_target_parameter(api_client, unit_maintenances):
     url = (
         reverse("maintenance:unit_maintenance-list")
-        + f"?target={UnitMaintenance.SKI_TRAIL}"
+        + f"?target__iexact={UnitMaintenance.SKI_TRAIL}"
     )
     response = api_client.get(url)
     assert response.json()["count"] == 2
