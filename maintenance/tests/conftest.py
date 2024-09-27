@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 
 import pytest
-import pytz
 from django.contrib.gis.geos import GEOSGeometry, LineString
+from django.utils import timezone
 from munigeo.models import (
     AdministrativeDivision,
     AdministrativeDivisionGeometry,
@@ -20,18 +20,20 @@ from maintenance.models import DEFAULT_SRID, GeometryHistory, UnitMaintenanceGeo
 from mobility_data.tests.conftest import TURKU_WKT
 from services.models import Unit
 
-UTC_TIMEZONE = pytz.timezone("UTC")
-
 
 @pytest.fixture
 def api_client():
     return APIClient()
 
 
+@pytest.fixture
+def now():
+    return datetime.now().replace(tzinfo=timezone.get_default_timezone())
+
+
 @pytest.mark.django_db
 @pytest.fixture
-def geometry_historys():
-    now = datetime.now(UTC_TIMEZONE)
+def geometry_historys(now):
     geometry = LineString((0, 0), (0, 50), (50, 50), (50, 0), (0, 0), sird=DEFAULT_SRID)
     GeometryHistory.objects.create(
         timestamp=now,
@@ -106,8 +108,7 @@ def unit_maintenance_geometry():
 
 
 @pytest.fixture
-def unit():
-    now = datetime.now(UTC_TIMEZONE)
+def unit(now):
     return Unit.objects.create(
         id=801, name="Oriketo-Räntämäki -kuntorata", last_modified_time=now
     )
