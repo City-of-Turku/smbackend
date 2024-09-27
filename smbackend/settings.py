@@ -353,6 +353,7 @@ DOC_ENDPOINTS = [
     "/maintenance/geometry_history/",
     "/maintenance/maintenance_works/",
     "/maintenance/maintenance_units/",
+    "/maintenance/unit_maintenance/",
     "/environment_data/api/v1/stations/",
     "/environment_data/api/v1/parameters/",
     "/environment_data/api/v1/data/",
