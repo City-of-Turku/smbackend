@@ -108,7 +108,9 @@ def unit_maintenance_geometry():
 
 
 @pytest.fixture
-def unit(now):
-    return Unit.objects.create(
+def units(now):
+    Unit.objects.create(
         id=801, name="Oriketo-Räntämäki -kuntorata", last_modified_time=now
     )
+    Unit.objects.create(id=784, name="Härkämäen kuntorata", last_modified_time=now)
+    return Unit.objects.all()
