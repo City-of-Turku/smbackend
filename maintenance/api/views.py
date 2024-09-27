@@ -15,6 +15,7 @@ from maintenance.api.serializers import (
     GeometryHistorySerializer,
     MaintenanceUnitSerializer,
     MaintenanceWorkSerializer,
+    UnitMaintenanceGeometrySerializer,
     UnitMaintenanceSerializer,
 )
 from maintenance.management.commands.constants import (
@@ -27,6 +28,7 @@ from maintenance.models import (
     MaintenanceUnit,
     MaintenanceWork,
     UnitMaintenance,
+    UnitMaintenanceGeometry,
 )
 
 EXAMPLE_TIME_FORMAT = "YYYY-MM-DD HH:MM:SS"
@@ -96,6 +98,11 @@ class UnitMaintenanceViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = UnitMaintenanceSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = UnitMaintenaceFilterSet
+
+
+class UnitMaintenanceGeometryViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = UnitMaintenanceGeometry.objects.all()
+    serializer_class = UnitMaintenanceGeometrySerializer
 
 
 class ActiveEventsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):

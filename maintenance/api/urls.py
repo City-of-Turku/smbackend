@@ -20,6 +20,11 @@ router.register(
 router.register(
     "unit_maintenance", views.UnitMaintenanceViewSet, basename="unit_maintenance"
 )
+router.register(
+    "unit_maintenance_geometry",
+    views.UnitMaintenanceGeometryViewSet,
+    basename="unit_maintenance_geometry",
+)
 urlpatterns = [
     path("", include(router.urls), name="maintenance"),
 ]
