@@ -1,8 +1,10 @@
 from datetime import datetime
 
+import django_filters
 from django.utils.decorators import method_decorator
 from django.utils.timezone import make_aware
 from django.views.decorators.cache import cache_page
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 from rest_framework import mixins, viewsets
 from rest_framework.exceptions import ParseError
@@ -13,13 +15,19 @@ from maintenance.api.serializers import (
     GeometryHistorySerializer,
     MaintenanceUnitSerializer,
     MaintenanceWorkSerializer,
+    UnitMaintenanceSerializer,
 )
 from maintenance.management.commands.constants import (
     EVENT_CHOICES,
     PROVIDERS,
     START_DATE_TIME_FORMAT,
 )
-from maintenance.models import GeometryHistory, MaintenanceUnit, MaintenanceWork
+from maintenance.models import (
+    GeometryHistory,
+    MaintenanceUnit,
+    MaintenanceWork,
+    UnitMaintenance,
+)
 
 EXAMPLE_TIME_FORMAT = "YYYY-MM-DD HH:MM:SS"
 EXAMPLE_TIME = "2022-09-18 10:00:00"
@@ -62,6 +70,32 @@ class LargeResultsSetPagination(PageNumberPagination):
     # Works are fetched to the remote data storage on a single page, to prevent
     # duplicates.
     max_page_size = 200_000
+
+
+class UnitMaintenaceFilterSet(django_filters.FilterSet):
+    maintained_at__gte = django_filters.DateTimeFilter(
+        method="filter_maintained_at__gte"
+    )
+    maintained_at__lte = django_filters.DateTimeFilter(
+        method="filter_maintained_at__lte"
+    )
+
+    class Meta:
+        model = UnitMaintenance
+        fields = {"target": ["iexact"], "unit": ["exact"]}
+
+    def filter_maintained_at__gte(self, queryset, fields, maintained_at):
+        return queryset.filter(maintained_at__gte=maintained_at)
+
+    def filter_maintained_at__lte(self, queryset, fields, maintained_at):
+        return queryset.filter(maintained_at__lte=maintained_at)
+
+
+class UnitMaintenanceViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = UnitMaintenance.objects.all()
+    serializer_class = UnitMaintenanceSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = UnitMaintenaceFilterSet
 
 
 class ActiveEventsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):

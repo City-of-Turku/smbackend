@@ -14,11 +14,12 @@ router.register(
 router.register(
     "maintenance_units", views.MaintenanceUnitViewSet, basename="maintenance_units"
 )
-
 router.register(
     "geometry_history", views.GeometryHitoryViewSet, basename="geometry_history"
 )
-
+router.register(
+    "unit_maintenance", views.UnitMaintenanceViewSet, basename="unit_maintenance"
+)
 urlpatterns = [
     path("", include(router.urls), name="maintenance"),
 ]
