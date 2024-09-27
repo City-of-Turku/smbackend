@@ -9,8 +9,65 @@ from maintenance.management.commands.constants import (
     INFRAROAD,
     KUNTEC,
     LIUKKAUDENTORJUNTA,
+    SKI_TRAILS_DATE_FIELD_FORMAT,
     START_DATE_TIME_FORMAT,
 )
+from maintenance.models import UnitMaintenance
+
+
+@pytest.mark.django_db
+def test_unit_maintenance_list(api_client, unit_maintenances):
+    url = reverse("maintenance:unit_maintenance-list")
+    response = api_client.get(url)
+    assert response.json()["count"] == 2
+    unit_maintenance = response.json()["results"][0]
+    assert unit_maintenance.keys() == {
+        "id",
+        "unit",
+        "target",
+        "condition",
+        "maintained_at",
+        "last_imported_time",
+        "geometries",
+    }
+
+
+@pytest.mark.django_db
+def test_unit_maintenance_list_unit_parameter(api_client, unit_maintenances):
+    url = reverse("maintenance:unit_maintenance-list") + "?unit=801"
+    response = api_client.get(url)
+    assert response.json()["count"] == 1
+    assert response.json()["results"][0]["unit"] == 801
+
+
+@pytest.mark.django_db
+def test_unit_maintenance_list_target_parameter(api_client, unit_maintenances):
+    url = (
+        reverse("maintenance:unit_maintenance-list")
+        + f"?target={UnitMaintenance.SKI_TRAIL}"
+    )
+    response = api_client.get(url)
+    assert response.json()["count"] == 2
+    assert response.json()["results"][0]["target"] == UnitMaintenance.SKI_TRAIL
+    assert response.json()["results"][1]["target"] == UnitMaintenance.SKI_TRAIL
+
+
+@pytest.mark.django_db
+def test_unit_maintenance_list_maintained_at_parameter(
+    api_client, now, unit_maintenances
+):
+    url = (
+        reverse("maintenance:unit_maintenance-list")
+        + f"?maintained_at__gte={now.strftime(SKI_TRAILS_DATE_FIELD_FORMAT)}"
+    )
+    response = api_client.get(url)
+    assert response.json()["results"][0]["unit"] == 801
+    url = (
+        reverse("maintenance:unit_maintenance-list")
+        + f"?maintained_at__lte={now.strftime(SKI_TRAILS_DATE_FIELD_FORMAT)}"
+    )
+    response = api_client.get(url)
+    assert response.json()["results"][0]["unit"] == 784
 
 
 @pytest.mark.django_db
