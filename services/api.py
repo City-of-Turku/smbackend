@@ -28,6 +28,7 @@ from rest_framework import generics, renderers, serializers, viewsets
 from rest_framework.exceptions import ParseError
 from rest_framework.response import Response
 
+from maintenance.api.views import UnitMaintenanceSerializer
 from observations.models import Observation
 from services.accessibility import RULES
 from services.models import (
@@ -61,6 +62,7 @@ from services.open_api_parameters import (
     LATITUDE_PARAMETER,
     LEVEL_PARAMETER,
     LONGITUDE_PARAMETER,
+    MAINTENANCE_PARAMETER,
     MUNICIPALITY_PARAMETER,
     OCD_ID_PARAMETER,
     OCD_MUNICIPALITY_PARAMETER,
@@ -817,6 +819,12 @@ class UnitSerializer(
 
         if qparams.get("accessibility_description", "").lower() in ("true", "1"):
             ret["accessibility_description"] = shortcomings.accessibility_description
+
+        if qparams.get("maintenance", "").lower() in ("true", "1"):
+            ret["maintenance"] = UnitMaintenanceSerializer(
+                obj.maintenance, many=True
+            ).data
+
         return ret
 
     class Meta:
@@ -890,6 +898,7 @@ class KmlRenderer(renderers.BaseRenderer):
         LEVEL_PARAMETER,
         UNIT_GEOMETRY_PARAMETER,
         UNIT_GEOMETRY_3D_PARAMETER,
+        MAINTENANCE_PARAMETER,
     ]
 )
 class UnitViewSet(

@@ -196,3 +196,12 @@ UNIT_GEOMETRY_PARAMETER = OpenApiParameter(
     required=False,
     type=bool,
 )
+
+MAINTENANCE_PARAMETER = OpenApiParameter(
+    name="maintenance",
+    location=OpenApiParameter.QUERY,
+    description="Display units maintenance information.",
+    required=False,
+    type=bool,
+    default=False,
+)
