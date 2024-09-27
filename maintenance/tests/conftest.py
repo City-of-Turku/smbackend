@@ -102,9 +102,11 @@ def administrative_division_geometry(administrative_division):
 
 
 @pytest.fixture
-def unit_maintenance_geometry():
+def unit_maintenance_geometries():
     geometry = GEOSGeometry("LINESTRING(0 0, 1 1, 2 2)")
-    return UnitMaintenanceGeometry.objects.create(geometry_id=863, geometry=geometry)
+    UnitMaintenanceGeometry.objects.create(geometry_id=863, geometry=geometry)
+    UnitMaintenanceGeometry.objects.create(geometry_id=864, geometry=geometry)
+    return UnitMaintenanceGeometry.objects.all()
 
 
 @pytest.fixture

@@ -10,7 +10,7 @@ from .utils import get_ski_trails_maintenance_history_mock_data
 @pytest.mark.django_db(transaction=True)
 @patch("maintenance.management.commands.utils.get_json_data")
 def test_import_ski_trails_maintenance_history(
-    get_json_data_mock, unit_maintenance_geometry, units
+    get_json_data_mock, unit_maintenance_geometries, units
 ):
     from maintenance.management.commands.import_ski_trails_maintenance_history import (
         save_maintenance_history,
@@ -23,7 +23,7 @@ def test_import_ski_trails_maintenance_history(
     assert len(json_data["features"]) == 4
     assert UnitMaintenance.objects.count() == 1
     um = UnitMaintenance.objects.first()
-    unit_maintenance_geometry.refresh_from_db()
+    unit_maintenance_geometry = unit_maintenance_geometries.get(geometry_id=863)
     assert unit_maintenance_geometry.unit_maintenance == um
     assert um.unit == units.get(id=801)
     assert um.target == UnitMaintenance.SKI_TRAIL
