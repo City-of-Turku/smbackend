@@ -16,7 +16,12 @@ from maintenance.management.commands.constants import (
     KUNTEC,
     LIUKKAUDENTORJUNTA,
 )
-from maintenance.models import DEFAULT_SRID, GeometryHistory, UnitMaintenanceGeometry
+from maintenance.models import (
+    DEFAULT_SRID,
+    GeometryHistory,
+    UnitMaintenance,
+    UnitMaintenanceGeometry,
+)
 from mobility_data.tests.conftest import TURKU_WKT
 from services.models import Unit
 
@@ -116,3 +121,20 @@ def units(now):
     )
     Unit.objects.create(id=784, name="Härkämäen kuntorata", last_modified_time=now)
     return Unit.objects.all()
+
+
+@pytest.fixture
+def unit_maintenances(now, units):
+    UnitMaintenance.objects.create(
+        target=UnitMaintenance.SKI_TRAIL,
+        unit=units.get(id=801),
+        last_imported_time=now,
+        maintained_at=now + timedelta(days=1),
+    )
+    UnitMaintenance.objects.create(
+        target=UnitMaintenance.SKI_TRAIL,
+        unit=units.get(id=784),
+        last_imported_time=now,
+        maintained_at=now - timedelta(days=1),
+    )
+    return UnitMaintenance.objects.all()
