@@ -1,7 +1,7 @@
 from django.contrib.gis.db import models
 from django.contrib.postgres.fields import ArrayField
 
-from street_maintenance.management.commands.constants import PROVIDER_CHOICES
+from maintenance.management.commands.constants import PROVIDER_CHOICES
 
 DEFAULT_SRID = 4326
 

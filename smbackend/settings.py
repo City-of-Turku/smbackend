@@ -77,7 +77,7 @@ env = environ.Env(
     ECO_COUNTER_LOG_LEVEL=(str, "INFO"),
     MOBILITY_DATA_LOG_LEVEL=(str, "INFO"),
     BICYCLE_NETWORK_LOG_LEVEL=(str, "INFO"),
-    STREET_MAINTENANCE_LOG_LEVEL=(str, "INFO"),
+    MAINTENANCE_LOG_LEVEL=(str, "INFO"),
     ENVIRONMENT_DATA_LOG_LEVEL=(str, "INFO"),
     EXCEPTIONAL_SITUATIONS_LOG_LEVEL=(str, "INFO"),
 )
@@ -102,7 +102,7 @@ IOT_LOG_LEVEL = env("IOT_LOG_LEVEL")
 ECO_COUNTER_LOG_LEVEL = env("ECO_COUNTER_LOG_LEVEL")
 MOBILITY_DATA_LOG_LEVEL = env("MOBILITY_DATA_LOG_LEVEL")
 BICYCLE_NETWORK_LOG_LEVEL = env("BICYCLE_NETWORK_LOG_LEVEL")
-STREET_MAINTENANCE_LOG_LEVEL = env("STREET_MAINTENANCE_LOG_LEVEL")
+MAINTENANCE_LOG_LEVEL = env("MAINTENANCE_LOG_LEVEL")
 ENVIRONMENT_DATA_LOG_LEVEL = env("ENVIRONMENT_DATA_LOG_LEVEL")
 EXCEPTIONAL_SITUATIONS_LOG_LEVEL = env("EXCEPTIONAL_SITUATIONS_LOG_LEVEL")
 
@@ -134,6 +134,7 @@ INSTALLED_APPS = [
     "bicycle_network.apps.BicycleNetworkConfig",
     "iot.apps.IotConfig",
     "street_maintenance.apps.StreetMaintenanceConfig",
+    "maintenance.apps.MaintenanceConfig",
     "environment_data.apps.EnvironmentDataConfig",
     "exceptional_situations.apps.ExceptionalSituationsConfig",
 ]
@@ -331,9 +332,9 @@ LOGGING = {
             "handlers": ["console"],
             "level": BICYCLE_NETWORK_LOG_LEVEL,
         },
-        "street_maintenance": {
+        "maintenance": {
             "handlers": ["console"],
-            "level": STREET_MAINTENANCE_LOG_LEVEL,
+            "level": MAINTENANCE_LOG_LEVEL,
         },
         "environment_data": {
             "handlers": ["console"],
@@ -349,9 +350,9 @@ logging.config.dictConfig(LOGGING)
 
 # Define the endpoints for API documentation with drf-spectacular.
 DOC_ENDPOINTS = [
-    "/street_maintenance/geometry_history/",
-    "/street_maintenance/maintenance_works/",
-    "/street_maintenance/maintenance_units/",
+    "/maintenance/geometry_history/",
+    "/maintenance/maintenance_works/",
+    "/maintenance/maintenance_units/",
     "/environment_data/api/v1/stations/",
     "/environment_data/api/v1/parameters/",
     "/environment_data/api/v1/data/",
