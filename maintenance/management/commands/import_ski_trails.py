@@ -14,27 +14,44 @@ logger = logging.getLogger(__name__)
 
 
 def save_trails(layer):
-    num_saved = 0
+    num_created = 0
+    num_updated = 0
     for feature in layer:
+        is_created = False
+        is_updated = False
         try:
-            geometry = UnitMaintenanceGeometry()
+            geometry = None
+
             try:
-                geometry.geometry = GEOSGeometry(
-                    feature.geom.wkt, srid=feature.geom.srid
-                )
+                geometry = GEOSGeometry(feature.geom.wkt, srid=feature.geom.srid)
             except GEOSException:
                 logger.error(f"Invalid geometry {feature.geom.wkt}, skipping...")
                 continue
 
-            geometry.geometry_id = feature["construction_point_id"].as_int()
+            geometry_id = feature["construction_point_id"].as_int()
+            filter = {"geometry_id": geometry_id}
+            queryset = UnitMaintenanceGeometry.objects.filter(**filter)
+
+            if queryset.count() == 0:
+                unit_maintenance_geometry = UnitMaintenanceGeometry(**filter)
+                unit_maintenance_geometry.geometry = geometry
+                is_created = True
+            else:
+                unit_maintenance_geometry = queryset.first()
+                if not unit_maintenance_geometry.geometry.equals(geometry):
+                    unit_maintenance_geometry.geometry = geometry
+                    is_updated = True
+
             try:
-                geometry.save()
-                num_saved += 1
+                unit_maintenance_geometry.save()
             except IntegrityError:
                 logger.error(f"geometry id {geometry.geometry_id} exists, skipping...")
+
         except Exception as exp:
             logger.error(f"Could not save ski trail {feature}, reason {exp}")
-    return num_saved
+        num_created = num_created + 1 if is_created else num_created
+        num_updated = num_updated + 1 if is_updated else num_updated
+    return num_created, num_updated
 
 
 class Command(BaseCommand):
@@ -51,5 +68,7 @@ class Command(BaseCommand):
             UnitMaintenanceGeometry.objects.filter(
                 unit_maintenance__target=UnitMaintenance.SKI_TRAIL
             ).delete()
+
         layer = get_data_layer(settings.SKI_TRAILS_URL)
-        logger.info(f"Saved {save_trails(layer)} ski trails.")
+        num_created, num_updated = save_trails(layer)
+        logger.info(f"Created {num_created}, updated {num_updated} ski trails.")
