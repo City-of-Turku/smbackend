@@ -14,6 +14,11 @@ GEOS_LIBRARY_PATH = os.environ.get("GEOS_LIBRARY_PATH")
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = str(Path(__file__).resolve().parent.parent)
+SKI_TRAILS_DEFAULT_URL = (
+    "https://api.paikannuspalvelu.fi/v1/public/track/"
+    "?data_key=cftqHZ8mjwf3uYpXz9HAUH3nXY6IjrvrvYmRMnbZ&author=?&format=geojson"
+)
+
 env = environ.Env(
     DEBUG=(bool, False),
     LANGUAGES=(list, ["fi", "sv", "en"]),
@@ -80,6 +85,7 @@ env = environ.Env(
     MAINTENANCE_LOG_LEVEL=(str, "INFO"),
     ENVIRONMENT_DATA_LOG_LEVEL=(str, "INFO"),
     EXCEPTIONAL_SITUATIONS_LOG_LEVEL=(str, "INFO"),
+    SKI_TRAILS_URL=(str, SKI_TRAILS_DEFAULT_URL)
 )
 
 
@@ -456,3 +462,4 @@ YIT_CONTRACTS_URL = env("YIT_CONTRACTS_URL")
 YIT_TOKEN_URL = env("YIT_TOKEN_URL")
 KUNTEC_KEY = env("KUNTEC_KEY")
 TELRAAM_TOKEN = env("TELRAAM_TOKEN")
+SKI_TRAILS_URL = env("SKI_TRAILS_URL")

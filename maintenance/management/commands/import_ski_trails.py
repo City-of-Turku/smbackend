@@ -1,5 +1,6 @@
 import logging
 
+from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.geos.error import GEOSException
 from django.core.management.base import BaseCommand
@@ -10,11 +11,6 @@ from maintenance.models import UnitMaintenance, UnitMaintenanceGeometry
 from .utils import get_data_layer
 
 logger = logging.getLogger(__name__)
-
-URL = (
-    "https://api.paikannuspalvelu.fi/v1/public/track/"
-    "?data_key=cftqHZ8mjwf3uYpXz9HAUH3nXY6IjrvrvYmRMnbZ&author=?&format=geojson"
-)
 
 
 def save_trails(layer):
@@ -55,5 +51,5 @@ class Command(BaseCommand):
             UnitMaintenanceGeometry.objects.filter(
                 unit_maintenance__target=UnitMaintenance.SKI_TRAIL
             ).delete()
-        layer = get_data_layer(URL)
+        layer = get_data_layer(settings.SKI_TRAILS_URL)
         logger.info(f"Saved {save_trails(layer)} ski trails.")
