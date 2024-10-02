@@ -92,7 +92,6 @@ def save_maintenance_history(json_data):
 
         if queryset.count() == 0:
             unit_maintenance = UnitMaintenance(**filter)
-            queryset = UnitMaintenance.objects.filter(**filter)
             is_created = True
         else:
             unit_maintenance = UnitMaintenance.objects.filter(**filter).first()
