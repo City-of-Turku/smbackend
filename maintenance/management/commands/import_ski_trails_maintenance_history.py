@@ -3,6 +3,7 @@ from datetime import datetime
 
 import pytz
 from django import db
+from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from maintenance.models import UnitMaintenance, UnitMaintenanceGeometry
@@ -12,10 +13,7 @@ from .constants import SKI_TRAILS_DATE_FIELD_FORMAT
 from .utils import get_json_data
 
 logger = logging.getLogger(__name__)
-URL = (
-    "https://api.paikannuspalvelu.fi/v1/public/location/lastvisit/"
-    "?data_key=cftqHZ8mjwf3uYpXz9HAUH3nXY6IjrvrvYmRMnbZ&author=?&format=geojson&max_distance=50"
-)
+
 SKITRAIL_TO_UNIT_ID_MAPPINGS = {
     "Impivaara-Isosuo": 805,
     "Impivaara-Mälikkälä": 804,
@@ -139,5 +137,5 @@ class Command(BaseCommand):
 
     @db.transaction.atomic
     def handle(self, *args, **options):
-        json_data = get_json_data(URL)
+        json_data = get_json_data(settings.SKI_TRAILS_MAINTENANCE_HISTORY_URL)
         save_maintenance_history(json_data)
