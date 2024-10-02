@@ -8,10 +8,11 @@ import polyline
 import requests
 from django import db
 from django.conf import settings
+from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import LineString, Point
 from munigeo.models import AdministrativeDivision, AdministrativeDivisionGeometry
 
-from street_maintenance.models import (
+from maintenance.models import (
     DEFAULT_SRID,
     GeometryHistory,
     MaintenanceUnit,
@@ -34,14 +35,17 @@ from .constants import (
     YIT,
 )
 
-logger = logging.getLogger("street_maintenance")
+logger = logging.getLogger("maintenance")
 # In seconds
 MAX_WORK_LENGTH = 60
 VALID_LINESTRING_MAX_POINT_DISTANCE = 0.01
 
 
 def get_turku_boundary():
-    division_turku = AdministrativeDivision.objects.get(name="Turku")
+    try:
+        division_turku = AdministrativeDivision.objects.get(name="Turku")
+    except AdministrativeDivision.DoesNotExist:
+        return None
     turku_boundary = AdministrativeDivisionGeometry.objects.get(
         division=division_turku
     ).boundary
@@ -641,3 +645,9 @@ def get_yit_access_token():
 
 def is_nested_coordinates(coordinates):
     return bool(np.array(coordinates).ndim > 1)
+
+
+def get_data_layer(url):
+    ds = DataSource(url)
+    assert len(ds) == 1
+    return ds[0]

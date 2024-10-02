@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 
 import pytest
-import pytz
 from django.contrib.gis.geos import GEOSGeometry, LineString
+from django.utils import timezone
 from munigeo.models import (
     AdministrativeDivision,
     AdministrativeDivisionGeometry,
@@ -10,16 +10,20 @@ from munigeo.models import (
 )
 from rest_framework.test import APIClient
 
-from mobility_data.tests.conftest import TURKU_WKT
-from street_maintenance.management.commands.constants import (
+from maintenance.management.commands.constants import (
     AURAUS,
     INFRAROAD,
     KUNTEC,
     LIUKKAUDENTORJUNTA,
 )
-from street_maintenance.models import DEFAULT_SRID, GeometryHistory
-
-UTC_TIMEZONE = pytz.timezone("UTC")
+from maintenance.models import (
+    DEFAULT_SRID,
+    GeometryHistory,
+    UnitMaintenance,
+    UnitMaintenanceGeometry,
+)
+from mobility_data.tests.conftest import TURKU_WKT
+from services.models import Unit
 
 
 @pytest.fixture
@@ -27,52 +31,51 @@ def api_client():
     return APIClient()
 
 
+@pytest.fixture
+def now():
+    return datetime.now().replace(tzinfo=timezone.get_default_timezone())
+
+
 @pytest.mark.django_db
 @pytest.fixture
-def geometry_historys():
-    geometry_historys = []
-    now = datetime.now(UTC_TIMEZONE)
+def geometry_historys(now):
     geometry = LineString((0, 0), (0, 50), (50, 50), (50, 0), (0, 0), sird=DEFAULT_SRID)
-    obj = GeometryHistory.objects.create(
+    GeometryHistory.objects.create(
         timestamp=now,
         geometry=geometry,
         coordinates=geometry.coords,
         provider=INFRAROAD,
         events=[AURAUS],
     )
-    geometry_historys.append(obj)
-    obj = GeometryHistory.objects.create(
+    GeometryHistory.objects.create(
         timestamp=now - timedelta(days=1),
         geometry=geometry,
         coordinates=geometry.coords,
         provider=INFRAROAD,
         events=[AURAUS],
     )
-    geometry_historys.append(obj)
-    obj = GeometryHistory.objects.create(
+    GeometryHistory.objects.create(
         timestamp=now - timedelta(days=2),
         geometry=geometry,
         coordinates=geometry.coords,
         provider=INFRAROAD,
         events=[LIUKKAUDENTORJUNTA],
     )
-    geometry_historys.append(obj)
-    obj = GeometryHistory.objects.create(
+    GeometryHistory.objects.create(
         timestamp=now - timedelta(days=1),
         geometry=geometry,
         coordinates=geometry.coords,
         provider=KUNTEC,
         events=[AURAUS],
     )
-    geometry_historys.append(obj)
-    obj = GeometryHistory.objects.create(
+    GeometryHistory.objects.create(
         timestamp=now - timedelta(days=2),
         geometry=geometry,
         coordinates=geometry.coords,
         provider=KUNTEC,
         events=[AURAUS, LIUKKAUDENTORJUNTA],
     )
-    geometry_historys.append(obj)
+    return GeometryHistory.objects.all()
 
 
 @pytest.mark.django_db
@@ -101,3 +104,37 @@ def administrative_division_geometry(administrative_division):
         id=1, division_id=1, boundary=turku_multipoly
     )
     return adm_div_geom
+
+
+@pytest.fixture
+def unit_maintenance_geometries():
+    geometry = GEOSGeometry("LINESTRING(0 0, 1 1, 2 2)")
+    UnitMaintenanceGeometry.objects.create(geometry_id=863, geometry=geometry)
+    UnitMaintenanceGeometry.objects.create(geometry_id=864, geometry=geometry)
+    return UnitMaintenanceGeometry.objects.all()
+
+
+@pytest.fixture
+def units(now):
+    Unit.objects.create(
+        id=801, name="Oriketo-Räntämäki -kuntorata", last_modified_time=now
+    )
+    Unit.objects.create(id=784, name="Härkämäen kuntorata", last_modified_time=now)
+    return Unit.objects.all()
+
+
+@pytest.fixture
+def unit_maintenances(now, units):
+    UnitMaintenance.objects.create(
+        target=UnitMaintenance.SKI_TRAIL,
+        unit=units.get(id=801),
+        last_imported_time=now,
+        maintained_at=now + timedelta(days=1),
+    )
+    UnitMaintenance.objects.create(
+        target=UnitMaintenance.SKI_TRAIL,
+        unit=units.get(id=784),
+        last_imported_time=now,
+        maintained_at=now - timedelta(days=1),
+    )
+    return UnitMaintenance.objects.all()

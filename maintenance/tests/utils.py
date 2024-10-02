@@ -1,10 +1,9 @@
+import os
 from datetime import datetime
 
-from street_maintenance.management.commands.constants import (
-    DATE_FORMATS,
-    INFRAROAD,
-    YIT,
-)
+from django.contrib.gis.gdal import DataSource
+
+from maintenance.management.commands.constants import DATE_FORMATS, INFRAROAD, YIT
 
 
 def get_yit_vehicles_mock_data(num_elements):
@@ -358,3 +357,100 @@ def get_kuntec_units_mock_data(num_elements):
     assert num_elements <= len(units)
     data = {"data": {"units": units[:num_elements]}}
     return data
+
+
+def get_ski_trails_maintenance_history_mock_data():
+    null = None
+    data = {
+        "__comment": "Paikannuspalvelu.fi API, please contact: info [at] paikannuspalvelu [dot] fi for description.",
+        "__format": "geojson",
+        "__generated": "2024-09-25 11:56:17",
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {
+                    "speed": 11,
+                    "missing_date": "2024-09-24 10:53",
+                    "device_id": 861774052275250,
+                    "location_id": 866,
+                    "name": "Missing date",
+                    "distance": 0,
+                    "hours_ago": 25.1,
+                    "days_ago": 1,
+                },
+                "geometry": {
+                    "coordinates": [22.249045608908, 60.486433601894],
+                    "type": "Point",
+                },
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "speed": 0,
+                    "date": "26-08-2024 11:56",
+                    "device_id": null,
+                    "location_id": 862,
+                    "name": "Invalid date",
+                    "distance": 0,
+                    "hours_ago": 720,
+                    "days_ago": 30,
+                },
+                "geometry": {
+                    "coordinates": [22.322459622776, 60.477908123479],
+                    "type": "Point",
+                },
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "speed": 0,
+                    "date": "26-08-2024 11:56",
+                    "device_id": null,
+                    "location_id": 424242,
+                    "name": "Invalid locatioin id",
+                    "distance": 0,
+                    "hours_ago": 720,
+                    "days_ago": 30,
+                },
+                "geometry": {
+                    "coordinates": [22.322459622776, 60.477908123479],
+                    "type": "Point",
+                },
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "speed": 0,
+                    "date": "2024-08-26 11:56",
+                    "device_id": null,
+                    "location_id": 863,
+                    "name": "Oriketo-Räntämäki",
+                    "distance": 0,
+                    "hours_ago": 720,
+                    "days_ago": 30,
+                },
+                "geometry": {
+                    "coordinates": [22.312831834656, 60.47943016396],
+                    "type": "Point",
+                },
+            },
+        ],
+    }
+    return data
+
+
+def get_data_source(file_name):
+    """
+    Returns the given file_name as a GDAL Datasource,
+    the file must be located in /maintenance/tests/data/
+    """
+    data_path = os.path.join(os.path.dirname(__file__), "data")
+    file = os.path.join(data_path, file_name)
+    return DataSource(file)
+
+
+def get_test_fixture_data_layer(file_name):
+    ds = get_data_source(file_name)
+    assert len(ds) == 1
+    return ds[0]

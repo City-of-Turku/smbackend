@@ -1,25 +1,35 @@
 from datetime import datetime
 
+import django_filters
 from django.utils.decorators import method_decorator
 from django.utils.timezone import make_aware
 from django.views.decorators.cache import cache_page
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 from rest_framework import mixins, viewsets
 from rest_framework.exceptions import ParseError
 from rest_framework.pagination import PageNumberPagination
 
-from street_maintenance.api.serializers import (
+from maintenance.api.serializers import (
     ActiveEventSerializer,
     GeometryHistorySerializer,
     MaintenanceUnitSerializer,
     MaintenanceWorkSerializer,
+    UnitMaintenanceGeometrySerializer,
+    UnitMaintenanceSerializer,
 )
-from street_maintenance.management.commands.constants import (
+from maintenance.management.commands.constants import (
     EVENT_CHOICES,
     PROVIDERS,
     START_DATE_TIME_FORMAT,
 )
-from street_maintenance.models import GeometryHistory, MaintenanceUnit, MaintenanceWork
+from maintenance.models import (
+    GeometryHistory,
+    MaintenanceUnit,
+    MaintenanceWork,
+    UnitMaintenance,
+    UnitMaintenanceGeometry,
+)
 
 EXAMPLE_TIME_FORMAT = "YYYY-MM-DD HH:MM:SS"
 EXAMPLE_TIME = "2022-09-18 10:00:00"
@@ -62,6 +72,37 @@ class LargeResultsSetPagination(PageNumberPagination):
     # Works are fetched to the remote data storage on a single page, to prevent
     # duplicates.
     max_page_size = 200_000
+
+
+class UnitMaintenaceFilterSet(django_filters.FilterSet):
+    maintained_at__gte = django_filters.DateTimeFilter(
+        method="filter_maintained_at__gte"
+    )
+    maintained_at__lte = django_filters.DateTimeFilter(
+        method="filter_maintained_at__lte"
+    )
+
+    class Meta:
+        model = UnitMaintenance
+        fields = {"target": ["iexact"], "unit": ["exact"]}
+
+    def filter_maintained_at__gte(self, queryset, fields, maintained_at):
+        return queryset.filter(maintained_at__gte=maintained_at)
+
+    def filter_maintained_at__lte(self, queryset, fields, maintained_at):
+        return queryset.filter(maintained_at__lte=maintained_at)
+
+
+class UnitMaintenanceViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = UnitMaintenance.objects.all()
+    serializer_class = UnitMaintenanceSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = UnitMaintenaceFilterSet
+
+
+class UnitMaintenanceGeometryViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = UnitMaintenanceGeometry.objects.all()
+    serializer_class = UnitMaintenanceGeometrySerializer
 
 
 class ActiveEventsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -133,7 +174,7 @@ class MaintenanceWorkViewSet(viewsets.ReadOnlyModelViewSet):
     list=extend_schema(
         description="MaintananceUnit objets are the entities that creates the MaintenanceWorks. Every MaintenanceWork "
         "has a relation to a MaintenanceUnit. The type of the MaintenanceUnit can vary depending on the provider. It "
-        "can be a machine or a event",
+        "can be a machine or an event.",
     ),
 )
 class MaintenanceUnitViewSet(viewsets.ReadOnlyModelViewSet):
