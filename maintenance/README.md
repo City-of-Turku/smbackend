@@ -54,3 +54,9 @@ To import the maintenance history, type:
 ```
 ./manage.py import_ski_trails_maintenance_history
 ```
+
+## Ice tracks maintenance history
+To import the maintenance history, type:
+```
+./manage.py import_ice_tracks_maintenance_history
+```
