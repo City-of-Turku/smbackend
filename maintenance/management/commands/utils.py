@@ -17,6 +17,7 @@ from maintenance.models import (
     GeometryHistory,
     MaintenanceUnit,
     MaintenanceWork,
+    UnitMaintenance,
 )
 
 from .constants import (
@@ -651,3 +652,18 @@ def get_data_layer(url):
     ds = DataSource(url)
     assert len(ds) == 1
     return ds[0]
+
+
+def get_unit_maintenance_instance(filter):
+    is_created = False
+    queryset = UnitMaintenance.objects.filter(**filter)
+
+    if queryset.count() == 0:
+        unit_maintenance = UnitMaintenance(**filter)
+        is_created = True
+    else:
+        unit_maintenance = UnitMaintenance.objects.filter(**filter).first()
+        if queryset.count() > 1:
+            logger.warning(f"Found duplicate UnitMaintenance {filter}")
+
+    return unit_maintenance, is_created

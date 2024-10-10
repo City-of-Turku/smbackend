@@ -10,7 +10,7 @@ from maintenance.models import UnitMaintenance, UnitMaintenanceGeometry
 from services.models import Unit
 
 from .constants import SKI_TRAILS_DATE_FIELD_FORMAT
-from .utils import get_json_data
+from .utils import get_json_data, get_unit_maintenance_instance
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,6 @@ def save_maintenance_history(json_data):
         return
 
     for feature in features:
-        is_created = False
         properties = feature.get("properties", None)
         if not properties:
             logger.warning(
@@ -88,16 +87,8 @@ def save_maintenance_history(json_data):
             "unit": unit,
             "target": UnitMaintenance.SKI_TRAIL,
         }
-        queryset = UnitMaintenance.objects.filter(**filter)
 
-        if queryset.count() == 0:
-            unit_maintenance = UnitMaintenance(**filter)
-            is_created = True
-        else:
-            unit_maintenance = UnitMaintenance.objects.filter(**filter).first()
-            if queryset.count() > 1:
-                logger.warning(f"Found duplicate UnitMaintenance {filter}")
-
+        unit_maintenance, is_created = get_unit_maintenance_instance(filter)
         unit_maintenance.maintained_at = maintained_at
         unit_maintenance.last_imported_time = TIMEZONE.localize(
             datetime.now().replace(microsecond=0)
