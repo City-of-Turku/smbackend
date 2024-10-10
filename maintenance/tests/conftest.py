@@ -120,6 +120,10 @@ def units(now):
         id=801, name="Oriketo-Räntämäki -kuntorata", last_modified_time=now
     )
     Unit.objects.create(id=784, name="Härkämäen kuntorata", last_modified_time=now)
+    Unit.objects.create(id=462, name="Frantsinkenttä", last_modified_time=now)
+    Unit.objects.create(
+        id=767, name="Pienpelikokoinen hiekkakenttä", last_modified_time=now
+    )
     return Unit.objects.all()
 
 
