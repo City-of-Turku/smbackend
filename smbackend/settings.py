@@ -22,6 +22,10 @@ SKI_TRAILS_MAINTENANCE_HISTORY_DEFAULT_URL = (
     "https://api.paikannuspalvelu.fi/v1/public/location/lastvisit/"
     "?data_key=cftqHZ8mjwf3uYpXz9HAUH3nXY6IjrvrvYmRMnbZ&author=?&format=geojson&max_distance=50"
 )
+ICE_TRACKS_MAINTENANCE_HISTORY_DEFAULT_URL = (
+    "https://api.paikannuspalvelu.fi/v1/public/location/32/"
+    "?data_key=cftqHZ8mjwf3uYpXz9HAUH3nXY6IjrvrvYmRMnbZ&author=?&format=geojson"
+)
 env = environ.Env(
     DEBUG=(bool, False),
     LANGUAGES=(list, ["fi", "sv", "en"]),
@@ -92,6 +96,10 @@ env = environ.Env(
     SKI_TRAILS_MAINTENANCE_HISTORY_URL=(
         str,
         SKI_TRAILS_MAINTENANCE_HISTORY_DEFAULT_URL,
+    ),
+    ICE_TRACKS_MAINTENANCE_HISTORY_URL=(
+        str,
+        ICE_TRACKS_MAINTENANCE_HISTORY_DEFAULT_URL,
     ),
 )
 
@@ -471,3 +479,4 @@ KUNTEC_KEY = env("KUNTEC_KEY")
 TELRAAM_TOKEN = env("TELRAAM_TOKEN")
 SKI_TRAILS_URL = env("SKI_TRAILS_URL")
 SKI_TRAILS_MAINTENANCE_HISTORY_URL = env("SKI_TRAILS_MAINTENANCE_HISTORY_URL")
+ICE_TRACKS_MAINTENANCE_HISTORY_URL = env("ICE_TRACKS_MAINTENANCE_HISTORY_URL")
