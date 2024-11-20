@@ -111,6 +111,7 @@ class UnitImporter:
         self.unitsyncher = None
         if importer:
             self.muutospaiva = importer.muutospaiva
+            self.lahde = importer.lahde
             self.allow_deletion_of_all_items = importer.allow_deletion_of_all_items
         else:
             self.muutospaiva = None
@@ -135,7 +136,9 @@ class UnitImporter:
         return [int(unit["koodi"]) for unit in units if type(unit["koodi"]) == str]
 
     def import_units(self):
-        units = get_plm_resource(tyyppi="Palvelupiste", muutospaiva=self.muutospaiva)
+        units = get_plm_resource(
+            tyyppi="Palvelupiste", muutospaiva=self.muutospaiva, lahde=self.lahde
+        )
         self.logger.info(f"Fetched {len(units)} units (Palvelupiste)")
         # Get the IDs of the units
         ids = self.get_ids(units)

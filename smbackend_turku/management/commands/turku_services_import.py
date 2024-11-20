@@ -81,6 +81,7 @@ class Command(BaseCommand):
         self.options = None
         self.verbosity = 1
         self.muutospaiva = None
+        self.lahde = None
         self.allow_deletion_of_all_items = False
 
     def add_arguments(self, parser):
@@ -120,6 +121,11 @@ class Command(BaseCommand):
             "--muutospaiva",
             type=str,
             help=f"Date time in {self.MUUTOSPAIVA_FORMAT} format",
+        )
+        parser.add_argument(
+            "--lahde",
+            type=str,
+            help="Source of the data, e.g. 'PTV'",
         )
 
         parser.add_argument(
@@ -180,6 +186,7 @@ class Command(BaseCommand):
         # if set delete external sources in arguments
         self.delete_external_source = options.get("delete_external_source", False)
         self.muutospaiva = options.get("muutospaiva", None)
+        self.lahde = options.get("lahde", None)
         self.allow_deletion_of_all_items = options.get("allow_deletion_of_all_items")
 
         if self.muutospaiva:

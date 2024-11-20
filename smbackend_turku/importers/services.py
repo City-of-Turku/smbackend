@@ -35,6 +35,7 @@ class ServiceImporter:
         self.delete_external_sources = delete_external_sources
         self.nodesyncher = ModelSyncher(ServiceNode.objects.all(), lambda obj: obj.id)
         self.servicesyncher = ModelSyncher(Service.objects.all(), lambda obj: obj.id)
+        self.lahde = importer.lahde
 
     def import_services(self):
         keyword_handler = KeywordHandler(logger=self.logger)
@@ -79,7 +80,7 @@ class ServiceImporter:
             pass
 
     def _import_services(self, keyword_handler):
-        services = get_plm_resource(tyyppi="Palvelu")
+        services = get_plm_resource(tyyppi="Palvelu", lahde=self.lahde)
         self.logger.info(f"Fetched {len(services)} services")
         for service in services:
             self._handle_service(service, keyword_handler)
