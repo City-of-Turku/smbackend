@@ -137,13 +137,13 @@ def get_plm_token():
         return e
 
 
-def get_plm_resource(headers=None, tyyppi="Palvelupiste", muutospaiva=None):
+def get_plm_resource(headers=None, tyyppi="Palvelupiste", muutospaiva=None, lahde=None):
     access_token = get_plm_token()
     if isinstance(access_token, Exception):
         logger.error(access_token)
         return None
     url = f"{settings.PLM_BASE_URL}server/odata/method.f_palvelukartta_API"
-    payload = json.dumps({"tyyppi": tyyppi, "muutospaiva": muutospaiva})
+    payload = json.dumps({"tyyppi": tyyppi, "muutospaiva": muutospaiva, "lahde": lahde})
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json",
@@ -151,10 +151,14 @@ def get_plm_resource(headers=None, tyyppi="Palvelupiste", muutospaiva=None):
     }
 
     response = requests.request("POST", url, headers=headers, data=payload)
+    # breakpoint()
     clean_data = str(response.content.decode("utf-8"))
     clean_data = clean_data[1:-1]
     clean_data = clean_data.replace('\\"', '"')
     json_data = json.loads(clean_data)
+    with open("services_ptv.json", "w") as file:
+        json.dump(json_data, file, indent=4)
+
     return json_data
 
 
