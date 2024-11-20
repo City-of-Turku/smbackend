@@ -11,9 +11,12 @@ from services.management.commands.services_import.services import (
 from services.models import Service, ServiceNode
 from smbackend_turku.importers.utils import (
     convert_code_to_int,
+    get_configured_external_sources_names,
+    get_external_source_config,
     get_external_sources_yaml_config,
     get_plm_resource,
     get_resource_from_file,
+    PLMModelSyncher,
     set_syncher_object_field,
     set_syncher_tku_translated_field,
 )
@@ -34,8 +37,32 @@ class ServiceImporter:
         self.importer = importer
         self.delete_external_sources = delete_external_sources
         self.nodesyncher = ModelSyncher(ServiceNode.objects.all(), lambda obj: obj.id)
-        self.servicesyncher = ModelSyncher(Service.objects.all(), lambda obj: obj.id)
-        self.lahde = importer.lahde
+        if importer:
+            self.lahde = importer.lahde
+        else:
+            self.lahde = None
+
+    def get_service_ids(self, services):
+        # Get all the IDs (koodi) in JSON data
+        return [
+            int(service["koodi"])
+            for service in services
+            if type(service["koodi"]) == str
+        ]
+
+    def get_external_service_ids(self):
+        # Return the IDs of services imported from external sources
+        # e.g., gas filling stations
+        source_names = get_configured_external_sources_names()
+        ids = []
+        for source_name in source_names:
+            config = get_external_source_config(source_name)
+            try:
+                service = Service.objects.get(id=config["service"]["id"])
+            except Service.DoesNotExist:
+                continue
+            ids.append(service.id)
+        return ids
 
     def import_services(self):
         keyword_handler = KeywordHandler(logger=self.logger)
@@ -82,6 +109,19 @@ class ServiceImporter:
     def _import_services(self, keyword_handler):
         services = get_plm_resource(tyyppi="Palvelu", lahde=self.lahde)
         self.logger.info(f"Fetched {len(services)} services")
+
+        ids = self.get_service_ids(services)
+        ids += self.get_external_service_ids()
+        # Mark objects that are Not in the payload
+        # If not marked the objects are deleted.
+        # This allows incremental import using the "muutospaiva" parameter.
+        objects_to_mark = Service.objects.exclude(id__in=ids)
+        self.servicesyncher = PLMModelSyncher(
+            Service.objects.all(),
+            lambda obj: obj.id,
+            objects_to_mark,
+            allow_deletion_of_all_items=False,
+        )
         for service in services:
             self._handle_service(service, keyword_handler)
 
