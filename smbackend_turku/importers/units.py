@@ -114,6 +114,7 @@ class UnitImporter:
             self.lahde = importer.lahde
             self.allow_deletion_of_all_items = importer.allow_deletion_of_all_items
         else:
+            self.lahde = None
             self.muutospaiva = None
             self.allow_deletion_of_all_items = False
 
@@ -333,7 +334,7 @@ class UnitImporter:
                 except Service.DoesNotExist:
                     # TODO fail the unit node completely here?
                     self.logger.warning(
-                        'Adding service to  Unit {}, Service "{}" does not exist!'.format(
+                        'Adding service to Unit {}, Service "{}" does not exist!'.format(
                             obj.id, service_id
                         )
                     )
