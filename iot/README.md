@@ -10,6 +10,12 @@ to be imported in the Celery task and when requesting data in the API.
 * Set is_xml to True if the data is in XML format, the data will be converted to JSON.
 * Add the optional headers for the request.
 
+## Authentication with token
+* Create a IoT-Data token item. 
+* Assign the token to the data source in the field 'Token', the token will be fetched when the data source is fetched.
+* Define the usage of the token in the data sources 'Token headers' field. The field defines the Header used when requesting data with token, e.g., {"Authorization": "Bearer <token>"}, Note, <token> will be replaced with the requested token.
+
+
 ## Setting periodic importing using Celery from the Admin
 * Create a periodic task, give a descrpitive name.
 * Select *iot.tasks.import_iot_data* as the Task (registered) 
