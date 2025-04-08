@@ -34,7 +34,7 @@ class IoTdataSourceForm(forms.ModelForm):
 
 
 class IoTDataSourceAdmin(admin.ModelAdmin):
-    list_display = (("source_full_name"),)
+    list_display = ("source_full_name",)
 
     form = IoTdataSourceForm
 
