@@ -2,6 +2,7 @@ from datetime import datetime
 
 from django.contrib.gis.db import models
 from django.utils import timezone
+from munigeo.models import Municipality
 
 PROJECTION_SRID = 4326
 
@@ -32,13 +33,14 @@ class SituationAnnouncement(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField(null=True, blank=True)
     additional_info = models.JSONField(null=True, blank=True)
-    location = models.OneToOneField(
+    location = models.ForeignKey(
         SituationLocation,
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name="announcement",
+        related_name="announcements",
     )
+    municipalities = models.ManyToManyField(Municipality)
 
     class Meta:
         ordering = ["start_time"]
@@ -66,12 +68,14 @@ class Situation(models.Model):
 
     @property
     def is_active(self) -> bool:
+        now = datetime.now().replace(tzinfo=timezone.get_default_timezone())
         if not self.announcements.exists():
             return False
 
         start_times_in_future = all(
-            {a.start_time > timezone.now() for a in self.announcements.all()}
+            {a.start_time > now for a in self.announcements.all()}
         )
+
         # If all start times are in future, return False
         if start_times_in_future:
             return False
@@ -82,7 +86,7 @@ class Situation(models.Model):
         # If end_time is past for all announcements, return True, else False
         return any(
             {
-                a.end_time > timezone.now()
+                a.end_time > now
                 for a in self.announcements.filter(end_time__isnull=False)
             }
         )

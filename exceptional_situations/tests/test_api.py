@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
 import pytest
-from django.utils import timezone
 from rest_framework.reverse import reverse
 
 SITUATION_LIST_URL = reverse("exceptional_situations:situation-list")
@@ -38,6 +37,7 @@ def test_situations_list(api_client, situations, inactive_situations):
         "end_time",
         "additional_info",
         "location",
+        "municipalities",
     }
     location = announcement["location"]
     assert location.keys() == {"id", "location", "geometry", "details"}
@@ -69,12 +69,13 @@ def test_situation_retrieve(api_client, situations):
 
 
 @pytest.mark.django_db
-def test_situation_filter_by_start_time(api_client, situations):
-    start_time = timezone.now()
+def test_situation_filter_by_start_time(api_client, situations, now):
+    start_time = now - timedelta(hours=6)
     response = api_client.get(
         SITUATION_LIST_URL
         + f"?start_time__gt={datetime.strftime(start_time, DATETIME_FORMAT)}"
     )
+
     assert response.json()["count"] == 1
     response = api_client.get(
         SITUATION_LIST_URL
@@ -82,7 +83,7 @@ def test_situation_filter_by_start_time(api_client, situations):
     )
     assert response.json()["count"] == 1
 
-    start_time = timezone.now() - timedelta(days=2)
+    start_time = now - timedelta(days=2)
     response = api_client.get(
         SITUATION_LIST_URL
         + f"?start_time__gt={datetime.strftime(start_time, DATETIME_FORMAT)}"
@@ -96,20 +97,8 @@ def test_situation_filter_by_start_time(api_client, situations):
 
 
 @pytest.mark.django_db
-def test_situation_filter_by_end_time(api_client, situations):
-    end_time = timezone.now()
-    response = api_client.get(
-        SITUATION_LIST_URL
-        + f"?end_time__gt={datetime.strftime(end_time, DATETIME_FORMAT)}"
-    )
-    assert response.json()["count"] == 1
-    response = api_client.get(
-        SITUATION_LIST_URL
-        + f"?end_time__lt={datetime.strftime(end_time, DATETIME_FORMAT)}"
-    )
-    assert response.json()["count"] == 1
-
-    end_time = timezone.now() - timedelta(days=2)
+def test_situation_filter_by_end_time(api_client, situations, now):
+    end_time = now
     response = api_client.get(
         SITUATION_LIST_URL
         + f"?end_time__gt={datetime.strftime(end_time, DATETIME_FORMAT)}"
@@ -120,6 +109,26 @@ def test_situation_filter_by_end_time(api_client, situations):
         + f"?end_time__lt={datetime.strftime(end_time, DATETIME_FORMAT)}"
     )
     assert response.json()["count"] == 0
+
+    end_time = now - timedelta(days=2)
+    response = api_client.get(
+        SITUATION_LIST_URL
+        + f"?end_time__gt={datetime.strftime(end_time, DATETIME_FORMAT)}"
+    )
+    assert response.json()["count"] == 2
+    response = api_client.get(
+        SITUATION_LIST_URL
+        + f"?end_time__lt={datetime.strftime(end_time, DATETIME_FORMAT)}"
+    )
+    assert response.json()["count"] == 0
+
+
+@pytest.mark.django_db
+def test_filter_by_municipalities(api_client, situations):
+    response = api_client.get(SITUATION_LIST_URL + "?municipalities=raisio,lieto")
+    assert response.json()["count"] == 2
+    response = api_client.get(SITUATION_LIST_URL + "?municipalities=turku")
+    assert response.json()["count"] == 1
 
 
 @pytest.mark.django_db
@@ -163,6 +172,7 @@ def test_announcement_list(api_client, announcements):
         "end_time",
         "additional_info",
         "location",
+        "municipalities",
     }
     location = result_data["location"]
     assert location.keys() == {"id", "location", "geometry", "details"}
@@ -186,6 +196,7 @@ def test_announcement_retrieve(api_client, announcements):
         "end_time",
         "additional_info",
         "location",
+        "municipalities",
     }
     assert json_data["id"] == announcements[0].pk
 
