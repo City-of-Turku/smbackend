@@ -74,7 +74,7 @@ class MobilityData(MobileUnitDataBase):
             source_srid = DEFAULT_SOURCE_DATA_SRID
 
         if config.get("locates_in_turku", False):
-            if not locates_in_turku(feature, source_srid):
+            if not locates_in_turku(feature.geom.wkt, source_srid):
                 return False
         # If geometry contains multiple polygons and create_multipolygon attribute is True
         # create one multipolygon from the polygons.

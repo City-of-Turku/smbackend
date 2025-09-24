@@ -254,7 +254,7 @@ def get_street_name_and_number(address):
     return street_name, street_number
 
 
-def locates_in_turku(feature, source_data_srid):
+def locates_in_turku(wkt, source_data_srid):
     """
     Returns True if the geometry of the feature is inside the boundaries
     of Turku.
@@ -264,7 +264,7 @@ def locates_in_turku(feature, source_data_srid):
     turku_boundary = AdministrativeDivisionGeometry.objects.get(
         division=division_turku
     ).boundary
-    geometry = GEOSGeometry(feature.geom.wkt, srid=source_data_srid)
+    geometry = GEOSGeometry(wkt, srid=source_data_srid)
     geometry.transform(settings.DEFAULT_SRID)
     return turku_boundary.contains(geometry)
 
