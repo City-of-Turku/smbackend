@@ -4,8 +4,15 @@ from django.conf import settings
 from django.contrib.gis.geos import Point
 from munigeo.models import Municipality
 
-from .utils import fetch_json, MobileUnitDataBase, fetch_json_with_headers, get_municipality_name, locates_in_turku, \
-    get_closest_address_full_name, get_postal_code
+from .utils import (
+    fetch_json,
+    fetch_json_with_headers,
+    get_closest_address_full_name,
+    get_municipality_name,
+    get_postal_code,
+    locates_in_turku,
+    MobileUnitDataBase,
+)
 
 """
     Föli park_and_ride objects have moved from data.foli.fi to use Fintraffic Parking data in 2025.
