@@ -56,7 +56,7 @@ def get_parkandride_car_stop_objects():
     turku_hubs = get_fintraffic_hubs()
     car_stops = []
     for feature in turku_hubs:
-        if checkUsage(feature["properties"]["facilityIds"], "CAR") is not None:
+        if check_usage(feature["properties"]["facilityIds"], "CAR") is not None:
             car_stops.append(ParkAndRideStop(feature))
     logging.debug('Found {} car stops'.format(len(car_stops)))
     return car_stops
@@ -66,7 +66,7 @@ def get_parkandride_bike_stop_objects():
     turku_hubs = get_fintraffic_hubs()
     bike_stops = []
     for feature in turku_hubs:
-        if checkUsage(feature["properties"]["facilityIds"], "BICYCLE") is not None:
+        if check_usage(feature["properties"]["facilityIds"], "BICYCLE") is not None:
             bike_stops.append(ParkAndRideStop(feature))
     logging.debug('Found {} bike stops'.format(len(bike_stops)))
     return bike_stops
@@ -89,10 +89,10 @@ def get_fintraffic_hubs():
             logger.warning(e)
     return turku_hubs
 
-def checkUsage(facilityIds, capacity_type):
+def check_usage(facility_ids, capacity_type):
     """ Get usage by fetching related facilities """
     try:
-        if facilityIds is not None and len(facilityIds) > 0:
+        if facility_ids is not None and len(facility_ids) > 0:
             json_data = fetch_json(FACILITIES_URL + "?" + "&".join(f"ids={i}" for i in facilityIds))
             return find_parking_object(json_data["results"], capacity_type)
         else:
