@@ -23,6 +23,7 @@ PARKANDRIDE = "PARK_AND_RIDE"
 SOURCE_DATA_SRID = 4326
 logger = logging.getLogger("mobility_data")
 
+
 class ParkAndRideStop(MobileUnitDataBase):
     def __init__(self, feature):
         super().__init__()
@@ -71,6 +72,7 @@ def get_parkandride_bike_stop_objects():
     logging.debug('Found {} bike stops'.format(len(bike_stops)))
     return bike_stops
 
+
 def get_fintraffic_hubs():
     """
     Fintraffic https://parking.fintraffic.fi/docs/index.html#hub-search hub search currently
@@ -89,6 +91,7 @@ def get_fintraffic_hubs():
             logger.warning(e)
     return turku_hubs
 
+
 def check_usage(facility_ids, capacity_type):
     """ Get usage by fetching related facilities """
     try:
@@ -100,6 +103,7 @@ def check_usage(facility_ids, capacity_type):
     except Exception as e:
         logger.warning("Exception: {}".format(e))
         return None
+
 
 def find_parking_object(data, capacity_type):
     """
