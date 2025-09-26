@@ -93,7 +93,7 @@ def check_usage(facility_ids, capacity_type):
     """ Get usage by fetching related facilities """
     try:
         if facility_ids is not None and len(facility_ids) > 0:
-            json_data = fetch_json(FACILITIES_URL + "?" + "&".join(f"ids={i}" for i in facilityIds))
+            json_data = fetch_json(FACILITIES_URL + "?" + "&".join(f"ids={i}" for i in facility_ids))
             return find_parking_object(json_data["results"], capacity_type)
         else:
             return None
