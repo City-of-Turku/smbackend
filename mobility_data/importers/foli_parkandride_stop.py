@@ -49,7 +49,9 @@ class ParkAndRideStop(MobileUnitDataBase):
         )
         self.geometry.transform(settings.DEFAULT_SRID)
         try:
-            self.municipality = Municipality.objects.get(name=get_municipality_name(self.geometry))
+            self.municipality = Municipality.objects.get(
+                name=get_municipality_name(self.geometry)
+            )
         except Municipality.DoesNotExist:
             self.municipality = None
         try:
@@ -66,7 +68,7 @@ def get_parkandride_car_stop_objects():
     for feature in turku_hubs:
         if check_usage(feature["properties"]["facilityIds"], "CAR") is not None:
             car_stops.append(ParkAndRideStop(feature))
-    logging.debug('Found {} car stops'.format(len(car_stops)))
+    logging.debug("Found {} car stops".format(len(car_stops)))
     return car_stops
 
 
@@ -76,7 +78,7 @@ def get_parkandride_bike_stop_objects():
     for feature in turku_hubs:
         if check_usage(feature["properties"]["facilityIds"], "BICYCLE") is not None:
             bike_stops.append(ParkAndRideStop(feature))
-    logging.debug('Found {} bike stops'.format(len(bike_stops)))
+    logging.debug("Found {} bike stops".format(len(bike_stops)))
     return bike_stops
 
 
@@ -91,7 +93,7 @@ def get_fintraffic_hubs():
         try:
             coords = feature["geometry"]["coordinates"]
             lon, lat = coords[0], coords[1]
-            wkt = f'POINT({lon} {lat})'
+            wkt = f"POINT({lon} {lat})"
             if locates_in_turku(wkt, SOURCE_DATA_SRID):
                 turku_hubs.append(feature)
         except Exception as e:
@@ -100,10 +102,12 @@ def get_fintraffic_hubs():
 
 
 def check_usage(facility_ids, capacity_type):
-    """ Get usage by fetching related facilities """
+    """Get usage by fetching related facilities"""
     try:
         if facility_ids is not None and len(facility_ids) > 0:
-            json_data = fetch_json(FACILITIES_URL + "?" + "&".join(f"ids={i}" for i in facility_ids))
+            json_data = fetch_json(
+                FACILITIES_URL + "?" + "&".join(f"ids={i}" for i in facility_ids)
+            )
             return find_parking_object(json_data["results"], capacity_type)
         else:
             return None
@@ -120,6 +124,11 @@ def find_parking_object(data, capacity_type):
     if not data:
         return None
     return next(
-        (obj for obj in data if "PARK_AND_RIDE" in obj.get("usages", []) and obj.get("type") == capacity_type),
-        None
+        (
+            obj
+            for obj in data
+            if "PARK_AND_RIDE" in obj.get("usages", [])
+               and obj.get("type") == capacity_type
+        ),
+        None,
     )
