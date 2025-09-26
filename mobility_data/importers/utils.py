@@ -109,7 +109,6 @@ def fetch_json(url):
 
 def fetch_json_with_headers(url, headers):
     response = requests.get(url, headers=headers)
-    print(response.request.headers)
     assert response.status_code == 200, "Fetching {} status code: {}".format(
         url, response.status_code
     )
