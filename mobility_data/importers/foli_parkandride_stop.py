@@ -128,7 +128,7 @@ def find_parking_object(data, capacity_type):
             obj
             for obj in data
             if "PARK_AND_RIDE" in obj.get("usages", [])
-               and obj.get("type") == capacity_type
+            and obj.get("type") == capacity_type
         ),
         None,
     )
