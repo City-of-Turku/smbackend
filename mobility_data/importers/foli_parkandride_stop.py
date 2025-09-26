@@ -8,7 +8,7 @@ from .utils import fetch_json, MobileUnitDataBase, fetch_json_with_headers, get_
     get_closest_address_full_name, get_postal_code
 
 """
-    Föli park_and_ride objects have moved from data.foli.fi to use Fintraffic Parking data in 2025. 
+    Föli park_and_ride objects have moved from data.foli.fi to use Fintraffic Parking data in 2025.
 """
 
 # URL = "https://data.foli.fi/geojson/poi"
