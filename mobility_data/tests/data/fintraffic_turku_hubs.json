@@ -1,0 +1,242 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "id": 492,
+      "geometry": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.231349945068363,
+          60.415132252964575,
+          22.231349945068363,
+          60.415132252964575
+        ],
+        "coordinates": [
+          22.231349945068363,
+          60.415132252964575
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": {
+          "fi": "Hirvensalo",
+          "sv": "Hirvensalo",
+          "en": "Hirvensalo"
+        },
+        "facilityIds": [
+          1416,
+          1467
+        ]
+      },
+      "type": "Feature"
+    },
+    {
+      "id": 451,
+      "geometry": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.270946989940683,
+          60.447183347610164,
+          22.270946989940683,
+          60.447183347610164
+        ],
+        "coordinates": [
+          22.270946989940683,
+          60.447183347610164
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": {
+          "fi": "Turku",
+          "sv": "Åbo",
+          "en": "City of Turku"
+        },
+        "facilityIds": [
+          1412,
+          1413,
+          1414,
+          1415,
+          1416
+        ]
+      },
+      "type": "Feature"
+    },
+    {
+      "id": 488,
+      "geometry": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.2291018754029,
+          60.418855304313595,
+          22.2291018754029,
+          60.418855304313595
+        ],
+        "coordinates": [
+          22.2291018754029,
+          60.418855304313595
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": {
+          "fi": "Turku K-Supermarket Hirvensalo",
+          "sv": "Turku K-Supermarket Hirvensalo",
+          "en": "Turku K-Supermarket Hirvensalo"
+        },
+        "facilityIds": [
+          1416
+        ]
+      },
+      "type": "Feature"
+    },
+    {
+      "id": 484,
+      "geometry": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.23363416534365,
+          60.472924170301596,
+          22.23363416534365,
+          60.472924170301596
+        ],
+        "coordinates": [
+          22.23363416534365,
+          60.472924170301596
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": {
+          "fi": "Turku Länsikeskus",
+          "sv": "Åbo Västra centrum",
+          "en": "Turku Länsikeskus"
+        },
+        "facilityIds": [
+          1415
+        ]
+      },
+      "type": "Feature"
+    },
+    {
+      "id": 486,
+      "geometry": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.325318736281982,
+          60.445582061469736,
+          22.325318736281982,
+          60.445582061469736
+        ],
+        "coordinates": [
+          22.325318736281982,
+          60.445582061469736
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": {
+          "fi": "Turku Prisma Itäharju",
+          "sv": "Åbo Prisma Österås",
+          "en": "Turku, Prisma Itäharju"
+        },
+        "facilityIds": [
+          1412
+        ]
+      },
+      "type": "Feature"
+    },
+    {
+      "id": 487,
+      "geometry": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.28412418541398,
+          60.47276201844573,
+          22.28412418541398,
+          60.47276201844573
+        ],
+        "coordinates": [
+          22.28412418541398,
+          60.47276201844573
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": {
+          "fi": "Turku Prisma Tampereentie",
+          "sv": "Åbo Prisma Tammerforsvägen ",
+          "en": "Turku Prisma Tampereentie"
+        },
+        "facilityIds": [
+          1414
+        ]
+      },
+      "type": "Feature"
+    },
+    {
+      "id": 373,
+      "geometry": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.253036,
+          60.45394,
+          22.253036,
+          60.45394
+        ],
+        "coordinates": [
+          22.253036,
+          60.45394
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": {
+          "fi": "Turun rautatieasema",
+          "sv": "Åbo järnvägsstation",
+          "en": "Turku railway station"
+        },
+        "facilityIds": [
+          1141,
+          1143
+        ]
+      },
+      "type": "Feature"
+    }
+  ]
+}
