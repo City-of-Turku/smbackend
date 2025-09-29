@@ -23,7 +23,7 @@ def test_import_foli_stops(fetch_json_mock, municipalities):
     )
 
     fetch_json_mock.return_value = get_test_fixture_json_data(
-        "foli_parkandride_stops.json"
+        "fintraffic_turku_hubs.json"
     )
 
     car_stops = get_parkandride_car_stop_objects()
