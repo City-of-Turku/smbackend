@@ -11,7 +11,7 @@ from .utils import (
     get_municipality_name,
     get_postal_code,
     locates_in_turku,
-    MobileUnitDataBase,
+    MobileUnitDataBase, locates_in_south_western_finland,
 )
 
 """
@@ -93,8 +93,8 @@ def get_fintraffic_hubs():
         try:
             coords = feature["geometry"]["coordinates"]
             lon, lat = coords[0], coords[1]
-            wkt = f"POINT({lon} {lat})"
-            if locates_in_turku(wkt, SOURCE_DATA_SRID):
+            point = Point(lon, lat, srid=SOURCE_DATA_SRID)
+            if locates_in_south_western_finland(point):
                 turku_hubs.append(feature)
         except Exception as e:
             logger.warning(e)

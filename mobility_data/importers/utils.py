@@ -13,7 +13,7 @@ from django import db
 from django.conf import settings
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.gdal import DataSource as GDALDataSource
-from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.geos import GEOSGeometry, Polygon
 from munigeo.models import (
     Address,
     AdministrativeDivision,
@@ -23,6 +23,7 @@ from munigeo.models import (
     Street,
 )
 
+from mobility_data.importers.constants import SOUTHWEST_FINLAND_BOUNDARY, SOUTHWEST_FINLAND_BOUNDARY_SRID
 from mobility_data.models import ContentType, DataSource, MobileUnit
 from services.models import Unit
 
@@ -267,6 +268,16 @@ def locates_in_turku(wkt, source_data_srid):
     geometry = GEOSGeometry(wkt, srid=source_data_srid)
     geometry.transform(settings.DEFAULT_SRID)
     return turku_boundary.contains(geometry)
+
+
+def locates_in_south_western_finland(point):
+    """
+    Returns True if the geometry of the feature is inside the boundaries of South Western Finland.
+    """
+    polygon = Polygon(
+        SOUTHWEST_FINLAND_BOUNDARY, srid=SOUTHWEST_FINLAND_BOUNDARY_SRID
+    )
+    return polygon.covers(point)
 
 
 def get_file_name_from_data_source(content_type):
