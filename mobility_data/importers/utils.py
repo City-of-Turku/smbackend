@@ -23,7 +23,10 @@ from munigeo.models import (
     Street,
 )
 
-from mobility_data.importers.constants import SOUTHWEST_FINLAND_BOUNDARY, SOUTHWEST_FINLAND_BOUNDARY_SRID
+from mobility_data.importers.constants import (
+    SOUTHWEST_FINLAND_BOUNDARY,
+    SOUTHWEST_FINLAND_BOUNDARY_SRID,
+)
 from mobility_data.models import ContentType, DataSource, MobileUnit
 from services.models import Unit
 
@@ -274,9 +277,7 @@ def locates_in_south_western_finland(point):
     """
     Returns True if the geometry of the feature is inside the boundaries of South Western Finland.
     """
-    polygon = Polygon(
-        SOUTHWEST_FINLAND_BOUNDARY, srid=SOUTHWEST_FINLAND_BOUNDARY_SRID
-    )
+    polygon = Polygon(SOUTHWEST_FINLAND_BOUNDARY, srid=SOUTHWEST_FINLAND_BOUNDARY_SRID)
     return polygon.covers(point)
 
 

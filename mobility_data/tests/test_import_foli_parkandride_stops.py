@@ -68,9 +68,11 @@ def test_import_foli_stops(fetch_json_mock):
     bikes_stops_content_type.name_sv = config["name"]["sv"]
     bikes_stops_content_type.name_en = config["name"]["en"]
     # Fixture data contains two park and ride stops for cars and bikes.
-    assert MobileUnit.objects.filter(content_types=cars_stops_content_type).count() == 12
     assert (
-        MobileUnit.objects.filter(content_types=bikes_stops_content_type).count() == 12
+            MobileUnit.objects.filter(content_types=cars_stops_content_type).count() == 12
+    )
+    assert (
+            MobileUnit.objects.filter(content_types=bikes_stops_content_type).count() == 12
     )
     # Test Föli park and ride cars stop
     train = MobileUnit.objects.filter(name_en="Turku railway station").first()
@@ -94,5 +96,7 @@ def test_import_foli_stops(fetch_json_mock):
     num_created, num_deleted = save_to_database(car_stops, content_type)
     assert num_created == 0
     assert num_deleted == 0
-    assert MobileUnit.objects.filter(content_types=cars_stops_content_type).count() == 12
+    assert (
+            MobileUnit.objects.filter(content_types=cars_stops_content_type).count() == 12
+    )
     assert hirvensalo.id == MobileUnit.objects.filter(name_en="Hirvensalo").first().id

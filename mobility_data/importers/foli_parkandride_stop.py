@@ -10,7 +10,8 @@ from .utils import (
     get_closest_address_full_name,
     get_municipality_name,
     get_postal_code,
-    MobileUnitDataBase, locates_in_south_western_finland,
+    locates_in_south_western_finland,
+    MobileUnitDataBase,
 )
 
 """
@@ -127,7 +128,7 @@ def find_parking_object(data, capacity_type):
             obj
             for obj in data
             if "PARK_AND_RIDE" in obj.get("usages", [])
-            and obj.get("type") == capacity_type
+               and obj.get("type") == capacity_type
         ),
         None,
     )
