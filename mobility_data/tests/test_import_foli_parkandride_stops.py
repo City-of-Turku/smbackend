@@ -12,15 +12,18 @@ from mobility_data.models import ContentType, MobileUnit
 from .utils import get_test_fixture_json_data
 
 """
-Tests Föli area park and ride stops. Föli transferred the stops from their own API to Fintraffic Parking API in 2025 and such the testing data
-needed changes. This means that the tests had to be suppressed as not all data was available through Fintraffic Parking API as easily as from
-the Föli API. Mainly address information was affected and now needs fetching the address from database. In testing environment, the addresses
-are not available so this test will cause a warning.
+Tests Föli area park and ride stops. Föli transferred the stops from their own API to Fintraffic Parking API
+in 2025 and such the testing data needed changes. This means that the tests had to be suppressed as not all data
+was available through Fintraffic Parking API as easily as from the Föli API. Mainly address information
+was affected and now needs fetching the address from database. In testing environment, the addresses are
+not available so this test will cause a warning.
 
 Suggestion when there is more time to use:
 - see the fetch_json_mock and edit it to only consist of a couple of cases
 - add the addresses and municipalities for those cases
 """
+
+
 @pytest.mark.django_db
 @patch("mobility_data.importers.utils.fetch_json")
 def test_import_foli_stops(fetch_json_mock):

@@ -10,7 +10,6 @@ from .utils import (
     get_closest_address_full_name,
     get_municipality_name,
     get_postal_code,
-    locates_in_turku,
     MobileUnitDataBase, locates_in_south_western_finland,
 )
 
