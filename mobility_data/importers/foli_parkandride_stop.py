@@ -66,7 +66,13 @@ def get_parkandride_car_stop_objects():
     turku_hubs = get_fintraffic_hubs()
     car_stops = []
     for feature in turku_hubs:
-        if check_usage(feature["properties"]["facilityIds"], "CAR") is not None:
+        usage = check_usage(feature["properties"]["facilityIds"], "CAR")
+        if usage is not None:
+            feature["geometry"]["coordinates"] = (
+                usage["location"]["coordinates"]
+                if usage["location"]["type"] == "Point"
+                else usage["location"]["coordinates"][0]
+            )
             car_stops.append(ParkAndRideStop(feature))
     logging.debug("Found {} car stops".format(len(car_stops)))
     return car_stops
@@ -76,7 +82,13 @@ def get_parkandride_bike_stop_objects():
     turku_hubs = get_fintraffic_hubs()
     bike_stops = []
     for feature in turku_hubs:
-        if check_usage(feature["properties"]["facilityIds"], "BICYCLE") is not None:
+        usage = check_usage(feature["properties"]["facilityIds"], "BICYCLE")
+        if usage is not None:
+            feature["geometry"]["coordinates"] = (
+                usage["location"]["coordinates"]
+                if usage["location"]["type"] == "Point"
+                else usage["location"]["coordinates"][0]
+            )
             bike_stops.append(ParkAndRideStop(feature))
     logging.debug("Found {} bike stops".format(len(bike_stops)))
     return bike_stops
