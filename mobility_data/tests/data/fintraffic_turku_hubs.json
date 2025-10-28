@@ -1,0 +1,1513 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "id": 492,
+      "geometry": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.231349945068363,
+          60.415132252964575,
+          22.231349945068363,
+          60.415132252964575
+        ],
+        "coordinates": [
+          22.231349945068363,
+          60.415132252964575
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": {
+          "fi": "Hirvensalo",
+          "sv": "Hirvensalo",
+          "en": "Hirvensalo"
+        },
+        "facilityIds": [
+          1416,
+          1467
+        ]
+      },
+      "type": "Feature"
+    },
+    {
+      "id": 451,
+      "geometry": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.270946989940683,
+          60.447183347610164,
+          22.270946989940683,
+          60.447183347610164
+        ],
+        "coordinates": [
+          22.270946989940683,
+          60.447183347610164
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": {
+          "fi": "Turku",
+          "sv": "Åbo",
+          "en": "City of Turku"
+        },
+        "facilityIds": [
+          1412,
+          1413,
+          1414,
+          1415,
+          1416
+        ]
+      },
+      "type": "Feature"
+    },
+    {
+      "id": 488,
+      "geometry": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.2291018754029,
+          60.418855304313595,
+          22.2291018754029,
+          60.418855304313595
+        ],
+        "coordinates": [
+          22.2291018754029,
+          60.418855304313595
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": {
+          "fi": "Turku K-Supermarket Hirvensalo",
+          "sv": "Turku K-Supermarket Hirvensalo",
+          "en": "Turku K-Supermarket Hirvensalo"
+        },
+        "facilityIds": [
+          1416
+        ]
+      },
+      "type": "Feature"
+    },
+    {
+      "id": 484,
+      "geometry": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.23363416534365,
+          60.472924170301596,
+          22.23363416534365,
+          60.472924170301596
+        ],
+        "coordinates": [
+          22.23363416534365,
+          60.472924170301596
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": {
+          "fi": "Turku Länsikeskus",
+          "sv": "Åbo Västra centrum",
+          "en": "Turku Länsikeskus"
+        },
+        "facilityIds": [
+          1415
+        ]
+      },
+      "type": "Feature"
+    },
+    {
+      "id": 486,
+      "geometry": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.325318736281982,
+          60.445582061469736,
+          22.325318736281982,
+          60.445582061469736
+        ],
+        "coordinates": [
+          22.325318736281982,
+          60.445582061469736
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": {
+          "fi": "Turku Prisma Itäharju",
+          "sv": "Åbo Prisma Österås",
+          "en": "Turku, Prisma Itäharju"
+        },
+        "facilityIds": [
+          1412
+        ]
+      },
+      "type": "Feature"
+    },
+    {
+      "id": 487,
+      "geometry": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.28412418541398,
+          60.47276201844573,
+          22.28412418541398,
+          60.47276201844573
+        ],
+        "coordinates": [
+          22.28412418541398,
+          60.47276201844573
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": {
+          "fi": "Turku Prisma Tampereentie",
+          "sv": "Åbo Prisma Tammerforsvägen ",
+          "en": "Turku Prisma Tampereentie"
+        },
+        "facilityIds": [
+          1414
+        ]
+      },
+      "type": "Feature"
+    },
+    {
+      "id": 373,
+      "geometry": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.253036,
+          60.45394,
+          22.253036,
+          60.45394
+        ],
+        "coordinates": [
+          22.253036,
+          60.45394
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": {
+          "fi": "Turun rautatieasema",
+          "sv": "Åbo järnvägsstation",
+          "en": "Turku railway station"
+        },
+        "facilityIds": [
+          1141,
+          1143
+        ]
+      },
+      "type": "Feature"
+    }
+  ],
+  "results": [
+    {
+      "id": 1415,
+      "name": {
+        "fi": "K-Citymarket Länsikeskus",
+        "sv": "K-Citymarket Länsikeskus",
+        "en": "K-Citymarket Länsikeskus"
+      },
+      "location": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.233709502361116,
+          60.47322118011114,
+          22.234031461974762,
+          60.47341152938753
+        ],
+        "coordinates": [
+          [
+            [
+              22.233709502361116,
+              60.473274055022145
+            ],
+            [
+              22.233859750180823,
+              60.47322118011114
+            ],
+            [
+              22.234031461974762,
+              60.473353367227105
+            ],
+            [
+              22.233924142103533,
+              60.47341152938753
+            ],
+            [
+              22.233709502361116,
+              60.473274055022145
+            ]
+          ]
+        ],
+        "type": "Polygon"
+      },
+      "operatorId": 125,
+      "type": "CAR",
+      "status": "IN_OPERATION",
+      "pricingMethod": "CUSTOM",
+      "statusDescription": null,
+      "softDeletedAt": null,
+      "builtCapacity": {
+        "CAR": 4
+      },
+      "usages": [
+        "PARK_AND_RIDE"
+      ],
+      "services": [],
+      "authenticationMethods": [],
+      "surveyOptions": [],
+      "pricing": [
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "CAR",
+          "maxCapacity": 4,
+          "dayType": "BUSINESS_DAY",
+          "time": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": "0"
+        },
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "CAR",
+          "maxCapacity": 4,
+          "dayType": "SATURDAY",
+          "time": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": "0"
+        },
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "CAR",
+          "maxCapacity": 4,
+          "dayType": "SUNDAY",
+          "time": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": "0"
+        }
+      ],
+      "paymentInfo": {
+        "detail": {
+          "fi": "https://www.turku.fi/liityntapysakointi",
+          "sv": "https://www.turku.fi/sv/anslutningsparkering",
+          "en": "https://www.turku.fi/en/park-and-ride"
+        },
+        "url": null,
+        "paymentMethods": []
+      },
+      "openingHours": {
+        "openNow": true,
+        "byDayType": {
+          "SATURDAY": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "SUNDAY": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "BUSINESS_DAY": {
+            "from": "00",
+            "until": "23:59"
+          }
+        },
+        "liipyByDayType": {
+          "SATURDAY": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "SUNDAY": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "BUSINESS_DAY": {
+            "from": "00",
+            "until": "23:59"
+          }
+        },
+        "info": null,
+        "url": null
+      },
+      "ports": []
+    },
+    {
+      "id": 1416,
+      "name": {
+        "fi": "K-Supermarket Hirvensalo",
+        "sv": "K-Supermarket Hirvensalo",
+        "en": "K-Supermarket Hirvensalo"
+      },
+      "location": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.22867695980695,
+          60.418934942591875,
+          22.228886233555837,
+          60.41912296205125
+        ],
+        "coordinates": [
+          [
+            [
+              22.22867695980695,
+              60.419107073124884
+            ],
+            [
+              22.22880574365242,
+              60.41912296205125
+            ],
+            [
+              22.228886233555837,
+              60.41895083160231
+            ],
+            [
+              22.228741351729706,
+              60.418934942591875
+            ],
+            [
+              22.22867695980695,
+              60.419107073124884
+            ]
+          ]
+        ],
+        "type": "Polygon"
+      },
+      "operatorId": 125,
+      "type": "CAR",
+      "status": "IN_OPERATION",
+      "pricingMethod": "CUSTOM",
+      "statusDescription": null,
+      "softDeletedAt": null,
+      "builtCapacity": {
+        "CAR": 4
+      },
+      "usages": [
+        "PARK_AND_RIDE"
+      ],
+      "services": [],
+      "authenticationMethods": [],
+      "surveyOptions": [],
+      "pricing": [
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "CAR",
+          "maxCapacity": 4,
+          "dayType": "BUSINESS_DAY",
+          "time": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": "0"
+        },
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "CAR",
+          "maxCapacity": 4,
+          "dayType": "SATURDAY",
+          "time": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": "0"
+        },
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "CAR",
+          "maxCapacity": 4,
+          "dayType": "SUNDAY",
+          "time": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": "0"
+        }
+      ],
+      "paymentInfo": {
+        "detail": {
+          "fi": "https://www.turku.fi/liityntapysakointi",
+          "sv": "https://www.turku.fi/sv/anslutningsparkering",
+          "en": "https://www.turku.fi/en/park-and-ride"
+        },
+        "url": null,
+        "paymentMethods": []
+      },
+      "openingHours": {
+        "openNow": true,
+        "byDayType": {
+          "SATURDAY": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "SUNDAY": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "BUSINESS_DAY": {
+            "from": "00",
+            "until": "23:59"
+          }
+        },
+        "liipyByDayType": {
+          "SATURDAY": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "SUNDAY": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "BUSINESS_DAY": {
+            "from": "00",
+            "until": "23:59"
+          }
+        },
+        "info": null,
+        "url": null
+      },
+      "ports": []
+    },
+    {
+      "id": 1467,
+      "name": {
+        "fi": "Moikoinen, Pitkäpellonkatu",
+        "sv": "Moikois, Långåkersgatan",
+        "en": "Moikoinen, Pitkäpellonkatu"
+      },
+      "location": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.23545446520262,
+          60.41154041413114,
+          22.235786947945833,
+          60.41167020365707
+        ],
+        "coordinates": [
+          [
+            [
+              22.23545446520262,
+              60.41160663334171
+            ],
+            [
+              22.235502728826635,
+              60.41154041413114
+            ],
+            [
+              22.235786947945833,
+              60.41161193087272
+            ],
+            [
+              22.23571723382228,
+              60.41167020365707
+            ],
+            [
+              22.23545446520262,
+              60.41160663334171
+            ]
+          ]
+        ],
+        "type": "Polygon"
+      },
+      "operatorId": 125,
+      "type": "BICYCLE",
+      "status": "IN_OPERATION",
+      "pricingMethod": "PARK_AND_RIDE_247_FREE",
+      "statusDescription": null,
+      "softDeletedAt": null,
+      "builtCapacity": {
+        "BICYCLE": 38
+      },
+      "usages": [
+        "PARK_AND_RIDE"
+      ],
+      "services": [],
+      "authenticationMethods": [],
+      "surveyOptions": [],
+      "pricing": [
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "BICYCLE",
+          "maxCapacity": 38,
+          "dayType": "BUSINESS_DAY",
+          "time": {
+            "from": "00",
+            "until": "24"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": null
+        },
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "BICYCLE",
+          "maxCapacity": 38,
+          "dayType": "SATURDAY",
+          "time": {
+            "from": "00",
+            "until": "24"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": null
+        },
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "BICYCLE",
+          "maxCapacity": 38,
+          "dayType": "SUNDAY",
+          "time": {
+            "from": "00",
+            "until": "24"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": null
+        }
+      ],
+      "paymentInfo": {
+        "detail": {
+          "fi": "https://www.foli.fi/fi/aikataulut-ja-reitit/liitynt%C3%A4pys%C3%A4k%C3%B6inti/polkupy%C3%B6r%C3%A4t",
+          "sv": "https://www.foli.fi/sv/tidtabeller-och-rutter/infartsparkering/infartsparkeringsplatser-f%C3%B6r-cyklar",
+          "en": "https://www.foli.fi/fi/aikataulut-ja-reitit/liitynt%C3%A4pys%C3%A4k%C3%B6inti/polkupy%C3%B6r%C3%A4t"
+        },
+        "url": null,
+        "paymentMethods": []
+      },
+      "openingHours": {
+        "openNow": true,
+        "byDayType": {
+          "SATURDAY": {
+            "from": "00",
+            "until": "24"
+          },
+          "SUNDAY": {
+            "from": "00",
+            "until": "24"
+          },
+          "BUSINESS_DAY": {
+            "from": "00",
+            "until": "24"
+          }
+        },
+        "liipyByDayType": {
+          "SATURDAY": {
+            "from": "00",
+            "until": "24"
+          },
+          "SUNDAY": {
+            "from": "00",
+            "until": "24"
+          },
+          "BUSINESS_DAY": {
+            "from": "00",
+            "until": "24"
+          }
+        },
+        "info": null,
+        "url": null
+      },
+      "ports": []
+    },
+    {
+      "id": 1412,
+      "name": {
+        "fi": "Prisma Itäharju",
+        "sv": "Prisma Itäharju",
+        "en": "Prisma Itäharju"
+      },
+      "location": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.325617074952792,
+          60.44515660406958,
+          22.32614278791971,
+          60.44541062231404
+        ],
+        "coordinates": [
+          [
+            [
+              22.32568144796915,
+              60.44534711793912
+            ],
+            [
+              22.325735092149447,
+              60.44541062231404
+            ],
+            [
+              22.32614278791971,
+              60.44526244524615
+            ],
+            [
+              22.326056957231234,
+              60.44515660406958
+            ],
+            [
+              22.325617074952792,
+              60.44531007366308
+            ],
+            [
+              22.32568144796915,
+              60.44534711793912
+            ]
+          ]
+        ],
+        "type": "Polygon"
+      },
+      "operatorId": 125,
+      "type": "CAR",
+      "status": "IN_OPERATION",
+      "pricingMethod": "CUSTOM",
+      "statusDescription": null,
+      "softDeletedAt": null,
+      "builtCapacity": {
+        "CAR": 4
+      },
+      "usages": [
+        "PARK_AND_RIDE"
+      ],
+      "services": [],
+      "authenticationMethods": [],
+      "surveyOptions": [],
+      "pricing": [
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "CAR",
+          "maxCapacity": 4,
+          "dayType": "BUSINESS_DAY",
+          "time": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": "0"
+        },
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "CAR",
+          "maxCapacity": 4,
+          "dayType": "SATURDAY",
+          "time": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": "0"
+        },
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "CAR",
+          "maxCapacity": 4,
+          "dayType": "SUNDAY",
+          "time": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": "0"
+        }
+      ],
+      "paymentInfo": {
+        "detail": {
+          "fi": "https://www.turku.fi/liityntapysakointi",
+          "sv": "https://www.turku.fi/sv/anslutningsparkering",
+          "en": "https://www.turku.fi/en/park-and-ride"
+        },
+        "url": null,
+        "paymentMethods": [
+          "OTHER"
+        ]
+      },
+      "openingHours": {
+        "openNow": true,
+        "byDayType": {
+          "SATURDAY": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "SUNDAY": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "BUSINESS_DAY": {
+            "from": "00",
+            "until": "23:59"
+          }
+        },
+        "liipyByDayType": {
+          "SATURDAY": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "SUNDAY": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "BUSINESS_DAY": {
+            "from": "00",
+            "until": "23:59"
+          }
+        },
+        "info": null,
+        "url": null
+      },
+      "ports": []
+    },
+    {
+      "id": 1413,
+      "name": {
+        "fi": "Prisma Piispanristi",
+        "sv": "Prisma Piispanristi",
+        "en": "Prisma Piispanristi"
+      },
+      "location": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.326071696128576,
+          60.416446809841176,
+          22.326694151381638,
+          60.416722239326
+        ],
+        "coordinates": [
+          [
+            [
+              22.326071696128576,
+              60.416526260893484
+            ],
+            [
+              22.326221943948283,
+              60.416446809841176
+            ],
+            [
+              22.326694151381638,
+              60.41662160190003
+            ],
+            [
+              22.326608295484647,
+              60.416722239326
+            ],
+            [
+              22.326071696128576,
+              60.416526260893484
+            ]
+          ]
+        ],
+        "type": "Polygon"
+      },
+      "operatorId": 125,
+      "type": "CAR",
+      "status": "IN_OPERATION",
+      "pricingMethod": "CUSTOM",
+      "statusDescription": null,
+      "softDeletedAt": null,
+      "builtCapacity": {
+        "CAR": 4
+      },
+      "usages": [
+        "PARK_AND_RIDE"
+      ],
+      "services": [],
+      "authenticationMethods": [],
+      "surveyOptions": [],
+      "pricing": [
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "CAR",
+          "maxCapacity": 4,
+          "dayType": "BUSINESS_DAY",
+          "time": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": "0"
+        },
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "CAR",
+          "maxCapacity": 4,
+          "dayType": "SATURDAY",
+          "time": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": "0"
+        },
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "CAR",
+          "maxCapacity": 4,
+          "dayType": "SUNDAY",
+          "time": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": "0"
+        }
+      ],
+      "paymentInfo": {
+        "detail": {
+          "fi": "https://www.turku.fi/liityntapysakointi",
+          "sv": "https://www.turku.fi/sv/anslutningsparkering",
+          "en": "https://www.turku.fi/en/park-and-ride"
+        },
+        "url": null,
+        "paymentMethods": [
+          "OTHER"
+        ]
+      },
+      "openingHours": {
+        "openNow": true,
+        "byDayType": {
+          "SATURDAY": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "SUNDAY": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "BUSINESS_DAY": {
+            "from": "00",
+            "until": "23:59"
+          }
+        },
+        "liipyByDayType": {
+          "SATURDAY": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "SUNDAY": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "BUSINESS_DAY": {
+            "from": "00",
+            "until": "23:59"
+          }
+        },
+        "info": null,
+        "url": null
+      },
+      "ports": []
+    },
+    {
+      "id": 1414,
+      "name": {
+        "fi": "Prisma Tampereentie",
+        "sv": "Prisma Tampereentie",
+        "en": "Prisma Tampereentie"
+      },
+      "location": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.283915067068897,
+          60.47239455778792,
+          22.284585816264006,
+          60.472500310217455
+        ],
+        "coordinates": [
+          [
+            [
+              22.283915067068897,
+              60.47249502260415
+            ],
+            [
+              22.28394189703671,
+              60.47239455778792
+            ],
+            [
+              22.284585816264006,
+              60.47241042067433
+            ],
+            [
+              22.2845482543091,
+              60.472500310217455
+            ],
+            [
+              22.283915067068897,
+              60.47249502260415
+            ]
+          ]
+        ],
+        "type": "Polygon"
+      },
+      "operatorId": 125,
+      "type": "CAR",
+      "status": "IN_OPERATION",
+      "pricingMethod": "CUSTOM",
+      "statusDescription": null,
+      "softDeletedAt": null,
+      "builtCapacity": {
+        "CAR": 4
+      },
+      "usages": [
+        "PARK_AND_RIDE"
+      ],
+      "services": [],
+      "authenticationMethods": [],
+      "surveyOptions": [],
+      "pricing": [
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "CAR",
+          "maxCapacity": 4,
+          "dayType": "BUSINESS_DAY",
+          "time": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": "0"
+        },
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "CAR",
+          "maxCapacity": 4,
+          "dayType": "SATURDAY",
+          "time": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": "0"
+        },
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "CAR",
+          "maxCapacity": 4,
+          "dayType": "SUNDAY",
+          "time": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": "0"
+        }
+      ],
+      "paymentInfo": {
+        "detail": {
+          "fi": "https://www.turku.fi/liityntapysakointi",
+          "sv": "https://www.turku.fi/sv/anslutningsparkering",
+          "en": "https://www.turku.fi/en/park-and-ride"
+        },
+        "url": null,
+        "paymentMethods": [
+          "OTHER"
+        ]
+      },
+      "openingHours": {
+        "openNow": true,
+        "byDayType": {
+          "SATURDAY": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "SUNDAY": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "BUSINESS_DAY": {
+            "from": "00",
+            "until": "23:59"
+          }
+        },
+        "liipyByDayType": {
+          "SATURDAY": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "SUNDAY": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "BUSINESS_DAY": {
+            "from": "00",
+            "until": "23:59"
+          }
+        },
+        "info": null,
+        "url": null
+      },
+      "ports": []
+    },
+    {
+      "id": 1141,
+      "name": {
+        "fi": "Turun rautatieasema P1",
+        "sv": "Åbo järnvägsstation P1",
+        "en": "Turku railway station P1"
+      },
+      "location": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.25272893904958,
+          60.45345190798858,
+          22.25418806075368,
+          60.45397568466684
+        ],
+        "coordinates": [
+          [
+            [
+              22.254043221466876,
+              60.45397568466684
+            ],
+            [
+              22.25272893904958,
+              60.45356036748916
+            ],
+            [
+              22.252868413918353,
+              60.45345190798858
+            ],
+            [
+              22.25418806075368,
+              60.4538804531718
+            ],
+            [
+              22.254043221466876,
+              60.45397568466684
+            ]
+          ]
+        ],
+        "type": "Polygon"
+      },
+      "operatorId": 46,
+      "type": "CAR",
+      "status": "IN_OPERATION",
+      "pricingMethod": "PAID_24H",
+      "statusDescription": null,
+      "softDeletedAt": null,
+      "builtCapacity": {
+        "CAR": 50,
+        "MOTORCYCLE": 5,
+        "DISABLED": 5
+      },
+      "usages": [
+        "PARK_AND_RIDE"
+      ],
+      "services": [
+        "LIGHTING"
+      ],
+      "authenticationMethods": [],
+      "surveyOptions": [],
+      "pricing": [
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "CAR",
+          "maxCapacity": 50,
+          "dayType": "BUSINESS_DAY",
+          "time": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": "1.80"
+        },
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "DISABLED",
+          "maxCapacity": 5,
+          "dayType": "BUSINESS_DAY",
+          "time": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": "1.80"
+        },
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "MOTORCYCLE",
+          "maxCapacity": 5,
+          "dayType": "BUSINESS_DAY",
+          "time": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": "1.80"
+        }
+      ],
+      "paymentInfo": {
+        "detail": null,
+        "url": null,
+        "paymentMethods": [
+          "DEBIT_CARD"
+        ]
+      },
+      "openingHours": {
+        "openNow": true,
+        "byDayType": {
+          "BUSINESS_DAY": {
+            "from": "00",
+            "until": "23:59"
+          }
+        },
+        "liipyByDayType": {
+          "BUSINESS_DAY": {
+            "from": "00",
+            "until": "23:59"
+          }
+        },
+        "info": null,
+        "url": null
+      },
+      "ports": [
+        {
+          "location": {
+            "crs": {
+              "type": "name",
+              "properties": {
+                "name": "EPSG:4326"
+              }
+            },
+            "bbox": [
+              22.254112,
+              60.453938,
+              22.254112,
+              60.453938
+            ],
+            "coordinates": [
+              22.254112,
+              60.453938
+            ],
+            "type": "Point"
+          },
+          "entry": true,
+          "exit": false,
+          "pedestrian": false,
+          "bicycle": false,
+          "address": {
+            "streetAddress": {
+              "fi": "Humalistonkatu 17b",
+              "sv": "Humlegårdsgatan 17b",
+              "en": "Humalistonkatu 17b"
+            },
+            "postalCode": null,
+            "city": {
+              "fi": "Turku",
+              "sv": "Turku",
+              "en": "Turku"
+            }
+          },
+          "info": null
+        },
+        {
+          "location": {
+            "crs": {
+              "type": "name",
+              "properties": {
+                "name": "EPSG:4326"
+              }
+            },
+            "bbox": [
+              22.252739,
+              60.453556,
+              22.252739,
+              60.453556
+            ],
+            "coordinates": [
+              22.252739,
+              60.453556
+            ],
+            "type": "Point"
+          },
+          "entry": false,
+          "exit": true,
+          "pedestrian": false,
+          "bicycle": false,
+          "address": {
+            "streetAddress": {
+              "fi": "Ratapihankatu 39",
+              "sv": "Bangårdsgatan 39",
+              "en": "Ratapihankatu 39"
+            },
+            "postalCode": null,
+            "city": {
+              "fi": "Turku",
+              "sv": "Turku",
+              "en": "Turku"
+            }
+          },
+          "info": null
+        }
+      ]
+    },
+    {
+      "id": 1143,
+      "name": {
+        "fi": "Turun rautatieasema P2",
+        "sv": "Åbo järnvägsstation P2",
+        "en": "Turku railway station P2"
+      },
+      "location": {
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:4326"
+          }
+        },
+        "bbox": [
+          22.249762415879108,
+          60.45293694089139,
+          22.252063751213885,
+          60.453751713881914
+        ],
+        "coordinates": [
+          [
+            [
+              22.249762415879108,
+              60.45302952976061
+            ],
+            [
+              22.2519403695992,
+              60.453751713881914
+            ],
+            [
+              22.252063751213885,
+              60.45365383638863
+            ],
+            [
+              22.249875068657733,
+              60.45293694089139
+            ],
+            [
+              22.249762415879108,
+              60.45302952976061
+            ]
+          ]
+        ],
+        "type": "Polygon"
+      },
+      "operatorId": 46,
+      "type": "CAR",
+      "status": "IN_OPERATION",
+      "pricingMethod": "PAID_24H",
+      "statusDescription": null,
+      "softDeletedAt": null,
+      "builtCapacity": {
+        "CAR": 50,
+        "MOTORCYCLE": 5,
+        "DISABLED": 5
+      },
+      "usages": [
+        "PARK_AND_RIDE"
+      ],
+      "services": [
+        "LIGHTING"
+      ],
+      "authenticationMethods": [],
+      "surveyOptions": [],
+      "pricing": [
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "CAR",
+          "maxCapacity": 50,
+          "dayType": "BUSINESS_DAY",
+          "time": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": "2.30"
+        },
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "DISABLED",
+          "maxCapacity": 5,
+          "dayType": "BUSINESS_DAY",
+          "time": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": "2.30"
+        },
+        {
+          "usage": "PARK_AND_RIDE",
+          "capacityType": "MOTORCYCLE",
+          "maxCapacity": 5,
+          "dayType": "BUSINESS_DAY",
+          "time": {
+            "from": "00",
+            "until": "23:59"
+          },
+          "price": null,
+          "priceExtra": null,
+          "priceOther": "2.30"
+        }
+      ],
+      "paymentInfo": {
+        "detail": null,
+        "url": null,
+        "paymentMethods": [
+          "DEBIT_CARD"
+        ]
+      },
+      "openingHours": {
+        "openNow": true,
+        "byDayType": {
+          "BUSINESS_DAY": {
+            "from": "00",
+            "until": "23:59"
+          }
+        },
+        "liipyByDayType": {
+          "BUSINESS_DAY": {
+            "from": "00",
+            "until": "23:59"
+          }
+        },
+        "info": null,
+        "url": null
+      },
+      "ports": [
+        {
+          "location": {
+            "crs": {
+              "type": "name",
+              "properties": {
+                "name": "EPSG:4326"
+              }
+            },
+            "bbox": [
+              22.250277400009967,
+              60.453063919844844,
+              22.250277400009967,
+              60.453063919844844
+            ],
+            "coordinates": [
+              22.250277400009967,
+              60.453063919844844
+            ],
+            "type": "Point"
+          },
+          "entry": true,
+          "exit": true,
+          "pedestrian": false,
+          "bicycle": false,
+          "address": {
+            "streetAddress": {
+              "fi": "Ratapihankatu 43",
+              "sv": "Bangårdsgatan 43",
+              "en": "Ratapihankatu 43"
+            },
+            "postalCode": null,
+            "city": {
+              "fi": "Turku",
+              "sv": "Turku",
+              "en": "Turku"
+            }
+          },
+          "info": null
+        }
+      ]
+    }
+  ]
+}
