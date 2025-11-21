@@ -24,6 +24,7 @@ from .constants import (
     EVENTS,
     KUNTEC,
     KUNTEC_KEY,
+    PROVIDER_TYPES,
     ROUTES,
     TIMESTAMP_FORMATS,
     TOKEN,
@@ -419,10 +420,12 @@ def create_maintenance_works(provider, history_size, fetch_size):
     )
     for unit in MaintenanceUnit.objects.filter(provider=provider):
         json_data = get_json_data(
-            URLS[provider][WORKS].format(id=unit.unit_id, history_size=fetch_size)
+            URLS[provider][WORKS].format(id=unit.unit_id, history_size=fetch_size, start=import_from_date_time, to=datetime.now())
         )
         if "location_history" in json_data:
             json_data = json_data["location_history"]
+        elif provider == PROVIDER_TYPES.INFRAROAD:
+            json_data = transform_infraroad_routa(json_data)
         else:
             logger.warning(f"Location history not found for unit: {unit.unit_id}")
             continue
@@ -430,7 +433,7 @@ def create_maintenance_works(provider, history_size, fetch_size):
             timestamp = datetime.strptime(
                 work["timestamp"], TIMESTAMP_FORMATS[provider]
             ).replace(tzinfo=zoneinfo.ZoneInfo("Europe/Helsinki"))
-            # Discard events older then import_from_date_time as they will
+            # Discard events older than import_from_date_time as they will
             # never be displayed
             if timestamp < import_from_date_time:
                 continue
@@ -638,3 +641,19 @@ def get_yit_access_token():
 
 def is_nested_coordinates(coordinates):
     return bool(np.array(coordinates).ndim > 1)
+
+def transform_infraroad_routa(work):
+    events = []
+    for street in work:
+        for geom in street["geometry"]:
+            for task in street["tasks"]:
+                timestamp = datetime.fromtimestamp(task["time"]).strftime("%Y-%m-%d %H:%M:%S")
+                coords = f"({geom['x']} {geom['y']})"
+                event_name = task["name"]
+
+                events.append({
+                    "timestamp": timestamp,
+                    "coords": coords,
+                    "events": [event_name]
+                })
+    return events

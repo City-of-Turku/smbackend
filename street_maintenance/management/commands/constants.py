@@ -43,8 +43,7 @@ URLS = {
         TOKEN: settings.YIT_TOKEN_URL,
     },
     INFRAROAD: {
-        WORKS: "https://infraroad.fluentprogress.fi/KuntoInfraroad/v1/snowplow/{id}?history={history_size}",
-        UNITS: "https://infraroad.fluentprogress.fi/KuntoInfraroad/v1/snowplow/query?since=72hours",
+        WORKS: "https://{ROUTA_ENDPOINT}&from={start}&to={end}",
     },
     DESTIA: {
         WORKS: "https://destia.fluentprogress.fi/KuntoDestia/turku/v1/snowplow/{id}?history={history_size}",
