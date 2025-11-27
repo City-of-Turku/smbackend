@@ -32,8 +32,8 @@ whitenoise
 pandas>=2.0.0
 pykml
 shapely
-celery
-django-celery-beat<2.8.0
+celery==5.5.*
+django-celery-beat<2.8
 django-celery-results>=2.4.0
 redis
 libvoikko
