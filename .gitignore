@@ -6,6 +6,7 @@ data/*
 !data/accessibility_rules.csv
 .idea
 .coverage
+/postgres-data
 venv_smbackend
 venv
 env/

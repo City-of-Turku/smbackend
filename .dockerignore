@@ -5,3 +5,6 @@ AzureUtil.ps1
 *.bicep
 *.bicepparam
 secrets.*
+.idea
+**/*.mo
+postgres-data
