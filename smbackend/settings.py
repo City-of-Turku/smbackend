@@ -80,8 +80,8 @@ env = environ.Env(
     STREET_MAINTENANCE_LOG_LEVEL=(str, "INFO"),
     ENVIRONMENT_DATA_LOG_LEVEL=(str, "INFO"),
     EXCEPTIONAL_SITUATIONS_LOG_LEVEL=(str, "INFO"),
-    ROUTA_API_KEY=(str, None),
-    ROUTA_API_URL=(str, None),
+    ROUTA_API_KEY=(str, ""),
+    ROUTA_API_URL=(str, ""),
 )
 
 
