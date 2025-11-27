@@ -88,6 +88,9 @@ class Command(BaseCommand):
                         provider, history_size, fetch_size
                     )
                 case PROVIDER_TYPES.INFRAROAD:
+                    num_created_units, num_del_units = create_maintenance_units(
+                        provider
+                    )
                     num_created_works, num_del_works = create_maintenance_works(
                         provider, history_size, fetch_size
                     )
