@@ -10,6 +10,8 @@ from .utils import (
     get_fluentprogress_works_mock_data,
     get_kuntec_units_mock_data,
     get_kuntec_works_mock_data,
+    get_routa_units_mock_data,
+    get_routa_works_mock_data,
     get_yit_contract_mock_data,
     get_yit_event_types_mock_data,
     get_yit_routes_mock_data,
@@ -179,41 +181,42 @@ def test_infraroad(
     )
 
     # Test unit creation
-    get_json_data_mock.return_value = get_fluentprogress_units_mock_data(2)
+    get_json_data_mock.return_value = get_routa_units_mock_data(1)
     num_created_units, num_del_units = create_maintenance_units(INFRAROAD)
-    assert MaintenanceUnit.objects.count() == 2
-    assert num_created_units == 2
+    assert MaintenanceUnit.objects.count() == 1
+    assert num_created_units == 1
     assert num_del_units == 0
     unit = MaintenanceUnit.objects.first()
     unit_id = unit.id
-    unit.unit_id = "2817625"
-    unit.names = ["au"]
-    get_json_data_mock.return_value = get_fluentprogress_units_mock_data(1)
+    unit.unit_id = "123"
+    unit.names = ["infraroad"]
+    get_json_data_mock.return_value = get_routa_units_mock_data(1)
     num_created_units, num_del_units = create_maintenance_units(INFRAROAD)
     assert unit_id == MaintenanceUnit.objects.first().id
     assert num_created_units == 0
-    assert num_del_units == 1
+    assert num_del_units == 0
     assert MaintenanceUnit.objects.count() == 1
-    get_json_data_mock.return_value = get_fluentprogress_works_mock_data(3)
+    get_json_data_mock.return_value = get_routa_works_mock_data(3)
     num_created_works, num_del_works = create_maintenance_works(INFRAROAD, 1, 10)
-    assert num_created_works == 3
+    assert num_created_works == 4
     assert num_del_works == 0
-    assert MaintenanceWork.objects.count() == 3
+    assert MaintenanceWork.objects.count() == 4
     work = MaintenanceWork.objects.first()
     work_id = work.id
     work.events = ["auraus"]
-    work.original_event_names = ["au"]
-    get_json_data_mock.return_value = get_fluentprogress_works_mock_data(1)
+    work.original_event_names = ["Auraus"]
+    get_json_data_mock.return_value = get_routa_works_mock_data(1)
     num_created_works, num_del_works = create_maintenance_works(INFRAROAD, 1, 10)
     assert num_created_works == 0
     assert num_del_works == 2
-    assert work_id == MaintenanceWork.objects.first().id
-    assert MaintenanceWork.objects.count() == 1
+    # Deleting first will delete two rows
+    assert work_id == MaintenanceWork.objects.first().id + 2
+    assert MaintenanceWork.objects.count() == 2
     # Test duplicate Unit
     unit_dup = MaintenanceUnit.objects.first()
     unit_dup.pk = 42
     unit_dup.save()
-    get_json_data_mock.return_value = get_fluentprogress_units_mock_data(1)
+    get_json_data_mock.return_value = get_routa_units_mock_data(1)
     num_created_units, num_del_units = create_maintenance_units(INFRAROAD)
     assert num_created_units == 0
     assert num_del_units == 1
@@ -221,7 +224,7 @@ def test_infraroad(
     work_dup = MaintenanceWork.objects.first()
     work_dup.pk = 42
     work_dup.save()
-    get_json_data_mock.return_value = get_fluentprogress_works_mock_data(1)
+    get_json_data_mock.return_value = get_routa_works_mock_data(1)
     num_created_works, num_del_works = create_maintenance_works(INFRAROAD, 1, 10)
     assert num_created_works == 0
     assert num_del_works == 1
