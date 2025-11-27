@@ -43,7 +43,8 @@ URLS = {
         TOKEN: settings.YIT_TOKEN_URL,
     },
     INFRAROAD: {
-        WORKS: "https://{ROUTA_ENDPOINT}&from={start}&to={end}",
+        TOKEN: {"Authorization": settings.ROUTA_API_KEY},
+        WORKS: settings.ROUTA_API_URL + "&from={start}&to={end}",
     },
     DESTIA: {
         WORKS: "https://destia.fluentprogress.fi/KuntoDestia/turku/v1/snowplow/{id}?history={history_size}",
