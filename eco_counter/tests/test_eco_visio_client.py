@@ -760,6 +760,104 @@ class TestGetRawTrafficChunked:
         assert call_args_list[1][1]["params"]["startDate"] == "2024-02-01"
         assert call_args_list[1][1]["params"]["endDate"] == "2024-03-01"
 
+    def test_get_raw_traffic_chunked_merges_additional_series(self):
+        """Additional series appearing in later chunks are merged instead of dropped."""
+        client = EcoVisioAPIClient(api_key="test-key")
+
+        start_date = date(2024, 1, 1)
+        end_date = date(2024, 2, 15)  # 45 days -> two chunks
+
+        chunk1_data = [
+            {
+                "flowID": 1,
+                "flowName": "Bikes in",
+                "travelMode": "bike",
+                "direction": "in",
+                "data": [{"timestamp": "2024-01-01T00:00:00Z", "count": 10}],
+            }
+        ]
+        chunk2_data = [
+            {
+                "flowID": 1,
+                "flowName": "Bikes in",
+                "travelMode": "bike",
+                "direction": "in",
+                "data": [{"timestamp": "2024-02-05T00:00:00Z", "count": 20}],
+            },
+            {
+                "flowID": 2,
+                "flowName": "Pedestrians out",
+                "travelMode": "pedestrian",
+                "direction": "out",
+                "data": [{"timestamp": "2024-02-05T00:00:00Z", "count": 5}],
+            },
+        ]
+
+        mock_responses = []
+        for chunk_data in [chunk1_data, chunk2_data]:
+            mock_response = Mock()
+            mock_response.status_code = 200
+            mock_response.headers = {}
+            mock_response.json.return_value = chunk_data
+            mock_responses.append(mock_response)
+
+        with patch.object(client.session, "get", side_effect=mock_responses):
+            result = client._get_raw_traffic_chunked(
+                site_id=12345,
+                start_date=start_date,
+                end_date=end_date,
+                include_status=False,
+                travel_modes=None,
+                gap_filling=False,
+            )
+
+        assert len(result) == 2
+        result_by_id = {series["flowID"]: series for series in result}
+        assert len(result_by_id[1]["data"]) == 2
+        assert len(result_by_id[2]["data"]) == 1
+        assert result_by_id[2]["data"][0]["count"] == 5
+
+    def test_get_raw_traffic_chunked_handles_empty_initial_chunk(self):
+        """Data in later chunks is preserved even if earlier chunks are empty."""
+        client = EcoVisioAPIClient(api_key="test-key")
+
+        start_date = date(2024, 1, 1)
+        end_date = date(2024, 2, 10)  # Two chunks
+
+        chunk1_data = []
+        chunk2_data = [
+            {
+                "flowID": 3,
+                "flowName": "Cars in",
+                "travelMode": "car",
+                "direction": "in",
+                "data": [{"timestamp": "2024-02-05T00:00:00Z", "count": 15}],
+            }
+        ]
+
+        mock_responses = []
+        for chunk_data in [chunk1_data, chunk2_data]:
+            mock_response = Mock()
+            mock_response.status_code = 200
+            mock_response.headers = {}
+            mock_response.json.return_value = chunk_data
+            mock_responses.append(mock_response)
+
+        with patch.object(client.session, "get", side_effect=mock_responses):
+            result = client._get_raw_traffic_chunked(
+                site_id=12345,
+                start_date=start_date,
+                end_date=end_date,
+                include_status=False,
+                travel_modes=None,
+                gap_filling=False,
+            )
+
+        assert len(result) == 1
+        assert result[0]["flowID"] == 3
+        assert len(result[0]["data"]) == 1
+        assert result[0]["data"][0]["count"] == 15
+
 
 class TestContextManager:
     """Tests for context manager functionality."""

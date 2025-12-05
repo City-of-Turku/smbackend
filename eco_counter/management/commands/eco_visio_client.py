@@ -406,8 +406,17 @@ class EcoVisioAPIClient:
         Returns:
             Combined list of traffic data series from all chunks
         """
-        all_traffic_data = []
+        merged_series: Dict[tuple, Dict] = {}
         current_date = start_date
+
+        def _series_key(series: Dict) -> tuple:
+            """Build a stable key for a traffic series across chunks."""
+            return (
+                series.get("flowID"),
+                series.get("flowName"),
+                series.get("travelMode"),
+                series.get("direction"),
+            )
 
         while current_date < end_date:
             # Calculate chunk end date (max 31 days)
@@ -426,14 +435,19 @@ class EcoVisioAPIClient:
                 gap_filling=gap_filling,
             )
 
-            # Merge data for each series
-            if not all_traffic_data:
-                all_traffic_data = chunk_data
-            else:
-                # Merge data points for each series
-                for i, series in enumerate(chunk_data):
-                    if i < len(all_traffic_data):
-                        all_traffic_data[i]["data"].extend(series["data"])
+            if not chunk_data:
+                current_date = chunk_end
+                continue
+
+            for series in chunk_data:
+                key = _series_key(series)
+                if key not in merged_series:
+                    merged_series[key] = {
+                        **{k: v for k, v in series.items() if k != "data"},
+                        "data": list(series.get("data") or []),
+                    }
+                else:
+                    merged_series[key]["data"].extend(series.get("data") or [])
 
             current_date = chunk_end
 
@@ -442,7 +456,7 @@ class EcoVisioAPIClient:
             f"from {start_date} to {end_date} in chunks"
         )
 
-        return all_traffic_data
+        return list(merged_series.values())
 
     def close(self):
         """Close the session."""

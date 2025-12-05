@@ -506,8 +506,6 @@ def get_eco_visio_stations():
             {
                 "station_id": str(station_id),
                 "name": name,
-                "name_sv": name,
-                "name_en": name,
                 "location": location,
                 "geometry": geometry,
                 "data_from_date": _parse_eco_visio_date(site.get("firstData")),
@@ -736,8 +734,6 @@ def save_stations(csv_data_source):
                 csv_data_source=csv_data_source,
                 defaults={
                     "name": station["name"],
-                    "name_sv": station["name_sv"],
-                    "name_en": station["name_en"],
                     "location": station["location"],
                     "geometry": station["geometry"],
                     "data_from_date": station["data_from_date"],
