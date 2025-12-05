@@ -5,7 +5,7 @@ see README.md
 
 import gc
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import dateutil.parser
 import pandas as pd
@@ -38,13 +38,18 @@ from eco_counter.models import (
     Year,
     YearData,
 )
+from .eco_visio_client import EcoVisioAPIClient, EcoVisioAPIError
+from .eco_visio_mapper import (
+    combine_station_dataframes,
+    get_supported_travel_modes,
+    transform_raw_traffic_to_dataframe,
+)
 
 from .utils import (
     check_counters_argument,
     gen_eco_counter_test_csv,
     get_data_from_date,
     get_data_until_date,
-    get_eco_counter_csv,
     get_is_active,
     get_lam_counter_csv,
     get_or_create_telraam_station,
@@ -410,6 +415,66 @@ def get_start_time(counter, import_state):
     return start_time
 
 
+def get_eco_visio_csv_data(start_time):
+    """
+    Fetch Eco-Visio traffic data for all EC stations and map it to CSV format.
+
+    Uses 31-day chunking handled inside EcoVisioAPIClient.get_raw_traffic().
+    Returns a combined dataframe compatible with the existing import pipeline.
+    """
+    start_date = start_time.date()
+    end_date = datetime.now(TIMEZONE).date() + timedelta(days=1)
+    dataframes = []
+
+    with EcoVisioAPIClient() as client:
+        for station in Station.objects.filter(csv_data_source=ECO_COUNTER):
+            try:
+                site_id = int(station.station_id)
+            except (TypeError, ValueError):
+                logger.warning(
+                    f"Skipping Eco-Visio station {station.name}: invalid station_id {station.station_id}"
+                )
+                continue
+
+            try:
+                raw_traffic = client.get_raw_traffic(
+                    site_id=site_id,
+                    start_date=start_date,
+                    end_date=end_date,
+                    travel_modes=get_supported_travel_modes(),
+                    gap_filling=True,
+                )
+            except EcoVisioAPIError as exc:
+                logger.error(
+                    f"Eco-Visio API error for station {station.name} ({site_id}): {exc}"
+                )
+                continue
+            except Exception as exc:  # noqa: BLE001 - log unexpected issues
+                logger.error(
+                    f"Unexpected error fetching Eco-Visio data for station {station.name} ({site_id}): {exc}"
+                )
+                continue
+
+            df = transform_raw_traffic_to_dataframe(raw_traffic, station.name)
+            if df.empty:
+                logger.warning(
+                    f"No Eco-Visio data for station {station.name} between {start_date} and {end_date}"
+                )
+                continue
+            dataframes.append(df)
+
+    combined_df = combine_station_dataframes(dataframes)
+    if combined_df.empty:
+        logger.warning(
+            f"No Eco-Visio traffic data available between {start_date} and {end_date}"
+        )
+        return combined_df
+
+    combined_df[INDEX_COLUMN_NAME] = combined_df["startTime"]
+    combined_df = combined_df.sort_values(INDEX_COLUMN_NAME).reset_index(drop=True)
+    return combined_df
+
+
 def get_csv_data(counter, import_state, start_time, verbose=True):
     match counter:
         # case COUNTERS.TELRAAM_COUNTER:
@@ -417,18 +482,29 @@ def get_csv_data(counter, import_state, start_time, verbose=True):
         case COUNTERS.LAM_COUNTER:
             csv_data = get_lam_counter_csv(start_time.date())
         case COUNTERS.ECO_COUNTER:
-            csv_data = get_eco_counter_csv()
+            csv_data = get_eco_visio_csv_data(start_time)
         case COUNTERS.TRAFFIC_COUNTER:
             if import_state.current_year_number:
                 start_year = import_state.current_year_number
             else:
                 start_year = TRAFFIC_COUNTER_START_YEAR
             csv_data = get_traffic_counter_csv(start_year=start_year)
+        case _:
+            raise ValueError(f"Unsupported counter type: {counter}")            
+
+    if csv_data.empty:
+        logger.warning(f"No data retrieved for counter {counter}")
+        return csv_data
 
     start_time_string = start_time.strftime("%Y-%m-%dT%H:%M")
-    start_index = csv_data.index[
-        csv_data[INDEX_COLUMN_NAME] == start_time_string
-    ].values[0]
+    start_matches = csv_data.index[csv_data[INDEX_COLUMN_NAME] == start_time_string]
+    if len(start_matches) == 0:
+        logger.warning(
+            f"Start time {start_time_string} not found for {counter}, starting from earliest available data"
+        )
+        start_index = 0
+    else:
+        start_index = start_matches.values[0]
     if verbose:
         # As LAM data is fetched with a timespan, no index data is available, instead display start_time.
         if counter == LAM_COUNTER:

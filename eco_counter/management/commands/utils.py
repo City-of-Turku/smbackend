@@ -190,11 +190,6 @@ def get_dataframe(url):
     csv_data = pd.read_csv(io.StringIO(string_data.decode("utf-8")))
     return csv_data
 
-
-def get_eco_counter_csv():
-    return get_dataframe(settings.ECO_COUNTER_OBSERVATIONS_URL)
-
-
 def get_traffic_counter_csv(start_year=2015):
     """
     This function returns traffic counter data in a format supported by the counter.
