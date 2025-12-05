@@ -551,6 +551,9 @@ def import_data(counters, initial_import=False, force=False):
             save_telraam_data(start_time)
         else:
             csv_data = get_csv_data(counter, import_state, start_time)
+            if csv_data.empty:
+                logger.info(f"No data retrieved for counter {counter}, skipping save.")
+                continue
             save_observations(
                 csv_data,
                 start_time,
