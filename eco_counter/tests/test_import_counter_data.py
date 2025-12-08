@@ -55,7 +55,7 @@ def import_command(*args, **kwargs):
 
 
 @pytest.mark.django_db
-@patch("eco_counter.management.commands.utils.get_telraam_data_frames")
+@patch("eco_counter.management.commands.import_counter_data.get_telraam_data_frames")
 def test_import_telraam(get_telraam_data_frames_mock):
     from eco_counter.management.commands.import_counter_data import import_data
 
