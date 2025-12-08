@@ -2,7 +2,6 @@
 Unit tests for Eco-Visio station import helpers.
 """
 
-import pytest
 from django.conf import settings
 
 from eco_counter.management.commands import utils
@@ -37,7 +36,10 @@ class TestGetEcoVisioStations:
                 "id": 123,
                 "name": "Test Station",
                 "location": {"lat": 60.45, "lon": 22.27},
-                "segments": {"type": "LineString", "coordinates": [[22.27, 60.45], [22.28, 60.46]]},
+                "segments": {
+                    "type": "LineString",
+                    "coordinates": [[22.27, 60.45], [22.28, 60.46]],
+                },
                 "firstData": "2024-01-01T00:00:00Z",
                 "lastData": "2024-06-01T12:00:00Z",
             }
@@ -99,5 +101,3 @@ class TestGetEcoVisioStations:
 
         assert include_recorder["include"] == ["segments"]
         assert stations == []
-
-

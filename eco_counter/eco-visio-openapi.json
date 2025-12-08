@@ -1,0 +1,3065 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "version": "2.0.0",
+    "title": "Eco-Visio API Reference",
+    "contact": {
+      "email": "vincent.dieulesaint@eco-counter.com",
+      "url": "https://developers.eco-counter.com/"
+    },
+    "license": {
+      "name": "Eco-Counter",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "x-logo": {
+      "url": "EcoVisio_OnWhite.png"
+    },
+    "description": "<!-- This is an **example** API to demonstrate features of the OpenAPI specification. -->\n\n<!-- # Introduction\n\n This API definition is intended to to be a good starting point for\ndescribing your API in \n\n[OpenAPI/Swagger\nformat](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md).\n\nIt also demonstrates features of the\n[create-openapi-repo](https://github.com/Redocly/create-openapi-repo) tool\nand \n\nthe [Redoc](https://github.com/Redocly/Redoc) documentation engine. Beyond\nthe standard OpenAPI syntax, we use a few \n\n[vendor\nextensions](https://github.com/Redocly/Redoc/blob/master/docs/redoc-vendor-extensions.md). -->\n\n\n<!-- # OpenAPI Specification\n\nThe goal of The OpenAPI Specification is to define a standard,\nlanguage-agnostic interface to REST APIs which\n\nallows both humans and computers to discover and understand the capabilities\nof the service without access to source\n\ncode, documentation, or through network traffic inspection. When properly\ndefined via OpenAPI, a consumer can \n\nunderstand and interact with the remote service with a minimal amount of\nimplementation logic. Similar to what\n\ninterfaces have done for lower-level programming, OpenAPI removes the\nguesswork in calling the service. -->\n"
+  },
+  "tags": [
+    {
+      "name": "Tags",
+      "description": "A tag allows to categorize a counting site. It help to get quickly traffic data for specific categories."
+    },
+    {
+      "name": "Sites",
+      "description": "A counting site represents a location equipped with one or many traffic counting systems."
+    },
+    {
+      "name": "Statistical",
+      "description": "The statistical API enable applications to obtain traffic data statistics."
+    },
+    {
+      "name": "Bulk export",
+      "description": "The bulk export API offers an efficient way to retrieve a large volume of data. Export is performed in a asynchronous manner."
+    },
+    {
+      "name": "Data validation",
+      "description": "The data validation API allows to validate the traffic data of the given sites on a period."
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://api.eco-counter.com/api/v2",
+      "description": "EU API Endpoint"
+    },
+    {
+      "url": "https://api.eco-counter.us/api/v2",
+      "description": "US API Endpoint"
+    }
+  ],
+  "paths": {
+    "/sites": {
+      "get": {
+        "tags": [
+          "Sites"
+        ],
+        "summary": "Get all sites",
+        "description": "Returns a list of your counting sites.\n",
+        "operationId": "GetSites",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Page size",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 100,
+              "minimum": 1,
+              "maximum": 500
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Sorting parameter (field name)",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "id",
+                "name"
+              ],
+              "default": "id"
+            }
+          },
+          {
+            "name": "orderBy",
+            "in": "query",
+            "description": "Sorting order : ascending  or descending\n",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "asc"
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Request additional information in response by using `include` request parameter.\n\n| Possible values      | Description                                                                                                                                              |\n|----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|\n| domain               | Returns the domain to which the counting site belongs. Only relevant if your api key grants you access to multiple domains.                              |\n| counters             | Returns the counters installed on the counting site.                                                                                           |\n| tags                 | Returns the tags associated with the counting site.                                                                                                      |\n| images               | Returns the images of the counting site.                                                                                                                 |\n| attributes           | Returns the custom attributes of the counting site defined by the sharing program. Only relevant in the context of a sharing program.                    |                                                                                                                 |\n| segments             | Returns the counting site infrastructure represented by segments.                                                                                        |\n",
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "domain",
+                  "counters",
+                  "tags",
+                  "images",
+                  "attributes",
+                  "segments"
+                ],
+                "example": "tags,images"
+              }
+            }
+          },
+          {
+            "name": "ids",
+            "in": "query",
+            "description": "Return sites with the given IDs.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "name": "domainIds",
+            "in": "query",
+            "description": "Return sites with the given domain IDs.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "name": "tagIds",
+            "in": "query",
+            "description": "Return sites with the given tags IDs.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "name": "customIds",
+            "in": "query",
+            "description": "Return sites with the given custom IDs.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "X-Count-Per-Page": {
+                "$ref": "#/components/headers/X-Count-Per-Page"
+              },
+              "X-Current-Page": {
+                "$ref": "#/components/headers/X-Current-Page"
+              },
+              "X-Total-Count": {
+                "$ref": "#/components/headers/X-Total-Count"
+              },
+              "X-Total-Pages": {
+                "$ref": "#/components/headers/X-Total-Pages"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-Minute"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-Minute"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/site"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequests"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tags": {
+      "get": {
+        "tags": [
+          "Tags"
+        ],
+        "summary": "Get all tags",
+        "description": "Returns a list of your tags.\n",
+        "operationId": "GetTags",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Page size",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 100,
+              "minimum": 1,
+              "maximum": 500
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Sorting parameter (field name)",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "id",
+                "name"
+              ],
+              "default": "id"
+            }
+          },
+          {
+            "name": "orderBy",
+            "in": "query",
+            "description": "Sorting order : ascending  or descending\n",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "asc"
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Request additional information in response by using `include` request parameter.\n\n| Possible values      | Description                                                                                                                                              |\n|----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|\n| domain               | Returns the domain to which the tag belongs. Only relevant if your api key grants you access to multiple domains.                              |\n",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "domain"
+                ],
+                "example": "domain"
+              }
+            }
+          },
+          {
+            "name": "ids",
+            "in": "query",
+            "description": "Return tags with the given IDs.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "name": "domainIds",
+            "in": "query",
+            "description": "Return tags with the given domain IDs.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "X-Count-Per-Page": {
+                "$ref": "#/components/headers/X-Count-Per-Page"
+              },
+              "X-Current-Page": {
+                "$ref": "#/components/headers/X-Current-Page"
+              },
+              "X-Total-Count": {
+                "$ref": "#/components/headers/X-Total-Count"
+              },
+              "X-Total-Pages": {
+                "$ref": "#/components/headers/X-Total-Pages"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-Minute"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-Minute"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/tag"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequests"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/exports": {
+      "post": {
+        "tags": [
+          "Bulk export"
+        ],
+        "summary": "Create an export job",
+        "operationId": "CreateExport",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportCreation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Export"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/exports/{jobId}": {
+      "get": {
+        "tags": [
+          "Bulk export"
+        ],
+        "summary": "Get job status",
+        "description": "Get the status of the export job.\n",
+        "operationId": "GetExportStatus",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "description": "The ID of the export job.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int11"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Export"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/exports/{jobId}/data": {
+      "get": {
+        "tags": [
+          "Bulk export"
+        ],
+        "summary": "Download data",
+        "description": "Download the result set data when completed.\n",
+        "operationId": "DownloadExportData",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "description": "The ID of the export job.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int11"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/statistical/adt": {
+      "get": {
+        "tags": [
+          "Statistical"
+        ],
+        "summary": "Get Average Daily Traffic",
+        "description": "Total traffic volume during the selected time period, divided by the number of days having data in that period.\n",
+        "operationId": "GetADT",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "domainId",
+            "in": "query",
+            "description": "The ID of the domain",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "siteId",
+            "in": "query",
+            "description": "The ID of the site",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "dateRange",
+            "in": "query",
+            "description": "The preset to get the statistical data from. Use the custom values to get data for a month and/or a year",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DateRange"
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "description": "The month to get the statistical data from, in the format of 1-12 (e.g., 1 is January, 2 is February, etc). Leave blank to get year only. Taken into account only when custom date range is set.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 12
+            }
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "description": "The year to get the statistical data from. Taken into account only when custom date range is set.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 2000
+            }
+          },
+          {
+            "name": "groupBy",
+            "in": "query",
+            "description": "Return data in groups based on the given entity.\n",
+            "schema": {
+              "$ref": "#/components/schemas/StatisticalAverageGroupBy"
+            }
+          },
+          {
+            "name": "travelModes",
+            "in": "query",
+            "description": "Return series with the given travel modes.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/TravelModeLabel"
+              }
+            }
+          },
+          {
+            "name": "validatedDataOnly",
+            "in": "query",
+            "description": "Filter the results to include only validated data. If set to true, only data that has been validated will be returned. If set to false or not specified, all data will be returned.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-Minute"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-Minute"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StatisticalTraffic"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequests"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/statistical/adt/by/site": {
+      "get": {
+        "tags": [
+          "Statistical"
+        ],
+        "summary": "Get Average Daily Traffic by site",
+        "description": "Total traffic volume during the selected time period, divided by the number of days having data in that period and by the number of counting sites.\n",
+        "operationId": "GetADTBySite",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "domainId",
+            "in": "query",
+            "description": "The ID of the domain",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "siteId",
+            "in": "query",
+            "description": "The ID of the site",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "dateRange",
+            "in": "query",
+            "description": "The preset to get the statistical data from. Use the custom values to get data for a month and/or a year",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DateRange"
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "description": "The month to get the statistical data from, in the format of 1-12 (e.g., 1 is January, 2 is February, etc). Leave blank to get year only. Taken into account only when custom date range is set.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 12
+            }
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "description": "The year to get the statistical data from. Taken into account only when custom date range is set.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 2000
+            }
+          },
+          {
+            "name": "groupBy",
+            "in": "query",
+            "description": "Return data in groups based on the given entity.\n",
+            "schema": {
+              "$ref": "#/components/schemas/StatisticalAverageGroupBy"
+            }
+          },
+          {
+            "name": "travelModes",
+            "in": "query",
+            "description": "Return series with the given travel modes.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/TravelModeLabel"
+              }
+            }
+          },
+          {
+            "name": "validatedDataOnly",
+            "in": "query",
+            "description": "Filter the results to include only validated data. If set to true, only data that has been validated will be returned. If set to false or not specified, all data will be returned.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-Minute"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-Minute"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StatisticalTraffic"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequests"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/statistical/total": {
+      "get": {
+        "tags": [
+          "Statistical"
+        ],
+        "summary": "Get Total Traffic",
+        "description": "Get total traffic\n",
+        "operationId": "GetTotalTraffic",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "domainId",
+            "in": "query",
+            "description": "The ID of the domain",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "siteId",
+            "in": "query",
+            "description": "The ID of the site",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "dateRange",
+            "in": "query",
+            "description": "The preset to get the statistical data from. Use the custom values to get data for a month and/or a year",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DateRange"
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "description": "The month to get the statistical data from, in the format of 1-12 (e.g., 1 is January, 2 is February, etc). Leave blank to get year only. Taken into account only when custom date range is set.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 12
+            }
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "description": "The year to get the statistical data from. Taken into account only when custom date range is set.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 2000
+            }
+          },
+          {
+            "name": "groupBy",
+            "in": "query",
+            "description": "Return data in groups based on the given entity.\n",
+            "schema": {
+              "$ref": "#/components/schemas/StatisticalTotalGroupBy"
+            }
+          },
+          {
+            "name": "travelModes",
+            "in": "query",
+            "description": "Return series with the given travel modes.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/TravelModeLabel"
+              }
+            }
+          },
+          {
+            "name": "validatedDataOnly",
+            "in": "query",
+            "description": "Filter the results to include only validated data. If set to true, only data that has been validated will be returned. If set to false or not specified, all data will be returned.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-Minute"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-Minute"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StatisticalTraffic"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequests"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/history/traffic/raw": {
+      "get": {
+        "tags": [
+          "Traffic History"
+        ],
+        "summary": "Get raw traffic",
+        "description": "Maximum timeframe of 31 days\n",
+        "operationId": "GetRawTraffic",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "siteId",
+            "in": "query",
+            "description": "The ID of the site",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Request additional information in response by using `include` request parameter.\n\n| Possible values      | Description               |\n|----------------------|---------------------------|\n| status               | Returns the data status.  |\n",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/HistoricalRawTrafficInclude"
+              }
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "Return data at or after start date. \nstartDate is inclusive.\nFull-date notation defined by RFC 3339 ; example : 2023-09-20\n",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "Return data before end date. \nendDate is exclusive.\nFull-date notation defined by RFC 3339 ; example : 2023-09-21\n",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "description": "Return data at or after start time.\nstartTime is local time and inclusive.\nFormat: hh:mm \n",
+            "schema": {
+              "type": "string",
+              "default": "00:00"
+            }
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "description": "Return data before end time. \nendTime is local time and exclusive.\nFormat: hh:mm \n",
+            "schema": {
+              "type": "string",
+              "default": "00:00"
+            }
+          },
+          {
+            "name": "gapFilling",
+            "in": "query",
+            "description": "Fill gaps with null values to ensure contiguous series.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "travelModes",
+            "in": "query",
+            "description": "Return series with the given travel modes.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/TravelModeLabel"
+              }
+            }
+          },
+          {
+            "name": "validatedDataOnly",
+            "in": "query",
+            "description": "Filter the results to include only validated data. If set to true, only data that has been validated will be returned. If set to false or not specified, all data will be returned.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "rawDataOnly",
+            "in": "query",
+            "description": "Filter the results to include only raw data. If set to true, only original data originally recorded by the counter will be returned. If set to false or not specified, all data will be returned.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-Minute"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-Minute"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HistoricalRawTraffic"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequests"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/history/traffic/aggregated": {
+      "get": {
+        "tags": [
+          "Traffic History"
+        ],
+        "summary": "Get aggregated traffic",
+        "description": "Maximum timeframe of : \n\n  | Aggregation interval | Maximum timeframe |\n  |----------------------|-------------------|\n  | 15 minutes           | 31 days           |\n  | 1 hour               | 31 days           |\n  | 1 day                | 1 year            |\n  | 1 week               | 5 years           |\n  | 1 month              | 10 years          |\n  | 1 year               | 30 years          |\n\nRequesting aggregated data by exceeding the limits above will result in a 400 HTTP error.\n",
+        "operationId": "GetAggregatedTraffic",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "siteId",
+            "in": "query",
+            "description": "The ID of the site",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Request additional information in response by using `include` request parameter.\n\n<u>Historical weather data (forecast)</u>\n\n**Our historical weather data is forecast data and not actuals.**\nAdding weather in the include parameter, you can access historical weather data associated to your traffic.\n\n<u>Data status</u>\n\nAdding status in the include parameter, you can get the data status indicator : raw, modified, validated, etc.\n\n| Possible values      | Description                |\n|----------------------|----------------------------|\n| status               | Returns the data status.   |\n| weather              | Returns the weather data.  |\n",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/HistoricalAggregatedTrafficInclude"
+              }
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "Return data at or after start date. \nstartDate is inclusive.\nFull-date notation defined by RFC 3339 ; example : 2023-09-20\n",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "Return data before end date. \nendDate is exclusive.\nFull-date notation defined by RFC 3339 ; example : 2023-09-21\n",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "description": "Return data at or after start time.\nstartTime is local time and inclusive.\nFormat: hh:mm \n",
+            "schema": {
+              "type": "string",
+              "default": "00:00"
+            }
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "description": "Return data before end time. \nendTime is local time and exclusive.\nFormat: hh:mm \n",
+            "schema": {
+              "type": "string",
+              "default": "00:00"
+            }
+          },
+          {
+            "name": "granularity",
+            "in": "query",
+            "description": "Return data in a specified interval.\n\n  | Parameter value      | Aggregation interval |\n  |----------------------|----------------------|\n  | PT15M                | 15 minutes           |\n  | PT1H                 | 1 hour               |\n  | P1D                  | 1 day                |\n  | P1W                  | 1 week               |\n  | P1M                  | 1 month              |\n  | P1Y                  | 1 year               | \n",
+            "schema": {
+              "$ref": "#/components/schemas/Granularity"
+            }
+          },
+          {
+            "name": "groupBy",
+            "in": "query",
+            "description": "Return data in groups based on the given entity.\n",
+            "schema": {
+              "$ref": "#/components/schemas/HistoricalAggregatedTrafficGroupBy"
+            }
+          },
+          {
+            "name": "gapFilling",
+            "in": "query",
+            "description": "Fill gaps with null values to ensure contiguous series.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "travelModes",
+            "in": "query",
+            "description": "Return series with the given travel modes.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/TravelModeLabel"
+              }
+            }
+          },
+          {
+            "name": "validatedDataOnly",
+            "in": "query",
+            "description": "Filter the results to include only validated data. If set to true, only data that has been validated will be returned. If set to false or not specified, all data will be returned.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "rawDataOnly",
+            "in": "query",
+            "description": "Filter the results to include only raw data. If set to true, only original data originally recorded by the counter will be returned. If set to false or not specified, all data will be returned.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-Minute"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-Minute"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HistoricalAggregatedTraffic"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequests"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/history/traffic/timestamp": {
+      "get": {
+        "tags": [
+          "Traffic History"
+        ],
+        "summary": "Get timestamp traffic",
+        "description": "Get timestamp traffic data for a specific date range. The maximum allowed duration between start and end date is **7 days** because of the amount of data returned.\nThis limitation ensures optimal performance and prevents the server from being overloaded due to excessive data retrieval.\n",
+        "operationId": "GetTimestampTraffic",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "siteId",
+            "in": "query",
+            "description": "The ID of the site",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "Return data at or after start date. \nstartDate is inclusive.\nFull-date notation defined by RFC 3339 ; example : 2023-09-20\n",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "Return data before end date. \nendDate is exclusive.\nFull-date notation defined by RFC 3339 ; example : 2023-09-21\n",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "description": "Return data at or after start time.\nstartTime is local time and inclusive.\nFormat: hh:mm \n",
+            "schema": {
+              "type": "string",
+              "default": "00:00"
+            }
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "description": "Return data before end time. \nendTime is local time and exclusive.\nFormat: hh:mm \n",
+            "schema": {
+              "type": "string",
+              "default": "00:00"
+            }
+          },
+          {
+            "name": "travelModes",
+            "in": "query",
+            "description": "Return series with the given travel modes.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/TravelModeLabel"
+              }
+            }
+          },
+          {
+            "name": "directions",
+            "in": "query",
+            "description": "Return series with the given directions.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Direction"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-Minute"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-Minute"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HistoricalTimestampTraffic"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequests"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/validation/data/jobs": {
+      "get": {
+        "tags": [
+          "Data validation"
+        ],
+        "summary": "Get all validation jobs",
+        "description": "Get the informations of your validation jobs.\n",
+        "operationId": "ValidationJobsGet",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Page size",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 100,
+              "minimum": 1,
+              "maximum": 500
+            }
+          }
+        ],
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "X-Count-Per-Page": {
+                "$ref": "#/components/headers/X-Count-Per-Page"
+              },
+              "X-Current-Page": {
+                "$ref": "#/components/headers/X-Current-Page"
+              },
+              "X-Total-Count": {
+                "$ref": "#/components/headers/X-Total-Count"
+              },
+              "X-Total-Pages": {
+                "$ref": "#/components/headers/X-Total-Pages"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/validationJob"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Data validation"
+        ],
+        "summary": "Validate the data of the given sites on a period",
+        "description": "Validate the data of the given sites from their ids on a period. The process is asynchronous.\nRestrictions:\n- Only one job can be in progress per API key\n- The validation period cannot exceed 1 year\n- Maximum 10 sites can be validated at once\n",
+        "operationId": "ValidationJobCreate",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "siteIds",
+                  "startDate",
+                  "endDate"
+                ],
+                "properties": {
+                  "siteIds": {
+                    "description": "The array of Eco-Visio identifiers of the sites.\nMaximum 10 sites can be validated at once.\n",
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int11"
+                    },
+                    "example": [
+                      10,
+                      20
+                    ],
+                    "minItems": 1,
+                    "maxItems": 10
+                  },
+                  "startDate": {
+                    "description": "The start date of the period to validate. startDate is inclusive. Full-date notation defined by RFC 3339 ; example : 2023-09-20\nThe validation period cannot exceed 1 year from startDate to endDate.\n",
+                    "type": "string",
+                    "format": "date",
+                    "example": "2020-01-01"
+                  },
+                  "endDate": {
+                    "description": "The end date of the period to validate. endDate is exclusive. Full-date notation defined by RFC 3339 ; example : 2023-09-20\nThe validation period cannot exceed 1 year from startDate to endDate.\n",
+                    "type": "string",
+                    "format": "date",
+                    "example": "2020-01-31"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/validationJobCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict - A validation job is already in progress for this API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Conflict"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/validation/data/jobs/{jobId}": {
+      "get": {
+        "tags": [
+          "Data validation"
+        ],
+        "summary": "Get validation job details",
+        "description": "Get the informations of a validation job from its id.\n",
+        "operationId": "ValidationJobGet",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "description": "The Eco-Visio identifier of the validation job.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int11"
+            }
+          }
+        ],
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/validationJob"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "api_key": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-KEY"
+      }
+    },
+    "headers": {
+      "X-Count-Per-Page": {
+        "description": "Number of results per page.",
+        "schema": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "X-Current-Page": {
+        "description": "Number of the current page.",
+        "schema": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "X-Total-Count": {
+        "description": "Total number of results available.",
+        "schema": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "X-Total-Pages": {
+        "description": "Total number of pages available.",
+        "schema": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "X-RateLimit-Limit-Minute": {
+        "description": "Calls per minute allowed by the application.",
+        "schema": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "X-RateLimit-Remaining-Minute": {
+        "description": "Number of remaining available requests for the current minute.",
+        "schema": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "X-RateLimit-Reset": {
+        "description": "Number of seconds remaining until the beginning of new window.",
+        "schema": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "schemas": {
+      "Location": {
+        "type": "object",
+        "properties": {
+          "lat": {
+            "description": "The latitude of the counting site.",
+            "type": "number",
+            "format": "double",
+            "example": 48.867834
+          },
+          "lon": {
+            "description": "The longitude of the counting site.",
+            "type": "number",
+            "format": "double",
+            "example": 2.313706
+          }
+        }
+      },
+      "Geometry": {
+        "type": "object",
+        "description": "Abstract GeoJson geometry object\n",
+        "externalDocs": {
+          "url": "https://tools.ietf.org/html/rfc7946#section-3"
+        },
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "LineString"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          }
+        ]
+      },
+      "Position": {
+        "type": "array",
+        "description": "GeoJson fundamental geometry construct.\nA position is an array of numbers. There MUST be two or more elements. The first two elements are longitude and latitude, or easting and northing, precisely in that order and using decimal numbers. Altitude or elevation MAY be included as an optional third element.\nImplementations SHOULD NOT extend positions beyond three elements because the semantics of extra elements are unspecified and ambiguous. Historically, some implementations have used a fourth element to carry a linear referencing measure (sometimes denoted as \"M\") or a numerical timestamp, but in most situations a parser will not be able to properly interpret these values. The interpretation and meaning of additional elements is beyond the scope of this specification, and additional elements MAY be ignored by parsers.\n",
+        "externalDocs": {
+          "url": "https://tools.ietf.org/html/rfc7946#section-3.1.1"
+        },
+        "minItems": 2,
+        "maxItems": 3,
+        "items": {
+          "type": "number"
+        }
+      },
+      "LineStringCoordinates": {
+        "type": "array",
+        "description": "GeoJSon fundamental geometry construct, array of two or more positions.\n",
+        "externalDocs": {
+          "url": "https://tools.ietf.org/html/rfc7946#section-3.1.4"
+        },
+        "items": {
+          "$ref": "#/components/schemas/Position"
+        },
+        "minItems": 2
+      },
+      "LineString": {
+        "type": "object",
+        "description": "GeoJson geometry object, array of two or more positions that share a relationship.\n",
+        "externalDocs": {
+          "url": "https://tools.ietf.org/html/rfc7946#section-3.1.4"
+        },
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Geometry"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "coordinates": {
+                "$ref": "#/components/schemas/LineStringCoordinates"
+              }
+            },
+            "required": [
+              "coordinates"
+            ]
+          }
+        ]
+      },
+      "GeoJsonObject": {
+        "type": "object",
+        "description": "The counting site infrastructure represented by segments. A GeoJson line string which defines pedestrian, cycling or road infrastructure.\n",
+        "externalDocs": {
+          "url": "https://tools.ietf.org/html/rfc7946#section-3"
+        },
+        "discriminator": {
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/LineString"
+          }
+        ]
+      },
+      "TravelModeLabel": {
+        "type": "string",
+        "description": "The travel/transportation mode",
+        "enum": [
+          "pedestrian",
+          "bike",
+          "horse",
+          "car",
+          "bus",
+          "minibus",
+          "undefined",
+          "motorbike",
+          "kayak",
+          "scooter",
+          "truck",
+          "cargobike",
+          "motorized"
+        ],
+        "example": "bike"
+      },
+      "siteCounter": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "The Eco-Visio ID for the counter.",
+            "type": "integer",
+            "example": 35486423
+          },
+          "serial": {
+            "description": "The serial number of the counter.",
+            "type": "string",
+            "example": "ECO22028451"
+          },
+          "installationDate": {
+            "description": "The installation date of the counter.",
+            "type": "string",
+            "format": "date-time",
+            "example": "2012-03-25T09:15:00Z"
+          },
+          "detachmentDate": {
+            "description": "The detachment date of the counter.",
+            "type": "string",
+            "format": "date-time",
+            "example": "2012-03-25T09:15:00Z"
+          }
+        }
+      },
+      "Domain": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "description": "The Eco-Visio ID of the domain.",
+            "type": "integer",
+            "format": "int64",
+            "example": 8952
+          },
+          "name": {
+            "description": "The name of the domain.",
+            "type": "string",
+            "example": "Lockwood Village"
+          }
+        }
+      },
+      "siteTag": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "The Eco-Visio ID for the tag.",
+            "type": "integer",
+            "format": "int64",
+            "example": 115102
+          },
+          "name": {
+            "description": "The name of the tag.",
+            "type": "string",
+            "maximum": 255,
+            "example": "Temporary counting 2023"
+          }
+        }
+      },
+      "Image": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "description": "The URL of the image.",
+            "type": "string",
+            "example": "https://filer.eco-counter-tools.com/file/894/fab0755be7b185ze65f1zef54ee8e0e66e022e791a2b28969c6b2b8a944fd1d84/13315982100680.jpg"
+          }
+        }
+      },
+      "site": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "The Eco-Visio ID for the counting site.",
+            "type": "integer",
+            "format": "int64",
+            "example": 128952
+          },
+          "name": {
+            "description": "The name of the counting site.",
+            "type": "string",
+            "example": "Mobile counting 2023"
+          },
+          "description": {
+            "description": "The description of the counting site.",
+            "type": "string",
+            "example": "Mobile counting 2023"
+          },
+          "customId": {
+            "description": "Custom identifier for the counting site from another system or input manually in Eco-Visio.",
+            "type": "string",
+            "example": "XCOUNT-89451"
+          },
+          "location": {
+            "description": "The location of the counting site.",
+            "$ref": "#/components/schemas/Location"
+          },
+          "segments": {
+            "$ref": "#/components/schemas/GeoJsonObject"
+          },
+          "firstData": {
+            "description": "The date and time (ISO 8601 format) when the site received its first data.",
+            "type": "string",
+            "format": "date-time",
+            "example": "2017-07-21T10:45:00Z"
+          },
+          "lastData": {
+            "description": "The date and time (ISO 8601 format) when the site received its last data.",
+            "type": "string",
+            "format": "date-time",
+            "example": "2023-08-25T16:45:00Z"
+          },
+          "granularity": {
+            "description": "Time intervals between two consecutive data\n\n  | Possible values      | Description          |\n  |----------------------|----------------------|\n  | PT15M                | 15 minutes           |\n  | PT1H                 | 1 hour               |\n  | P1D                  | 1 day                |\n  | P1W                  | 1 week               |\n  | P1M                  | 1 month              |\n  | P1Y                  | 1 year               | \n",
+            "type": "string",
+            "enum": [
+              "PT15M",
+              "PT1H",
+              "P1D",
+              "P1W",
+              "P1M",
+              "P1Y"
+            ]
+          },
+          "travelModes": {
+            "description": "The travel modes of the counting site.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TravelModeLabel"
+            },
+            "example": [
+              "bike",
+              "pedestrian"
+            ]
+          },
+          "directional": {
+            "description": "Indicator telling if directions are distinguished.",
+            "type": "boolean",
+            "example": true
+          },
+          "counters": {
+            "description": "The counters installed on the counting site.",
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/siteCounter"
+            }
+          },
+          "domain": {
+            "description": "The domain of the counting site to which it belongs.",
+            "$ref": "#/components/schemas/Domain"
+          },
+          "tags": {
+            "description": "The tags of the counting site.",
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/siteTag"
+            }
+          },
+          "images": {
+            "description": "The images of the counting site.",
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/Image"
+            }
+          },
+          "attributes": {
+            "description": "Custom attributes of the counting site defined by the sharing program. \nOnly relevant in the context of a sharing program.\n",
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": {
+              "type": "string"
+            },
+            "example": {
+              "infrastructureType": "green_way"
+            }
+          },
+          "hasTimestampedData": {
+            "description": "Indicator telling if the counting site has timestamped data.\nIt needs to be equal to true to use the API for timestamped traffic /api/v2/history/traffic/timestamp.\n",
+            "type": "boolean",
+            "example": true
+          },
+          "hasWeather": {
+            "description": "Indicator telling if the counting site has weather station.\n",
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "BadRequest": {
+        "type": "object",
+        "description": "error",
+        "properties": {
+          "status": {
+            "description": "The HTTP status code.",
+            "type": "number",
+            "format": "int32",
+            "example": 400
+          },
+          "code": {
+            "description": "The error code.",
+            "type": "string",
+            "example": "bad_request"
+          },
+          "message": {
+            "description": "The error description.",
+            "type": "string",
+            "example": "Invalid date format"
+          }
+        }
+      },
+      "Unauthorized": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "The HTTP status code.",
+            "type": "number",
+            "format": "int32",
+            "example": 401
+          },
+          "code": {
+            "description": "The error code.",
+            "type": "string",
+            "example": "unauthorized"
+          },
+          "message": {
+            "description": "The error description.",
+            "type": "string",
+            "example": "Invalid or missing API key"
+          }
+        }
+      },
+      "Forbidden": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "The HTTP status code.",
+            "type": "number",
+            "format": "int32",
+            "example": 403
+          },
+          "code": {
+            "description": "The error code.",
+            "type": "string",
+            "example": "forbidden"
+          },
+          "message": {
+            "description": "The error description.",
+            "type": "string",
+            "example": "Access forbidden"
+          }
+        }
+      },
+      "TooManyRequests": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "The HTTP status code.",
+            "type": "number",
+            "format": "int32",
+            "example": 429
+          },
+          "code": {
+            "description": "The error code.",
+            "type": "string",
+            "example": "too_many_requests"
+          },
+          "message": {
+            "description": "The error description.",
+            "type": "string",
+            "example": "Your app has exceeded its rate limits"
+          }
+        }
+      },
+      "tag": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "The Eco-Visio ID for the tag.",
+            "type": "integer",
+            "format": "int64",
+            "example": 115102
+          },
+          "name": {
+            "description": "The name of the tag.",
+            "type": "string",
+            "maximum": 255,
+            "example": "Temporary counting 2023"
+          },
+          "description": {
+            "description": "The description of the tag.",
+            "maximum": 1023,
+            "type": "string",
+            "example": "Mobile counting sites for 2023"
+          },
+          "color": {
+            "description": "The color of the tag in hexadecimal format.",
+            "type": "string",
+            "maximum": 255,
+            "example": "Mobile counting sites for 2023"
+          },
+          "domain": {
+            "$ref": "#/components/schemas/Domain"
+          }
+        }
+      },
+      "ExportCreation": {
+        "type": "object",
+        "required": [
+          "startDate",
+          "schema",
+          "siteIds"
+        ],
+        "properties": {
+          "startDate": {
+            "description": "Return data at or after start date.\n",
+            "type": "string",
+            "format": "date",
+            "example": "2023-09-20"
+          },
+          "endDate": {
+            "description": "Return data before end date. If this is not specified, then the system will use today as the endDate.\n",
+            "type": "string",
+            "format": "date",
+            "example": "2023-09-25"
+          },
+          "startTime": {
+            "description": "Return data at or after start time\nFormat: hh:mm\n",
+            "type": "string",
+            "default": "00:00",
+            "example": "06:00"
+          },
+          "endTime": {
+            "description": "Return data before end time.\nFormat: hh:mm\n",
+            "type": "string",
+            "default": "00:00",
+            "example": "20:00"
+          },
+          "schema": {
+            "description": "Export schema format for structuring mobility data:\n  - **mobility_counting_schema** : comprehensive mobility counting format designed for interoperability and standardization. \n    The format uses CSV files organized in a logical hierarchy, making it easy to process with standard data tools while maintaining data integrity and completeness.\n\n    📋 [Complete schema documentation](https://docs.google.com/document/d/1u2S_TVG2tT2BorHWI2syjrisXH49SH4m-PFKE3Mj840/edit#heading=h.gsqclrqliggp)\n",
+            "type": "string",
+            "enum": [
+              "mobility_counting_schema"
+            ],
+            "example": "mobility_counting_schema"
+          },
+          "siteIds": {
+            "description": "Site identifiers of the data to export.",
+            "type": "array",
+            "items": {
+              "description": "A site identifier",
+              "type": "integer",
+              "format": "int11",
+              "example": [
+                300016820,
+                300017019
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 10000
+          },
+          "granularity": {
+            "description": "Time intervals between two consecutive data\n\n  | Possible values      | Description          |\n  |----------------------|----------------------|\n  | PT15M                | 15 minutes           |\n  | PT1H                 | 1 hour               |\n  | P1D                  | 1 day                |\n  | P1M                  | 1 month              |\n  | P1Y                  | 1 year               |\n",
+            "type": "string",
+            "enum": [
+              "PT15M",
+              "PT1H",
+              "P1D",
+              "P1M",
+              "P1Y"
+            ],
+            "default": "P1D",
+            "example": "PT1H"
+          },
+          "validatedDataOnly": {
+            "description": "Filter the results to include only validated data. If set to true, only data that has been validated will be returned. If set to false or not specified, all data will be returned.\n",
+            "type": "boolean",
+            "default": false
+          },
+          "gapFilling": {
+            "description": "Fill gaps with null values to ensure contiguous series. If set to true, gaps will be filled with \"null\". If set to false or not specified, gaps will remain unfilled.\n",
+            "type": "boolean",
+            "default": false
+          },
+          "validateSchema": {
+            "description": "Enable strict schema validation to ensure data compliance and completeness.\n\nWhen enabled (`true`), the export process will:\n* Verify all required fields are present and properly formatted\n* Validate data types and value constraints\n* Fail the export if any validation errors are found\n\nWhen disabled (`false`, default), missing optional fields will be handled gracefully, and the export will proceed with available data.\n\n**Note**: Enable validation when preparing data for import to ensure full compliance with national data portal requirements.\n",
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "Export": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "The ID of the export",
+            "type": "integer",
+            "format": "int11",
+            "example": 123456
+          },
+          "status": {
+            "description": "The status of the export",
+            "type": "string",
+            "enum": [
+              "queued",
+              "in_progress",
+              "success",
+              "failure",
+              "cleaned"
+            ],
+            "example": "completed"
+          },
+          "url": {
+            "description": "The download url of the archive when the export is completed successfully.",
+            "type": "string",
+            "nullable": true,
+            "example": "https://api.eco-counter.com/api/v2/exports/123456789/data"
+          },
+          "errorMessage": {
+            "description": "The error details if the export failed.",
+            "type": "string",
+            "nullable": true,
+            "example": "Missing location for site Madison Square Garden."
+          },
+          "endProcessingDateTime": {
+            "description": "The end processing date and time (ISO 8601 format) of the export",
+            "type": "string",
+            "nullable": true,
+            "format": "datetime",
+            "example": "2023-08-25T16:45:00Z"
+          }
+        }
+      },
+      "NotFound": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "The HTTP status code.",
+            "type": "number",
+            "format": "int32",
+            "example": 404
+          },
+          "code": {
+            "description": "The error code.",
+            "type": "string",
+            "example": "not_found"
+          },
+          "message": {
+            "description": "The error description.",
+            "type": "string",
+            "example": "The requested resource was not found"
+          }
+        }
+      },
+      "DateRange": {
+        "type": "string",
+        "enum": [
+          "currentYear",
+          "lastYear",
+          "currentMonth",
+          "lastMonth",
+          "currentWeek",
+          "lastWeek",
+          "yesterday",
+          "custom"
+        ],
+        "description": "The preset to get the statistical data from. Use the custom values to get data for a month and/or a year\n"
+      },
+      "StatisticalAverageGroupBy": {
+        "type": "string",
+        "enum": [
+          "site",
+          "travelMode",
+          "direction",
+          "siteAndTravelMode"
+        ],
+        "description": "Return data in groups based on the given entity.\n"
+      },
+      "Direction": {
+        "type": "string",
+        "description": "The direction",
+        "enum": [
+          "in",
+          "out",
+          "undefined"
+        ],
+        "example": "in"
+      },
+      "DirectionName": {
+        "type": "string",
+        "nullable": true,
+        "description": "The direction name",
+        "example": "in (to the city)"
+      },
+      "Value": {
+        "description": "The value",
+        "type": "number",
+        "format": "float",
+        "example": 12
+      },
+      "StatisticalTraffic": {
+        "type": "object",
+        "required": [
+          "objectType"
+        ],
+        "properties": {
+          "siteId": {
+            "description": "The Eco-Visio ID for the counting site.",
+            "nullable": true,
+            "type": "integer",
+            "format": "int64",
+            "example": 128952
+          },
+          "date": {
+            "description": "The date of the traffic data.",
+            "nullable": true,
+            "type": "string",
+            "format": "date-time",
+            "example": "2023-09-20T00:00:00Z"
+          },
+          "travelMode": {
+            "$ref": "#/components/schemas/TravelModeLabel"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/Direction"
+          },
+          "directionName": {
+            "$ref": "#/components/schemas/DirectionName"
+          },
+          "value": {
+            "$ref": "#/components/schemas/Value"
+          }
+        }
+      },
+      "StatisticalTotalGroupBy": {
+        "type": "string",
+        "enum": [
+          "site",
+          "travelMode",
+          "siteAndTravelMode"
+        ],
+        "description": "Return data in groups based on the given entity.\n"
+      },
+      "HistoricalRawTrafficInclude": {
+        "type": "string",
+        "enum": [
+          "status"
+        ]
+      },
+      "BaseSerie": {
+        "type": "object",
+        "description": "Base Serie",
+        "properties": {
+          "travelMode": {
+            "$ref": "#/components/schemas/TravelModeLabel"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/Direction"
+          }
+        }
+      },
+      "DateTime": {
+        "description": "The date time in ISO format",
+        "type": "string",
+        "format": "date-time",
+        "example": "2017-09-14T18:15:00+02:00"
+      },
+      "Count": {
+        "description": "The total of counts",
+        "type": "number",
+        "format": "float",
+        "example": 12
+      },
+      "DataStatus": {
+        "type": "array",
+        "description": "The status of the data\n\n| Name         | Description                     |\n|--------------|---------------------------------|\n| raw          | Count data is raw               |\n| deleted      | Count data has been deleted     |\n| modified     | Count data has been modified    |\n| validated    | Count data has been validated   |\n| invalidated  | Count data has been invalidated |\n",
+        "items": {
+          "type": "string",
+          "enum": [
+            "raw",
+            "deleted",
+            "modified",
+            "validated",
+            "invalidated"
+          ],
+          "example": "raw"
+        }
+      },
+      "HistoricalRawTraffic": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseSerie"
+          },
+          {
+            "type": "object",
+            "required": [
+              "objectType"
+            ],
+            "properties": {
+              "flowID": {
+                "description": "The flow ID",
+                "type": "integer",
+                "format": "int64",
+                "example": 1265564,
+                "nullable": true
+              },
+              "flowName": {
+                "description": "The flow name",
+                "type": "string",
+                "example": "Name of the flow",
+                "nullable": true
+              },
+              "data": {
+                "description": "The data points",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "timestamp": {
+                      "$ref": "#/components/schemas/DateTime"
+                    },
+                    "granularity": {
+                      "description": "The time step in ISO-8601 format",
+                      "type": "string",
+                      "example": "PT15M"
+                    },
+                    "counts": {
+                      "$ref": "#/components/schemas/Count"
+                    },
+                    "status": {
+                      "$ref": "#/components/schemas/DataStatus"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "HistoricalAggregatedTrafficInclude": {
+        "type": "string",
+        "enum": [
+          "status",
+          "weather"
+        ]
+      },
+      "Granularity": {
+        "type": "string",
+        "enum": [
+          "PT15M",
+          "PT1H",
+          "P1D",
+          "P1W",
+          "P1M",
+          "P1Y"
+        ],
+        "default": "P1D"
+      },
+      "HistoricalAggregatedTrafficGroupBy": {
+        "type": "string",
+        "enum": [
+          "site",
+          "travelMode",
+          "direction",
+          "travelModeAndDirection",
+          "flow"
+        ],
+        "description": "Return data in groups based on the given entity.\n",
+        "default": "site"
+      },
+      "HistoricalAggregatedTraffic": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseSerie"
+          },
+          {
+            "type": "object",
+            "required": [
+              "objectType"
+            ],
+            "properties": {
+              "data": {
+                "description": "The data points",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "timestamp": {
+                      "$ref": "#/components/schemas/DateTime"
+                    },
+                    "traffic": {
+                      "description": "The traffic data",
+                      "type": "object",
+                      "properties": {
+                        "counts": {
+                          "$ref": "#/components/schemas/Count"
+                        },
+                        "status": {
+                          "type": "object",
+                          "$ref": "#/components/schemas/DataStatus"
+                        }
+                      }
+                    },
+                    "weather": {
+                      "description": "The traffic data",
+                      "type": "object",
+                      "properties": {
+                        "temperature": {
+                          "description": "The average temperature in celcius\n",
+                          "type": "number",
+                          "format": "float",
+                          "example": 12
+                        },
+                        "rainAccumulation": {
+                          "description": "The rain accumulation in millimeters",
+                          "type": "number",
+                          "format": "float",
+                          "example": 6.2
+                        },
+                        "snowAccumulation": {
+                          "description": "The snow accumulation in centimeters",
+                          "type": "number",
+                          "format": "float",
+                          "example": 10.5
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "directionName": {
+                "$ref": "#/components/schemas/DirectionName"
+              },
+              "flowID": {
+                "description": "The flow ID",
+                "type": "integer",
+                "format": "int64",
+                "example": 1265564,
+                "nullable": true
+              },
+              "flowName": {
+                "description": "The flow name",
+                "type": "string",
+                "example": "Name of the flow",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "Lane": {
+        "type": "integer",
+        "format": "int32",
+        "description": "The lane number",
+        "example": 1
+      },
+      "HistoricalTimestampTraffic": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseSerie"
+          },
+          {
+            "type": "object",
+            "required": [
+              "objectType"
+            ],
+            "properties": {
+              "timestamp": {
+                "$ref": "#/components/schemas/DateTime"
+              },
+              "lane": {
+                "$ref": "#/components/schemas/Lane"
+              },
+              "speed": {
+                "description": "The speed in km/h. This field is only available if the counter is able to measure the speed and has collect it.",
+                "type": "integer",
+                "format": "int64",
+                "example": 15
+              }
+            }
+          }
+        ]
+      },
+      "validationJobStatus": {
+        "type": "string",
+        "enum": [
+          "IN_PROGRESS",
+          "SUCCESS",
+          "FAILURE"
+        ],
+        "default": "IN_PROGRESS"
+      },
+      "validationJob": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "The job id of the validation job.",
+            "type": "integer",
+            "format": "int64"
+          },
+          "status": {
+            "$ref": "#/components/schemas/validationJobStatus"
+          },
+          "siteIds": {
+            "description": "The array of Eco-Visio identifiers of the sites.\n",
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int11"
+            },
+            "example": [
+              10,
+              20
+            ]
+          },
+          "startDate": {
+            "description": "The beginning of the period to validate in ISO-8601 format.\n",
+            "type": "string",
+            "format": "date",
+            "example": "2020-01-01"
+          },
+          "endDate": {
+            "description": "The end of the period to validate in ISO-8601 format.\n",
+            "type": "string",
+            "format": "date",
+            "example": "2020-01-31"
+          },
+          "errorMessage": {
+            "description": "The error message if the validation job failed.\n",
+            "type": "string",
+            "example": "The validation job failed because of an error."
+          },
+          "endProcessingDateTime": {
+            "description": "The date and time (ISO 8601 format) when the validation job ended.\n",
+            "type": "string",
+            "format": "date-time",
+            "example": "2020-01-31T23:59:59Z"
+          },
+          "createdAt": {
+            "description": "The creation date time of the validation job",
+            "type": "string",
+            "format": "date-time",
+            "example": "2023-02-25T16:45:07Z"
+          }
+        }
+      },
+      "validationJobCreated": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "The job id of the validation job.",
+            "type": "integer",
+            "format": "int64"
+          },
+          "status": {
+            "$ref": "#/components/schemas/validationJobStatus"
+          },
+          "siteIds": {
+            "description": "The array of Eco-Visio identifiers of the sites.\n",
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int11"
+            },
+            "example": [
+              10,
+              20
+            ]
+          },
+          "startDate": {
+            "description": "The start date of the period to validate. startDate is inclusive. Full-date notation defined by RFC 3339 ; example : 2023-09-20\n",
+            "type": "string",
+            "format": "date",
+            "example": "2020-01-01"
+          },
+          "endDate": {
+            "description": "The end date of the period to validate. endDate is exclusive. Full-date notation defined by RFC 3339 ; example : 2023-09-20\n",
+            "type": "string",
+            "format": "date",
+            "example": "2020-01-31"
+          }
+        }
+      },
+      "Conflict": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "The HTTP status code.",
+            "type": "number",
+            "format": "int32",
+            "example": 409
+          },
+          "code": {
+            "description": "The error code.",
+            "type": "string",
+            "example": "conflict"
+          },
+          "message": {
+            "description": "The error description.",
+            "type": "string",
+            "example": "A validation job is already in progress for this API key. Please wait for the current job to complete before starting a new one."
+          }
+        }
+      }
+    }
+  }
+}

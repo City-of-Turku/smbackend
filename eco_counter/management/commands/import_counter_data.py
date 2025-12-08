@@ -38,13 +38,13 @@ from eco_counter.models import (
     Year,
     YearData,
 )
+
 from .eco_visio_client import EcoVisioAPIClient, EcoVisioAPIError
 from .eco_visio_mapper import (
     combine_station_dataframes,
     get_supported_travel_modes,
     transform_raw_traffic_to_dataframe,
 )
-
 from .utils import (
     check_counters_argument,
     gen_eco_counter_test_csv,
@@ -490,7 +490,7 @@ def get_csv_data(counter, import_state, start_time, verbose=True):
                 start_year = TRAFFIC_COUNTER_START_YEAR
             csv_data = get_traffic_counter_csv(start_year=start_year)
         case _:
-            raise ValueError(f"Unsupported counter type: {counter}")            
+            raise ValueError(f"Unsupported counter type: {counter}")
 
     if csv_data.empty:
         logger.warning(f"No data retrieved for counter {counter}")

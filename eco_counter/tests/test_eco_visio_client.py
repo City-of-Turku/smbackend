@@ -5,9 +5,8 @@ These tests provide comprehensive coverage of the Eco-Visio API client,
 including authentication, rate limiting, error handling, and data retrieval.
 """
 
-import time
-from datetime import date, timedelta
-from unittest.mock import MagicMock, Mock, patch
+from datetime import date
+from unittest.mock import Mock, patch
 
 import pytest
 import requests
@@ -160,7 +159,9 @@ class TestMakeRequest:
         mock_response.status_code = 200
         mock_response.headers = {}
 
-        with patch.object(client.session, "get", return_value=mock_response) as mock_get:
+        with patch.object(
+            client.session, "get", return_value=mock_response
+        ) as mock_get:
             client._make_request("/test", params={"key": "value"})
 
         mock_get.assert_called_once_with(
@@ -174,7 +175,10 @@ class TestMakeRequest:
         client = EcoVisioAPIClient(api_key="test-key")
         mock_response = Mock()
         mock_response.status_code = 200
-        mock_response.headers = {"X-RateLimit-Remaining": "99", "X-RateLimit-Reset": "60"}
+        mock_response.headers = {
+            "X-RateLimit-Remaining": "99",
+            "X-RateLimit-Reset": "60",
+        }
 
         with patch.object(client.session, "get", return_value=mock_response):
             client._make_request("/test")
@@ -358,7 +362,9 @@ class TestGetSites:
         }
         mock_response.json.return_value = [{"id": 1, "name": "Site 1"}]
 
-        with patch.object(client.session, "get", return_value=mock_response) as mock_get:
+        with patch.object(
+            client.session, "get", return_value=mock_response
+        ) as mock_get:
             result = client.get_sites()
 
         assert result["sites"] == [{"id": 1, "name": "Site 1"}]
@@ -386,8 +392,12 @@ class TestGetSites:
         }
         mock_response.json.return_value = [{"id": 2, "name": "Site 2"}]
 
-        with patch.object(client.session, "get", return_value=mock_response) as mock_get:
-            result = client.get_sites(page=2, page_size=200, include=["segments", "counters"])
+        with patch.object(
+            client.session, "get", return_value=mock_response
+        ) as mock_get:
+            result = client.get_sites(
+                page=2, page_size=200, include=["segments", "counters"]
+            )
 
         assert result["current_page"] == 2
 
@@ -410,7 +420,9 @@ class TestGetSites:
         }
         mock_response.json.return_value = []
 
-        with patch.object(client.session, "get", return_value=mock_response) as mock_get:
+        with patch.object(
+            client.session, "get", return_value=mock_response
+        ) as mock_get:
             client.get_sites(page_size=1000)
 
         # Verify page size was capped at 500
@@ -500,7 +512,9 @@ class TestGetAllSites:
             mock_response.json.return_value = sites
             mock_responses.append(mock_response)
 
-        with patch.object(client.session, "get", side_effect=mock_responses) as mock_get:
+        with patch.object(
+            client.session, "get", side_effect=mock_responses
+        ) as mock_get:
             result = client.get_all_sites()
 
         assert len(result) == 250
@@ -521,7 +535,9 @@ class TestGetAllSites:
         }
         mock_response.json.return_value = [{"id": 1, "segments": []}]
 
-        with patch.object(client.session, "get", return_value=mock_response) as mock_get:
+        with patch.object(
+            client.session, "get", return_value=mock_response
+        ) as mock_get:
             client.get_all_sites(include=["segments", "counters"])
 
         call_args = mock_get.call_args
@@ -540,7 +556,9 @@ class TestGetAllSites:
         }
         mock_response_empty.json.return_value = []
 
-        with patch.object(client.session, "get", return_value=mock_response_empty) as mock_get:
+        with patch.object(
+            client.session, "get", return_value=mock_response_empty
+        ) as mock_get:
             result = client.get_all_sites()
 
         assert len(result) == 0
@@ -572,8 +590,12 @@ class TestGetRawTraffic:
         start_date = date(2024, 1, 1)
         end_date = date(2024, 1, 10)
 
-        with patch.object(client.session, "get", return_value=mock_response) as mock_get:
-            result = client.get_raw_traffic(site_id=12345, start_date=start_date, end_date=end_date)
+        with patch.object(
+            client.session, "get", return_value=mock_response
+        ) as mock_get:
+            result = client.get_raw_traffic(
+                site_id=12345, start_date=start_date, end_date=end_date
+            )
 
         assert result == traffic_data
 
@@ -596,7 +618,9 @@ class TestGetRawTraffic:
         start_date = date(2024, 1, 1)
         end_date = date(2024, 1, 10)
 
-        with patch.object(client.session, "get", return_value=mock_response) as mock_get:
+        with patch.object(
+            client.session, "get", return_value=mock_response
+        ) as mock_get:
             client.get_raw_traffic(
                 site_id=12345,
                 start_date=start_date,
@@ -623,9 +647,13 @@ class TestGetRawTraffic:
         with patch.object(
             client, "_get_raw_traffic_chunked", return_value=[]
         ) as mock_chunked:
-            client.get_raw_traffic(site_id=12345, start_date=start_date, end_date=end_date)
+            client.get_raw_traffic(
+                site_id=12345, start_date=start_date, end_date=end_date
+            )
 
-        mock_chunked.assert_called_once_with(12345, start_date, end_date, False, None, False)
+        mock_chunked.assert_called_once_with(
+            12345, start_date, end_date, False, None, False
+        )
 
     def test_get_raw_traffic_exactly_31_days(self):
         """Test that exactly 31 days does not trigger chunking."""
@@ -641,7 +669,9 @@ class TestGetRawTraffic:
 
         with patch.object(client.session, "get", return_value=mock_response):
             with patch.object(client, "_get_raw_traffic_chunked") as mock_chunked:
-                client.get_raw_traffic(site_id=12345, start_date=start_date, end_date=end_date)
+                client.get_raw_traffic(
+                    site_id=12345, start_date=start_date, end_date=end_date
+                )
 
         mock_chunked.assert_not_called()
 
@@ -661,7 +691,9 @@ class TestGetRawTraffic:
         end_date = date(2024, 1, 10)
 
         with patch.object(client.session, "get", return_value=mock_response):
-            client.get_raw_traffic(site_id=12345, start_date=start_date, end_date=end_date)
+            client.get_raw_traffic(
+                site_id=12345, start_date=start_date, end_date=end_date
+            )
 
         mock_sleep.assert_called_once_with(3)
 
@@ -707,7 +739,9 @@ class TestGetRawTrafficChunked:
             mock_response.json.return_value = chunk_data
             mock_responses.append(mock_response)
 
-        with patch.object(client.session, "get", side_effect=mock_responses) as mock_get:
+        with patch.object(
+            client.session, "get", side_effect=mock_responses
+        ) as mock_get:
             result = client._get_raw_traffic_chunked(
                 site_id=12345,
                 start_date=start_date,
@@ -739,7 +773,9 @@ class TestGetRawTrafficChunked:
         mock_response.headers = {}
         mock_response.json.return_value = [{"travelMode": "bike", "data": []}]
 
-        with patch.object(client.session, "get", return_value=mock_response) as mock_get:
+        with patch.object(
+            client.session, "get", return_value=mock_response
+        ) as mock_get:
             client._get_raw_traffic_chunked(
                 site_id=12345,
                 start_date=start_date,
@@ -751,11 +787,11 @@ class TestGetRawTrafficChunked:
 
         # Verify the date parameters in each call
         call_args_list = mock_get.call_args_list
-        
+
         # First chunk: 2024-01-01 to 2024-02-01 (31 days)
         assert call_args_list[0][1]["params"]["startDate"] == "2024-01-01"
         assert call_args_list[0][1]["params"]["endDate"] == "2024-02-01"
-        
+
         # Second chunk: 2024-02-01 to 2024-03-01 (29 days)
         assert call_args_list[1][1]["params"]["startDate"] == "2024-02-01"
         assert call_args_list[1][1]["params"]["endDate"] == "2024-03-01"
@@ -995,4 +1031,3 @@ class TestIntegrationScenarios:
 
         assert result == []
         mock_sleep.assert_called_once_with(2)  # Reset time + 1
-

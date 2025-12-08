@@ -40,10 +40,7 @@ from eco_counter.management.commands.eco_visio_client import EcoVisioAPIClient
 from eco_counter.models import Day, DayData, Station, YearData
 from eco_counter.tests.constants import TEST_COLUMN_NAMES
 from mobility_data.importers.constants import SOUTHWEST_FINLAND_BOUNDARY_SRID
-from mobility_data.importers.utils import (
-    get_root_dir,
-    locates_in_south_western_finland,
-)
+from mobility_data.importers.utils import get_root_dir, locates_in_south_western_finland
 
 logger = logging.getLogger("eco_counter")
 Q_EXP = Q(value_at__gt=0) | Q(value_pt__gt=0) | Q(value_jt__gt=0) | Q(value_bt__gt=0)
@@ -189,6 +186,7 @@ def get_dataframe(url):
     string_data = response.content
     csv_data = pd.read_csv(io.StringIO(string_data.decode("utf-8")))
     return csv_data
+
 
 def get_traffic_counter_csv(start_year=2015):
     """

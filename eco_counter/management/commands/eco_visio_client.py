@@ -9,7 +9,7 @@ API Documentation: https://developers.eco-counter.com/
 
 import logging
 import time
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from typing import Dict, List, Optional
 
 import requests
@@ -65,7 +65,9 @@ class EcoVisioAPIClient:
         """
         self.api_key = api_key or settings.ECO_VISIO_API_KEY
         self.api_url = (
-            api_url or settings.ECO_VISIO_API_URL or "https://api.eco-counter.com/api/v2"
+            api_url
+            or settings.ECO_VISIO_API_URL
+            or "https://api.eco-counter.com/api/v2"
         )
 
         if not self.api_key:
@@ -156,7 +158,7 @@ class EcoVisioAPIClient:
 
             elif response.status_code == 401:
                 raise EcoVisioAuthError(
-                    f"Authentication failed: Invalid or missing API key"
+                    "Authentication failed: Invalid or missing API key"
                 )
 
             elif response.status_code == 403:
@@ -470,4 +472,3 @@ class EcoVisioAPIClient:
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit."""
         self.close()
-

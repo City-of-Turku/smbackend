@@ -13,11 +13,9 @@ from io import StringIO
 from unittest.mock import patch
 
 import dateutil.parser
+import pandas as pd
 import pytest
 from django.core.management import call_command
-
-import pandas as pd
-from eco_counter.management.commands.import_counter_data import import_data
 
 from eco_counter.constants import (
     ECO_COUNTER,
@@ -25,6 +23,7 @@ from eco_counter.constants import (
     TELRAAM_COUNTER,
     TRAFFIC_COUNTER,
 )
+from eco_counter.management.commands.import_counter_data import import_data
 from eco_counter.models import (
     Day,
     DayData,

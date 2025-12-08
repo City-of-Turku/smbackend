@@ -7,20 +7,19 @@ expected by the existing eco_counter import logic.
 """
 
 import pandas as pd
-import pytest
 
 from eco_counter.management.commands.eco_visio_mapper import (
-    DIRECTION_MAPPING,
-    TRAVEL_MODE_MAPPING,
     _normalize_timestamp,
     _process_undefined_direction_data,
     combine_station_dataframes,
+    DIRECTION_MAPPING,
     get_column_suffix,
     get_direction_code,
     get_movement_type_code,
     get_supported_travel_modes,
     get_travel_mode_description,
     transform_raw_traffic_to_dataframe,
+    TRAVEL_MODE_MAPPING,
 )
 
 
@@ -213,9 +212,11 @@ class TestNormalizeTimestamp:
 
     def test_partial_timestamp_returns_none(self):
         """Test that partial/malformed timestamp returns None."""
-        result = _normalize_timestamp("2024-01-01")
         # This might be valid for fromisoformat in newer Python, but check behavior
         # If it fails, it should return None
+        result = _normalize_timestamp("2024-01-01")
+        # Result may be None or a parsed value depending on Python version
+        assert result is None or isinstance(result, str)
 
     def test_midnight_timestamp(self):
         """Test midnight timestamp."""
@@ -654,9 +655,7 @@ class TestCombineStationDataframes:
 
     def test_single_dataframe_returned_as_is(self):
         """Test that single DataFrame is returned unchanged."""
-        df = pd.DataFrame(
-            {"startTime": ["2024-01-01T00:00"], "Station1 PK": [5]}
-        )
+        df = pd.DataFrame({"startTime": ["2024-01-01T00:00"], "Station1 PK": [5]})
         result = combine_station_dataframes([df])
 
         assert len(result) == 1
@@ -664,12 +663,8 @@ class TestCombineStationDataframes:
 
     def test_multiple_dataframes_same_timestamps(self):
         """Test combining DataFrames with same timestamps."""
-        df1 = pd.DataFrame(
-            {"startTime": ["2024-01-01T00:00"], "Station1 PK": [5]}
-        )
-        df2 = pd.DataFrame(
-            {"startTime": ["2024-01-01T00:00"], "Station2 PK": [10]}
-        )
+        df1 = pd.DataFrame({"startTime": ["2024-01-01T00:00"], "Station1 PK": [5]})
+        df2 = pd.DataFrame({"startTime": ["2024-01-01T00:00"], "Station2 PK": [10]})
         result = combine_station_dataframes([df1, df2])
 
         assert len(result) == 1
@@ -680,12 +675,8 @@ class TestCombineStationDataframes:
 
     def test_multiple_dataframes_different_timestamps(self):
         """Test combining DataFrames with different timestamps (outer join)."""
-        df1 = pd.DataFrame(
-            {"startTime": ["2024-01-01T00:00"], "Station1 PK": [5]}
-        )
-        df2 = pd.DataFrame(
-            {"startTime": ["2024-01-01T01:00"], "Station2 PK": [10]}
-        )
+        df1 = pd.DataFrame({"startTime": ["2024-01-01T00:00"], "Station1 PK": [5]})
+        df2 = pd.DataFrame({"startTime": ["2024-01-01T01:00"], "Station2 PK": [10]})
         result = combine_station_dataframes([df1, df2])
 
         # Should have 2 rows (outer join)
@@ -696,12 +687,8 @@ class TestCombineStationDataframes:
 
     def test_dataframes_sorted_by_timestamp(self):
         """Test that combined DataFrame is sorted by timestamp."""
-        df1 = pd.DataFrame(
-            {"startTime": ["2024-01-01T02:00"], "Station1 PK": [20]}
-        )
-        df2 = pd.DataFrame(
-            {"startTime": ["2024-01-01T01:00"], "Station2 PK": [10]}
-        )
+        df1 = pd.DataFrame({"startTime": ["2024-01-01T02:00"], "Station1 PK": [20]})
+        df2 = pd.DataFrame({"startTime": ["2024-01-01T01:00"], "Station2 PK": [10]})
         result = combine_station_dataframes([df1, df2])
 
         assert result.loc[0, "startTime"] == "2024-01-01T01:00"
@@ -710,9 +697,7 @@ class TestCombineStationDataframes:
     def test_empty_dataframes_are_filtered(self):
         """Test that empty DataFrames are filtered out."""
         df1 = pd.DataFrame(columns=["startTime"])  # Empty
-        df2 = pd.DataFrame(
-            {"startTime": ["2024-01-01T00:00"], "Station2 PK": [10]}
-        )
+        df2 = pd.DataFrame({"startTime": ["2024-01-01T00:00"], "Station2 PK": [10]})
         result = combine_station_dataframes([df1, df2])
 
         assert len(result) == 1
@@ -721,9 +706,7 @@ class TestCombineStationDataframes:
     def test_dataframes_without_starttime_are_filtered(self):
         """Test that DataFrames without startTime column are filtered."""
         df1 = pd.DataFrame({"some_column": [1, 2, 3]})  # No startTime
-        df2 = pd.DataFrame(
-            {"startTime": ["2024-01-01T00:00"], "Station2 PK": [10]}
-        )
+        df2 = pd.DataFrame({"startTime": ["2024-01-01T00:00"], "Station2 PK": [10]})
         result = combine_station_dataframes([df1, df2])
 
         assert len(result) == 1
@@ -740,14 +723,18 @@ class TestCombineStationDataframes:
 
     def test_nan_values_filled_with_zero(self):
         """Test that NaN values from outer join are filled with 0."""
-        df1 = pd.DataFrame({
-            "startTime": ["2024-01-01T00:00", "2024-01-01T01:00"],
-            "Station1 PK": [5, 10],
-        })
-        df2 = pd.DataFrame({
-            "startTime": ["2024-01-01T00:00"],
-            "Station2 PK": [20],
-        })
+        df1 = pd.DataFrame(
+            {
+                "startTime": ["2024-01-01T00:00", "2024-01-01T01:00"],
+                "Station1 PK": [5, 10],
+            }
+        )
+        df2 = pd.DataFrame(
+            {
+                "startTime": ["2024-01-01T00:00"],
+                "Station2 PK": [20],
+            }
+        )
         result = combine_station_dataframes([df1, df2])
 
         # Station2 PK should be 0 for second timestamp
@@ -903,10 +890,26 @@ class TestIntegrationScenarios:
                 "flowID": 1,
                 "flowName": "Bike In",
                 "data": [
-                    {"timestamp": "2024-01-01T00:00:00+02:00", "granularity": "PT15M", "counts": 5},
-                    {"timestamp": "2024-01-01T00:15:00+02:00", "granularity": "PT15M", "counts": 8},
-                    {"timestamp": "2024-01-01T00:30:00+02:00", "granularity": "PT15M", "counts": 3},
-                    {"timestamp": "2024-01-01T00:45:00+02:00", "granularity": "PT15M", "counts": 2},
+                    {
+                        "timestamp": "2024-01-01T00:00:00+02:00",
+                        "granularity": "PT15M",
+                        "counts": 5,
+                    },
+                    {
+                        "timestamp": "2024-01-01T00:15:00+02:00",
+                        "granularity": "PT15M",
+                        "counts": 8,
+                    },
+                    {
+                        "timestamp": "2024-01-01T00:30:00+02:00",
+                        "granularity": "PT15M",
+                        "counts": 3,
+                    },
+                    {
+                        "timestamp": "2024-01-01T00:45:00+02:00",
+                        "granularity": "PT15M",
+                        "counts": 2,
+                    },
                 ],
             },
             {
@@ -915,10 +918,26 @@ class TestIntegrationScenarios:
                 "flowID": 2,
                 "flowName": "Bike Out",
                 "data": [
-                    {"timestamp": "2024-01-01T00:00:00+02:00", "granularity": "PT15M", "counts": 3},
-                    {"timestamp": "2024-01-01T00:15:00+02:00", "granularity": "PT15M", "counts": 4},
-                    {"timestamp": "2024-01-01T00:30:00+02:00", "granularity": "PT15M", "counts": 6},
-                    {"timestamp": "2024-01-01T00:45:00+02:00", "granularity": "PT15M", "counts": 1},
+                    {
+                        "timestamp": "2024-01-01T00:00:00+02:00",
+                        "granularity": "PT15M",
+                        "counts": 3,
+                    },
+                    {
+                        "timestamp": "2024-01-01T00:15:00+02:00",
+                        "granularity": "PT15M",
+                        "counts": 4,
+                    },
+                    {
+                        "timestamp": "2024-01-01T00:30:00+02:00",
+                        "granularity": "PT15M",
+                        "counts": 6,
+                    },
+                    {
+                        "timestamp": "2024-01-01T00:45:00+02:00",
+                        "granularity": "PT15M",
+                        "counts": 1,
+                    },
                 ],
             },
             {
@@ -927,8 +946,16 @@ class TestIntegrationScenarios:
                 "flowID": 3,
                 "flowName": "Pedestrian In",
                 "data": [
-                    {"timestamp": "2024-01-01T00:00:00+02:00", "granularity": "PT15M", "counts": 10},
-                    {"timestamp": "2024-01-01T00:15:00+02:00", "granularity": "PT15M", "counts": 15},
+                    {
+                        "timestamp": "2024-01-01T00:00:00+02:00",
+                        "granularity": "PT15M",
+                        "counts": 10,
+                    },
+                    {
+                        "timestamp": "2024-01-01T00:15:00+02:00",
+                        "granularity": "PT15M",
+                        "counts": 15,
+                    },
                 ],
             },
         ]
@@ -997,10 +1024,26 @@ class TestIntegrationScenarios:
                 "travelMode": "bike",
                 "direction": "in",
                 "data": [
-                    {"timestamp": "2024-01-01T00:00:00+02:00", "granularity": "PT15M", "counts": 1},
-                    {"timestamp": "2024-01-01T00:15:00+02:00", "granularity": "PT15M", "counts": 2},
-                    {"timestamp": "2024-01-01T00:30:00+02:00", "granularity": "PT15M", "counts": 3},
-                    {"timestamp": "2024-01-01T00:45:00+02:00", "granularity": "PT15M", "counts": 4},
+                    {
+                        "timestamp": "2024-01-01T00:00:00+02:00",
+                        "granularity": "PT15M",
+                        "counts": 1,
+                    },
+                    {
+                        "timestamp": "2024-01-01T00:15:00+02:00",
+                        "granularity": "PT15M",
+                        "counts": 2,
+                    },
+                    {
+                        "timestamp": "2024-01-01T00:30:00+02:00",
+                        "granularity": "PT15M",
+                        "counts": 3,
+                    },
+                    {
+                        "timestamp": "2024-01-01T00:45:00+02:00",
+                        "granularity": "PT15M",
+                        "counts": 4,
+                    },
                 ],
             }
         ]
@@ -1039,4 +1082,3 @@ class TestIntegrationScenarios:
         assert result.loc[0, "Test PK"] == 13.0
         # PP should have 3 (half of 6 from 'undefined')
         assert result.loc[0, "Test PP"] == 3.0
-

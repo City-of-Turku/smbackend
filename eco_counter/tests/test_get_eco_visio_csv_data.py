@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import call, MagicMock, patch
 
 import pandas as pd
 import pytest
@@ -8,8 +8,8 @@ from eco_counter.constants import ECO_COUNTER, INDEX_COLUMN_NAME
 from eco_counter.management.commands import import_counter_data
 from eco_counter.management.commands.import_counter_data import (
     EcoVisioAPIError,
-    TIMEZONE,
     get_eco_visio_csv_data,
+    TIMEZONE,
 )
 from eco_counter.models import Station
 
@@ -25,7 +25,9 @@ class FixedDatetime(datetime):
 @pytest.mark.django_db
 @patch("eco_counter.management.commands.import_counter_data.get_supported_travel_modes")
 @patch("eco_counter.management.commands.import_counter_data.combine_station_dataframes")
-@patch("eco_counter.management.commands.import_counter_data.transform_raw_traffic_to_dataframe")
+@patch(
+    "eco_counter.management.commands.import_counter_data.transform_raw_traffic_to_dataframe"
+)
 @patch("eco_counter.management.commands.import_counter_data.EcoVisioAPIClient")
 def test_get_eco_visio_csv_data_returns_sorted_combined(
     eco_client_mock,
@@ -40,10 +42,16 @@ def test_get_eco_visio_csv_data_returns_sorted_combined(
     monkeypatch.setattr(import_counter_data, "datetime", FixedDatetime)
 
     station1 = Station.objects.create(
-        name="Station 1", location="POINT(0 0)", csv_data_source=ECO_COUNTER, station_id="101"
+        name="Station 1",
+        location="POINT(0 0)",
+        csv_data_source=ECO_COUNTER,
+        station_id="101",
     )
     station2 = Station.objects.create(
-        name="Station 2", location="POINT(1 1)", csv_data_source=ECO_COUNTER, station_id="102"
+        name="Station 2",
+        location="POINT(1 1)",
+        csv_data_source=ECO_COUNTER,
+        station_id="102",
     )
 
     client_instance = MagicMock()
@@ -104,7 +112,9 @@ def test_get_eco_visio_csv_data_returns_sorted_combined(
 @pytest.mark.django_db
 @patch("eco_counter.management.commands.import_counter_data.get_supported_travel_modes")
 @patch("eco_counter.management.commands.import_counter_data.combine_station_dataframes")
-@patch("eco_counter.management.commands.import_counter_data.transform_raw_traffic_to_dataframe")
+@patch(
+    "eco_counter.management.commands.import_counter_data.transform_raw_traffic_to_dataframe"
+)
 @patch("eco_counter.management.commands.import_counter_data.EcoVisioAPIClient")
 def test_get_eco_visio_csv_data_skips_invalid_and_errors(
     eco_client_mock,
@@ -149,4 +159,3 @@ def test_get_eco_visio_csv_data_skips_invalid_and_errors(
     combine_mock.assert_called_once_with([])
     assert result.empty
     assert list(result.columns) == ["startTime"]
-

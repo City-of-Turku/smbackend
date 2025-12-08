@@ -366,4 +366,3 @@ def get_travel_mode_description(travel_mode: str) -> str:
         "B": "Bussi (bus)",
     }
     return f"{travel_mode} -> {code} ({code_names.get(code, 'unknown')})"
-
