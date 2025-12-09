@@ -51,6 +51,19 @@ def api_client():
     return APIClient()
 
 
+@pytest.fixture
+def mock_geocode_address(monkeypatch):
+    def fake_geocode(address):
+        if "Kaivokatu 1" in address:
+            return 60.1720965, 24.9412486
+        if "Katajanokanranta 1" in address:
+            return 60.1681792, 24.9744105
+        return None
+
+    monkeypatch.setattr("services.api.geocode_address", fake_geocode)
+    return fake_geocode
+
+
 @pytest.mark.django_db
 def test_get_administrative_division_list(api_client):
     create_administrative_divisions()
@@ -73,7 +86,7 @@ def test_municipality_filter(api_client):
 
 
 @pytest.mark.django_db
-def test_address_filter(api_client):
+def test_address_filter(api_client, mock_geocode_address):
     create_administrative_divisions()
     division = AdministrativeDivision.objects.get(name="helsinki")
     AdministrativeDivisionGeometry.objects.create(
