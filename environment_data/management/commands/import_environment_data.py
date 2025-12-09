@@ -3,7 +3,7 @@ from datetime import datetime
 from functools import lru_cache
 
 from django.core.management import BaseCommand, CommandError
-from django.db import connection, reset_queries
+from django.db import connection, reset_queries, transaction
 
 import environment_data.management.commands.air_quality_constants as aq_constants
 import environment_data.management.commands.air_quality_utils as am_utils
@@ -108,49 +108,50 @@ def bulk_create_rows(data_model, model_objs, measurements, datas):
         datas: Dictionary mapping keys to dicts with structure:
                {"data": <data_model_instance>, "measurements": [<Measurement_instances>]}
     """
-    # 1) Insert parent rows in one query.
-    logger.info(f"Bulk creating {len(model_objs)} {data_model.__name__} rows")
-    data_model.objects.bulk_create(model_objs)
+    with transaction.atomic():
+        # 1) Insert parent rows in one query.
+        logger.info(f"Bulk creating {len(model_objs)} {data_model.__name__} rows")
+        data_model.objects.bulk_create(model_objs)
 
-    # 2) Insert all Measurement rows in one query.
-    logger.info(f"Bulk creating {len(measurements)} Measurement rows")
-    Measurement.objects.bulk_create(measurements)
+        # 2) Insert all Measurement rows in one query.
+        logger.info(f"Bulk creating {len(measurements)} Measurement rows")
+        Measurement.objects.bulk_create(measurements)
 
-    # 3) Insert many-to-many junction rows in one query via the auto through model.
-    through_model = data_model.measurements.through
+        # 3) Insert many-to-many junction rows in one query via the auto through model.
+        through_model = data_model.measurements.through
 
-    # Discover FK field names dynamically (they differ per data_model).
-    data_field = [
-        f
-        for f in through_model._meta.fields
-        if f.is_relation and f.related_model == data_model
-    ][0]
+        # Discover FK field names dynamically (they differ per data_model).
+        data_field = [
+            f
+            for f in through_model._meta.fields
+            if f.is_relation and f.related_model == data_model
+        ][0]
 
-    # Find the foreign key field that points to the Measurement model.
-    measurement_field = [
-        f
-        for f in through_model._meta.fields
-        if f.is_relation and f.related_model == Measurement
-    ][0]
+        # Find the foreign key field that points to the Measurement model.
+        measurement_field = [
+            f
+            for f in through_model._meta.fields
+            if f.is_relation and f.related_model == Measurement
+        ][0]
 
-    # Build junction rows for every (data obj, measurement) pair.
-    through_rows = []
-    for data in datas.values():
-        # data["data"] is the data_model instance (e.g., YearData object)
-        # data["measurements"] is a list of Measurement instances
-        for measurement in data["measurements"]:
-            through_rows.append(
-                through_model(
-                    **{
-                        data_field.name: data["data"],
-                        measurement_field.name: measurement,
-                    }
+        # Build junction rows for every (data obj, measurement) pair.
+        through_rows = []
+        for data in datas.values():
+            # data["data"] is the data_model instance (e.g., YearData object)
+            # data["measurements"] is a list of Measurement instances
+            for measurement in data["measurements"]:
+                through_rows.append(
+                    through_model(
+                        **{
+                            data_field.name: data["data"],
+                            measurement_field.name: measurement,
+                        }
+                    )
                 )
-            )
 
-    # Bulk create all junction table rows in a single database query.
-    if through_rows:
-        through_model.objects.bulk_create(through_rows)
+        # Bulk create all junction table rows in a single database query.
+        if through_rows:
+            through_model.objects.bulk_create(through_rows)
 
 
 def save_years(df, stations):
