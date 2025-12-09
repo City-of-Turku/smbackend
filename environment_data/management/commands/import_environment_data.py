@@ -96,11 +96,11 @@ def get_measurement_objects(measurements):
 def bulk_create_rows(data_model, model_objs, measurements, datas):
     """
     Bulk create data objects, measurements, and their many-to-many relationships.
-    
+
     This function optimizes database writes by using bulk_create instead of individual
     save() calls. For many-to-many relationships, it manually creates junction table
     rows instead of using .add() which would trigger N queries.
-    
+
     Args:
         data_model: The Django model class (e.g., YearData, MonthData, DayData, HourData)
         model_objs: List of unsaved model instances to bulk create
@@ -112,19 +112,19 @@ def bulk_create_rows(data_model, model_objs, measurements, datas):
     # This creates all the parent records in a single database query.
     logger.info(f"Bulk creating {len(model_objs)} {data_model.__name__} rows")
     data_model.objects.bulk_create(model_objs)
-    
+
     # Step 2: Bulk create all Measurement objects.
     # This creates all measurement records in a single database query.
     logger.info(f"Bulk creating {len(measurements)} Measurement rows")
     Measurement.objects.bulk_create(measurements)
-    
+
     # Step 3: Bulk create the many-to-many junction table rows.
     # Django automatically creates a "through" model for many-to-many relationships.
     # Instead of calling data_obj.measurements.add(measurement) for each relationship
     # (which would execute N queries), we manually create the junction table rows
     # and bulk insert them in a single query.
     through_model = data_model.measurements.through
-    
+
     # Introspect the through model to find the foreign key field names dynamically.
     # The through model has two foreign keys: one pointing to data_model and one to Measurement.
     # We need to find these field names because they vary (e.g., "yeardata_id" vs "monthdata_id").
@@ -134,14 +134,14 @@ def bulk_create_rows(data_model, model_objs, measurements, datas):
         for f in through_model._meta.fields
         if f.is_relation and f.related_model == data_model
     ][0]
-    
+
     # Find the foreign key field that points to the Measurement model.
     measurement_field = [
         f
         for f in through_model._meta.fields
         if f.is_relation and f.related_model == Measurement
     ][0]
-    
+
     # Build the junction table rows by iterating through the datas dictionary.
     # Each entry in datas contains a data object and its associated measurements.
     # We create one junction row for each (data_object, measurement) pair.
@@ -153,16 +153,19 @@ def bulk_create_rows(data_model, model_objs, measurements, datas):
             through_rows.append(
                 through_model(
                     **{
-                        data_field.name: data["data"],  # e.g., yeardata_id = <YearData instance>
+                        data_field.name: data[
+                            "data"
+                        ],  # e.g., yeardata_id = <YearData instance>
                         measurement_field.name: measurement,  # e.g., measurement_id = <Measurement instance>
                     }
                 )
             )
-    
+
     # Bulk create all junction table rows in a single database query.
     # This is much faster than calling .add() for each relationship individually.
     if through_rows:
         through_model.objects.bulk_create(through_rows)
+
 
 def save_years(df, stations):
     logger.info("Saving years...")
