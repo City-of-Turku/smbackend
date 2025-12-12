@@ -24,6 +24,7 @@ Up-to-date open data URLs can be found at https://www.avoindata.fi/data/fi/datas
 - Raw traffic is retrieved per station in ≤31-day chunks with rate-limit-aware retries; native granularity (15 min / 1 h) is preserved, and existing aggregation logic handles rollups.
 - Travel modes map to existing columns (bike→P, pedestrian→J, car/motorized→A, bus→B; undefined directions are split evenly between K/P).
 - Legacy EC endpoints/models remain unchanged; only the data source is now the Eco-Visio API.
+- Initial imports for Eco-Visio data start from 2025-01-01 (earlier dates are not fetched).
 
 ## Importing
 
