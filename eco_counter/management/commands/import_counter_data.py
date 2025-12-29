@@ -50,6 +50,7 @@ from .utils import (
     gen_eco_counter_test_csv,
     get_data_from_date,
     get_data_until_date,
+    get_eco_visio_api_keys,
     get_is_active,
     get_lam_counter_csv,
     get_or_create_telraam_station,
@@ -419,55 +420,82 @@ def get_eco_visio_csv_data(start_time):
     """
     Fetch Eco-Visio traffic data for all EC stations and map it to CSV format.
 
-    Uses 31-day chunking handled inside EcoVisioAPIClient.get_raw_traffic().
-    Returns a combined dataframe compatible with the existing import pipeline.
+    Uses multiple API keys if configured. Each station's data is fetched
+    using the appropriate API key.
     """
-    start_date = start_time.date()
+    global_start_date = start_time.date()
     end_date = datetime.now(TIMEZONE).date() + timedelta(days=1)
     dataframes = []
+    api_keys = get_eco_visio_api_keys()
 
-    with EcoVisioAPIClient() as client:
-        for station in Station.objects.filter(csv_data_source=ECO_COUNTER):
-            try:
-                site_id = int(station.station_id)
-            except (TypeError, ValueError):
-                logger.warning(
-                    f"Skipping Eco-Visio station {station.name}: invalid station_id {station.station_id}"
-                )
-                continue
+    # Build mapping: station_id -> api_key
+    station_key_map = {}
+    for api_key in api_keys:
+        try:
+            with EcoVisioAPIClient(api_key=api_key) as client:
+                sites = client.get_all_sites()
+            for site in sites:
+                station_id = str(site.get("id"))
+                if station_id not in station_key_map:
+                    station_key_map[station_id] = api_key
+        except Exception as exc:  # noqa: BLE001
+            logger.error(f"Failed to fetch sites for mapping with an API key: {exc}")
+            continue
 
-            try:
+    for station in Station.objects.filter(csv_data_source=ECO_COUNTER):
+        api_key = station_key_map.get(station.station_id)
+        if not api_key:
+            logger.warning(
+                f"No Eco-Visio API key found for station {station.name} ({station.station_id})"
+            )
+            continue
+
+        # Determine start date for this station.
+        # Use firstData from the API (Station.data_from_date) if available,
+        # rounded down to the 1st of the month.
+        if station.data_from_date:
+            station_start_date = station.data_from_date.replace(day=1)
+        else:
+            station_start_date = global_start_date
+
+        if station_start_date > end_date:
+            logger.warning(
+                f"Skipping Eco-Visio data for station {station.name} ({station.station_id}): "
+                f"start date {station_start_date} is after end date {end_date}"
+            )
+            continue
+
+        try:
+            with EcoVisioAPIClient(api_key=api_key) as client:
                 raw_traffic = client.get_raw_traffic(
-                    site_id=site_id,
-                    start_date=start_date,
+                    site_id=int(station.station_id),
+                    start_date=station_start_date,
                     end_date=end_date,
                     travel_modes=get_supported_travel_modes(),
                     gap_filling=True,
                 )
-            except EcoVisioAPIError as exc:
-                logger.error(
-                    f"Eco-Visio API error for station {station.name} ({site_id}): {exc}"
-                )
-                continue
-            except Exception as exc:  # noqa: BLE001 - log unexpected issues
-                logger.error(
-                    f"Unexpected error fetching Eco-Visio data for station {station.name} ({site_id}): {exc}"
-                )
-                continue
+        except (EcoVisioAPIError, TypeError, ValueError) as exc:
+            logger.error(
+                f"Eco-Visio API error for station {station.name} ({station.station_id}): {exc}"
+            )
+            continue
+        except Exception as exc:  # noqa: BLE001
+            logger.error(
+                f"Unexpected error fetching Eco-Visio data for station {station.name} ({station.station_id}): {exc}"
+            )
+            continue
 
-            df = transform_raw_traffic_to_dataframe(raw_traffic, station.name)
-            if df.empty:
-                logger.warning(
-                    f"No Eco-Visio data for station {station.name} between {start_date} and {end_date}"
-                )
-                continue
-            dataframes.append(df)
+        df = transform_raw_traffic_to_dataframe(raw_traffic, station.name)
+        if df.empty:
+            logger.warning(
+                f"No Eco-Visio data for station {station.name} between {station_start_date} and {end_date}"
+            )
+            continue
+        dataframes.append(df)
 
     combined_df = combine_station_dataframes(dataframes)
     if combined_df.empty:
-        logger.warning(
-            f"No Eco-Visio traffic data available between {start_date} and {end_date}"
-        )
+        logger.warning("No Eco-Visio traffic data available for the given period")
         return combined_df
 
     combined_df[INDEX_COLUMN_NAME] = combined_df["startTime"]
@@ -517,6 +545,20 @@ def get_csv_data(counter, import_state, start_time, verbose=True):
 
 
 def import_data(counters, initial_import=False, force=False):
+    # Check if ECO_VISIO_API_KEYS is configured when importing EC data
+    if ECO_COUNTER in counters:
+        api_keys = get_eco_visio_api_keys()
+        if not api_keys:
+            logger.error(
+                "ECO_VISIO_API_KEYS is not configured. "
+                "Cannot import Eco Counter data without API keys. "
+                "Please set ECO_VISIO_API_KEYS in your environment/settings."
+            )
+            # Remove ECO_COUNTER from counters to skip it, or return early
+            counters = [c for c in counters if c != ECO_COUNTER]
+            if not counters:
+                return
+
     for counter in counters:
         logger.info(f"Importing/counting data for {counter}...")
         import_state = ImportState.objects.filter(csv_data_source=counter).first()

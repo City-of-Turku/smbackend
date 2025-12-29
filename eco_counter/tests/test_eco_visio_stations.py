@@ -10,9 +10,10 @@ from eco_counter.management.commands import utils
 class DummyEcoVisioClient:
     """Minimal Eco-Visio client stub for testing."""
 
-    def __init__(self, sites, include_recorder):
+    def __init__(self, sites, include_recorder, api_key=None):
         self.sites = sites
         self.include_recorder = include_recorder
+        self.api_key = api_key
 
     def __enter__(self):
         return self
@@ -44,10 +45,11 @@ class TestGetEcoVisioStations:
                 "lastData": "2024-06-01T12:00:00Z",
             }
         ]
+        monkeypatch.setattr(utils, "get_eco_visio_api_keys", lambda: ["test_api_key"])
         monkeypatch.setattr(
             utils,
             "EcoVisioAPIClient",
-            lambda: DummyEcoVisioClient(sites, include_recorder),
+            lambda api_key: DummyEcoVisioClient(sites, include_recorder, api_key),
         )
         monkeypatch.setattr(
             utils,
@@ -86,10 +88,11 @@ class TestGetEcoVisioStations:
                 "location": {"lat": None, "lon": None},
             },
         ]
+        monkeypatch.setattr(utils, "get_eco_visio_api_keys", lambda: ["test_api_key"])
         monkeypatch.setattr(
             utils,
             "EcoVisioAPIClient",
-            lambda: DummyEcoVisioClient(sites, include_recorder),
+            lambda api_key: DummyEcoVisioClient(sites, include_recorder, api_key),
         )
         monkeypatch.setattr(
             utils,
@@ -101,3 +104,64 @@ class TestGetEcoVisioStations:
 
         assert include_recorder["include"] == ["segments"]
         assert stations == []
+
+    def test_deduplicates_overlapping_sites_across_keys(self, monkeypatch):
+        """Stations with the same ID provided by multiple keys are only imported once."""
+        monkeypatch.setattr(utils, "get_eco_visio_api_keys", lambda: ["key1", "key2"])
+
+        # key1 returns site 123 and site 456
+        # key2 returns site 123 (duplicate) and site 789
+        sites_key1 = [
+            {
+                "id": 123,
+                "name": "Station 123",
+                "location": {"lat": 60.45, "lon": 22.27},
+            },
+            {
+                "id": 456,
+                "name": "Station 456",
+                "location": {"lat": 60.46, "lon": 22.28},
+            },
+        ]
+        sites_key2 = [
+            {
+                "id": 123,
+                "name": "Station 123 Dup",
+                "location": {"lat": 60.45, "lon": 22.27},
+            },
+            {
+                "id": 789,
+                "name": "Station 789",
+                "location": {"lat": 60.47, "lon": 22.29},
+            },
+        ]
+
+        # Record which keys were used
+        keys_used = []
+
+        def mock_client_init(api_key):
+            keys_used.append(api_key)
+            sites = sites_key1 if api_key == "key1" else sites_key2
+            return DummyEcoVisioClient(sites, {}, api_key)
+
+        monkeypatch.setattr(utils, "EcoVisioAPIClient", mock_client_init)
+        monkeypatch.setattr(
+            utils, "locates_in_south_western_finland", lambda point: True
+        )
+
+        stations = utils.get_eco_visio_stations()
+
+        assert len(keys_used) == 2
+        assert "key1" in keys_used
+        assert "key2" in keys_used
+
+        # Should have 3 unique stations (123, 456, 789)
+        assert len(stations) == 3
+        station_ids = [s["station_id"] for s in stations]
+        assert "123" in station_ids
+        assert "456" in station_ids
+        assert "789" in station_ids
+
+        # Verify first occurrence was kept (from key1)
+        station_123 = next(s for s in stations if s["station_id"] == "123")
+        assert station_123["name"] == "Station 123"

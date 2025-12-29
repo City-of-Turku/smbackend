@@ -451,60 +451,86 @@ def _segments_to_geometry(segments, srid):
         return None
 
 
+def get_eco_visio_api_keys():
+    """Return a list of Eco-Visio API keys from settings."""
+    if hasattr(settings, "ECO_VISIO_API_KEYS") and settings.ECO_VISIO_API_KEYS:
+        return settings.ECO_VISIO_API_KEYS
+    return []
+
+
 def get_eco_visio_stations():
     """Fetch Eco-Visio sites, filter to Southwestern Finland, and normalize into station dicts.
 
     Steps:
-    - Call the Eco-Visio API requesting site segments.
+    - Iterate over all configured API keys.
+    - Call the Eco-Visio API requesting site segments for each key.
     - Skip sites missing id/coordinates or outside the Southwestern Finland boundary.
+    - Deduplicate sites by station_id (first occurrence wins).
     - Transform point locations and optional segment geometries to ``settings.DEFAULT_SRID``.
     - Parse first/last data dates to ``date`` objects.
     - Return a list of station dictionaries ready for import/mapping.
     """
     stations = []
+    seen_station_ids = set()
     source_srid = SOUTHWEST_FINLAND_BOUNDARY_SRID
-    with EcoVisioAPIClient() as client:
-        sites = client.get_all_sites(include=["segments"])
-    logger.info(f"Fetched {len(sites)} Eco-Visio sites before filtering")
+    api_keys = get_eco_visio_api_keys()
 
-    for site in sites:
-        station_id = site.get("id")
-        if station_id is None:
-            logger.warning(f"Skipping Eco-Visio site without id: {site}")
-            continue
-        location_data = site.get("location") or {}
-        lat = location_data.get("lat")
-        lon = location_data.get("lon")
-        if lat is None or lon is None:
-            logger.warning(f"Skipping Eco-Visio site {station_id}: missing location")
-            continue
+    for api_key in api_keys:
         try:
-            location_src = Point(lon, lat, srid=source_srid)
-        except (TypeError, ValueError) as exc:
-            logger.warning(
-                f"Skipping Eco-Visio site {station_id}: invalid coordinates ({exc})"
-            )
-            continue
-        if not locates_in_south_western_finland(location_src):
+            with EcoVisioAPIClient(api_key=api_key) as client:
+                sites = client.get_all_sites(include=["segments"])
             logger.info(
-                f"Skipping Eco-Visio site {station_id} outside Southwestern Finland"
+                f"Fetched {len(sites)} Eco-Visio sites for an API key before filtering"
             )
-            continue
-        location = GEOSGeometry(location_src.wkt, srid=source_srid)
-        location.transform(settings.DEFAULT_SRID)
 
-        geometry = _segments_to_geometry(site.get("segments"), source_srid)
-        name = site.get("name") or f"Eco-Visio site {station_id}"
-        stations.append(
-            {
-                "station_id": str(station_id),
-                "name": name,
-                "location": location,
-                "geometry": geometry,
-                "data_from_date": _parse_eco_visio_date(site.get("firstData")),
-                "data_until_date": _parse_eco_visio_date(site.get("lastData")),
-            }
-        )
+            for site in sites:
+                station_id = site.get("id")
+                if station_id is None:
+                    logger.warning(f"Skipping Eco-Visio site without id: {site}")
+                    continue
+
+                if station_id in seen_station_ids:
+                    continue
+                seen_station_ids.add(station_id)
+
+                location_data = site.get("location") or {}
+                lat = location_data.get("lat")
+                lon = location_data.get("lon")
+                if lat is None or lon is None:
+                    logger.warning(
+                        f"Skipping Eco-Visio site {station_id}: missing location"
+                    )
+                    continue
+                try:
+                    location_src = Point(lon, lat, srid=source_srid)
+                except (TypeError, ValueError) as exc:
+                    logger.warning(
+                        f"Skipping Eco-Visio site {station_id}: invalid coordinates ({exc})"
+                    )
+                    continue
+                if not locates_in_south_western_finland(location_src):
+                    logger.info(
+                        f"Skipping Eco-Visio site {station_id} outside Southwestern Finland"
+                    )
+                    continue
+                location = GEOSGeometry(location_src.wkt, srid=source_srid)
+                location.transform(settings.DEFAULT_SRID)
+
+                geometry = _segments_to_geometry(site.get("segments"), source_srid)
+                name = site.get("name") or f"Eco-Visio site {station_id}"
+                stations.append(
+                    {
+                        "station_id": str(station_id),
+                        "name": name,
+                        "location": location,
+                        "geometry": geometry,
+                        "data_from_date": _parse_eco_visio_date(site.get("firstData")),
+                        "data_until_date": _parse_eco_visio_date(site.get("lastData")),
+                    }
+                )
+        except Exception as exc:  # noqa: BLE001
+            logger.error(f"Failed to fetch sites with an Eco-Visio API key: {exc}")
+            continue
 
     logger.info(
         f"Prepared {len(stations)} Eco-Visio stations within Southwestern Finland"

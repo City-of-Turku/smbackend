@@ -39,24 +39,10 @@ class TestEcoVisioAPIClientInitialization:
         )
         assert client.api_url == "https://custom.api.com/v2"
 
-    @patch("eco_counter.management.commands.eco_visio_client.settings")
-    def test_init_with_settings(self, mock_settings):
-        """Test initialization using Django settings."""
-        mock_settings.ECO_VISIO_API_KEY = "settings-key"
-        mock_settings.ECO_VISIO_API_URL = "https://settings.api.com/v2"
-
-        client = EcoVisioAPIClient()
-        assert client.api_key == "settings-key"
-        assert client.api_url == "https://settings.api.com/v2"
-
-    @patch("eco_counter.management.commands.eco_visio_client.settings")
-    def test_init_without_api_key_raises_error(self, mock_settings):
-        """Test that initialization without API key raises EcoVisioAuthError."""
-        mock_settings.ECO_VISIO_API_KEY = None
-
-        with pytest.raises(EcoVisioAuthError) as exc_info:
-            EcoVisioAPIClient()
-        assert "ECO_VISIO_API_KEY not configured" in str(exc_info.value)
+    def test_init_without_api_key_raises_error(self):
+        """Test that initialization without API key raises TypeError or EcoVisioAuthError."""
+        with pytest.raises((TypeError, EcoVisioAuthError)):
+            EcoVisioAPIClient()  # type: ignore
 
     def test_init_with_custom_max_retries(self):
         """Test initialization with custom max_retries."""

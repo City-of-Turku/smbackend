@@ -51,7 +51,7 @@ class EcoVisioAPIClient:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str,
         api_url: Optional[str] = None,
         max_retries: int = 3,
     ):
@@ -59,11 +59,11 @@ class EcoVisioAPIClient:
         Initialize the Eco-Visio API client.
 
         Args:
-            api_key: API key for authentication. If None, uses settings.ECO_VISIO_API_KEY
+            api_key: API key for authentication.
             api_url: Base URL for the API. If None, uses settings.ECO_VISIO_API_URL
             max_retries: Maximum number of retries for failed requests
         """
-        self.api_key = api_key or settings.ECO_VISIO_API_KEY
+        self.api_key = api_key
         self.api_url = (
             api_url
             or settings.ECO_VISIO_API_URL
@@ -71,9 +71,7 @@ class EcoVisioAPIClient:
         )
 
         if not self.api_key:
-            raise EcoVisioAuthError(
-                "ECO_VISIO_API_KEY not configured in settings or provided"
-            )
+            raise EcoVisioAuthError("Eco-Visio API key not provided")
 
         self.max_retries = max_retries
         self.session = requests.Session()
@@ -147,7 +145,7 @@ class EcoVisioAPIClient:
 
         try:
             logger.debug(f"Making request to {endpoint} with params: {params}")
-            response = self.session.get(url, params=params, timeout=30)
+            response = self.session.get(url, params=params, timeout=90)
 
             # Update rate limit info from headers
             self._update_rate_limit_info(response.headers)

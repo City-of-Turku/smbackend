@@ -8,7 +8,7 @@ Imports and processes counter data for the Turku region:
 
 ## Environment
 Add the following to `.env` (update URLs if the data sources change):
-- `ECO_VISIO_API_KEY=` **(required)** API key for Eco-Visio
+- `ECO_VISIO_API_KEYS=` **(required)** Comma-separated list of API keys for Eco-Visio.
 - `ECO_VISIO_API_URL=https://api.eco-counter.com/api/v2` (override if needed)
 - `ECO_COUNTER_OBSERVATIONS_URL=https://data.turku.fi/cjtv3brqr7gectdv7rfttc/counters-15min.csv` (kept for backward compatibility, still required by the importer)
 - `TRAFFIC_COUNTER_OBSERVATIONS_BASE_URL=https://data.turku.fi/2yxpk2imqi2mzxpa6e6knq/`
@@ -19,7 +19,8 @@ Add the following to `.env` (update URLs if the data sources change):
 Up-to-date open data URLs can be found at https://www.avoindata.fi/data/fi/dataset/turun-seudun-liikennemaaria and https://www.digitraffic.fi/tieliikenne/lam/.
 
 ## Eco-Visio (Eco Counter)
-- EC stations and observations are fetched directly from Eco-Visio API v2 using `ECO_VISIO_API_KEY`.
+- EC stations and observations are fetched directly from Eco-Visio API v2 using `ECO_VISIO_API_KEYS`.
+- Multiple API keys are supported to combine data from different accounts. Sites are deduplicated by `station_id`.
 - Stations are pulled with segment geometry, filtered to the Southwestern Finland polygon, and stored with transformed geometry.
 - Raw traffic is retrieved per station in ≤31-day chunks with rate-limit-aware retries; native granularity (15 min / 1 h) is preserved, and existing aggregation logic handles rollups.
 - Travel modes map to existing columns (bike→P, pedestrian→J, car/motorized→A, bus→B; undefined directions are split evenly between K/P).
@@ -55,7 +56,7 @@ Example (delete all Lam Counter data):
 To load Telraam data into the database, import the raw data first with the `import_telraam_to_csv` management command. Schedule it hourly (see: https://github.com/City-of-Turku/smbackend/wiki/Celery-Tasks#telraam-to-csv-eco_countertasksimport_telraam_to_csv). Telraam raw data is stored in `PROJECT_ROOT/media/telraam_data/`.
 
 ## Troubleshooting
-- EC 401/403 responses: check `ECO_VISIO_API_KEY`/`ECO_VISIO_API_URL` and key permissions.
+- EC 401/403 responses: check `ECO_VISIO_API_KEYS`/`ECO_VISIO_API_URL` and key permissions.
 - EC 429 or rate-limit warnings: the client retries using API headers; rerun after the cooldown if imports still fail.
 - "No Eco-Visio data..." warnings: verify the station exists within Southwestern Finland, has a valid `station_id`, and the requested time range contains data.
 - "Start time ... not found" during imports: data may start later than expected; rerun with `--init` to reset state if needed.
