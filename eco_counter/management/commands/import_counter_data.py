@@ -545,20 +545,6 @@ def get_csv_data(counter, import_state, start_time, verbose=True):
 
 
 def import_data(counters, initial_import=False, force=False):
-    # Check if ECO_VISIO_API_KEYS is configured when importing EC data
-    if ECO_COUNTER in counters:
-        api_keys = get_eco_visio_api_keys()
-        if not api_keys:
-            logger.error(
-                "ECO_VISIO_API_KEYS is not configured. "
-                "Cannot import Eco Counter data without API keys. "
-                "Please set ECO_VISIO_API_KEYS in your environment/settings."
-            )
-            # Remove ECO_COUNTER from counters to skip it, or return early
-            counters = [c for c in counters if c != ECO_COUNTER]
-            if not counters:
-                return
-
     for counter in counters:
         logger.info(f"Importing/counting data for {counter}...")
         import_state = ImportState.objects.filter(csv_data_source=counter).first()
