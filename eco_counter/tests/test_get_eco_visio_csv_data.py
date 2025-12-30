@@ -58,7 +58,8 @@ def test_get_eco_visio_csv_data_returns_sorted_combined(
     )
 
     client_instance = MagicMock()
-    eco_client_mock.return_value.__enter__.return_value = client_instance
+    eco_client_mock.return_value = client_instance
+    client_instance.__enter__.return_value = client_instance
     client_instance.get_all_sites.return_value = [{"id": 101}, {"id": 102}]
     raw_traffic_1 = [{"series": "s1"}]
     raw_traffic_2 = [{"series": "s2"}]
@@ -149,7 +150,8 @@ def test_get_eco_visio_csv_data_skips_invalid_and_errors(
     )
 
     client_instance = MagicMock()
-    eco_client_mock.return_value.__enter__.return_value = client_instance
+    eco_client_mock.return_value = client_instance
+    client_instance.__enter__.return_value = client_instance
     client_instance.get_all_sites.return_value = [{"id": 200}]
     client_instance.get_raw_traffic.side_effect = EcoVisioAPIError("API failure")
     combine_mock.return_value = pd.DataFrame(columns=["startTime"])
@@ -188,16 +190,17 @@ def test_get_eco_visio_csv_data_per_station_start_date(
 ):
     api_keys_mock.return_value = ["test-key"]
     travel_modes_mock.return_value = ["bike"]
-    global_start_time = TIMEZONE.localize(datetime(2024, 1, 1, 0, 0))
+    global_start_time = TIMEZONE.localize(datetime(2023, 12, 15, 0, 0))
     monkeypatch.setattr(import_counter_data, "datetime", FixedDatetime)
 
-    # Station 1: has firstData mid-month (should round down to 1st)
+    # Station 1: has firstData after global_start (should round down to 1st)
+    # We use a date LATER than global_start_time to verify it overrides global
     Station.objects.create(
         name="Station 1",
         location="POINT(0 0)",
         csv_data_source=ECO_COUNTER,
         station_id="101",
-        data_from_date=datetime(2023, 5, 15).date(),
+        data_from_date=datetime(2024, 1, 2).date(),
     )
     # Station 2: no firstData (should use global start)
     Station.objects.create(
@@ -207,10 +210,23 @@ def test_get_eco_visio_csv_data_per_station_start_date(
         station_id="102",
         data_from_date=None,
     )
+    # Station 3: has firstData before global_start (global should win)
+    Station.objects.create(
+        name="Station 3",
+        location="POINT(2 2)",
+        csv_data_source=ECO_COUNTER,
+        station_id="103",
+        data_from_date=datetime(2023, 1, 1).date(),
+    )
 
     client_instance = MagicMock()
-    eco_client_mock.return_value.__enter__.return_value = client_instance
-    client_instance.get_all_sites.return_value = [{"id": 101}, {"id": 102}]
+    eco_client_mock.return_value = client_instance
+    client_instance.__enter__.return_value = client_instance
+    client_instance.get_all_sites.return_value = [
+        {"id": 101},
+        {"id": 102},
+        {"id": 103},
+    ]
 
     # We don't care about the actual data returned for this test
     client_instance.get_raw_traffic.return_value = []
@@ -224,7 +240,7 @@ def test_get_eco_visio_csv_data_per_station_start_date(
         [
             call(
                 site_id=101,
-                start_date=datetime(2023, 5, 1).date(),  # Rounded down
+                start_date=datetime(2024, 1, 1).date(),  # Rounded down
                 end_date=expected_end_date,
                 travel_modes=["bike"],
                 gap_filling=True,
@@ -232,6 +248,13 @@ def test_get_eco_visio_csv_data_per_station_start_date(
             call(
                 site_id=102,
                 start_date=global_start_time.date(),  # Fallback to global
+                end_date=expected_end_date,
+                travel_modes=["bike"],
+                gap_filling=True,
+            ),
+            call(
+                site_id=103,
+                start_date=global_start_time.date(),  # Global wins over 2023-01-01
                 end_date=expected_end_date,
                 travel_modes=["bike"],
                 gap_filling=True,

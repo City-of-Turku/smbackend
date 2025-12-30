@@ -145,7 +145,7 @@ class EcoVisioAPIClient:
 
         try:
             logger.debug(f"Making request to {endpoint} with params: {params}")
-            response = self.session.get(url, params=params, timeout=90)
+            response = self.session.get(url, params=params, timeout=120)
 
             # Update rate limit info from headers
             self._update_rate_limit_info(response.headers)

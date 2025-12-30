@@ -223,7 +223,7 @@ def save_weeks(df, stations):
     weeks = df.groupby([df.index.year, df.index.isocalendar().week])
     for index, row in weeks:
         year_number, week_number = index
-        logger.info(f"Saving week number {week_number} of year {year_number}")
+        logger.debug(f"Saving week number {week_number} of year {year_number}")
         sum_series = row.sum()
         year = Year.objects.get(year_number=year_number)
         week, _ = Week.objects.get_or_create(
@@ -264,7 +264,7 @@ def save_days(df, stations):
             save_values(values, day_data)
         if not prev_week_number or prev_week_number != week_number:
             prev_week_number = week_number
-            logger.info(f"Saved days for week {week_number} of year {year_number}")
+            logger.debug(f"Saved days for week {week_number} of year {year_number}")
 
 
 def save_hours(df, stations):
@@ -296,7 +296,7 @@ def save_hours(df, stations):
                 values = {k: [] for k in ALL_TYPE_DIRS}
                 # output logger only when last station is saved
                 if i_station == len(stations) - 1:
-                    logger.info(
+                    logger.debug(
                         f"Saved hour data for day {prev_day_number}, month {prev_month_number} year {year_number}"
                     )
                 prev_day_number = day_number
@@ -322,6 +322,55 @@ def save_hours(df, stations):
         save_hour_data_values(hour_data, values)
 
 
+def build_station_key_map():
+    """
+    Build mapping: station_id -> api_key by fetching sites for all configured API keys.
+    """
+    api_keys = get_eco_visio_api_keys()
+    station_key_map = {}
+    for idx, api_key in enumerate(api_keys, start=1):
+        try:
+            with EcoVisioAPIClient(api_key=api_key) as client:
+                sites = client.get_all_sites()
+            for site in sites:
+                station_id = str(site.get("id"))
+                if station_id not in station_key_map:
+                    station_key_map[station_id] = api_key
+        except Exception as exc:  # noqa: BLE001
+            logger.error(
+                f"Failed to fetch sites for mapping with Eco-Visio API key #{idx}: {exc}"
+            )
+            continue
+    return station_key_map
+
+
+def prepare_observations_dataframe(df):
+    """
+    Common cleanup for traffic dataframes: Date index, fillna, clip, and thresholding.
+
+    Note: this function intentionally mutates the passed DataFrame to avoid an
+    extra full in-memory copy for large imports (important for OOM avoidance).
+    """
+    # Convert startTime to datetime and set it as the index
+    if "startTime" in df.columns:
+        df["Date"] = pd.to_datetime(df["startTime"], format="%Y-%m-%dT%H:%M")
+        df.set_index("Date", inplace=True)
+        df.drop("startTime", axis=1, inplace=True, errors="ignore")
+
+    # Fill missing cells with the value 0
+    df.fillna(0, inplace=True)
+
+    # Set negative numbers to 0
+    # After dropping startTime and setting Date as index,
+    # the remaining columns should all be numeric.
+    df.clip(lower=0, inplace=True)
+
+    # Set values higher than ERRORNEOUS_VALUE_THRESHOLD to 0
+    df[df > ERRORNEOUS_VALUE_THRESHOLD] = 0
+
+    return df
+
+
 def save_observations(csv_data, start_time, csv_data_source=ECO_COUNTER, station=None):
     import_state = ImportState.objects.get(csv_data_source=csv_data_source)
     # Populate stations list, this is used to set/lookup station relations.
@@ -332,16 +381,7 @@ def save_observations(csv_data, start_time, csv_data_source=ECO_COUNTER, station
         ]
     else:
         stations = [station]
-    df = csv_data
-    df["Date"] = pd.to_datetime(df["startTime"], format="%Y-%m-%dT%H:%M")
-    df = df.drop("startTime", axis=1)
-    df = df.set_index("Date")
-    # Fill missing cells with the value 0
-    df = df.fillna(0)
-    # Set negative numbers to 0
-    df = df.clip(lower=0)
-    # Set values higher than ERRORNEOUS_VALUES_THRESHOLD to 0
-    df[df > ERRORNEOUS_VALUE_THRESHOLD] = 0
+    df = prepare_observations_dataframe(csv_data)
     if not import_state.current_year_number:
         # In initial import populate all years.
         save_years(df, stations)
@@ -416,6 +456,143 @@ def get_start_time(counter, import_state):
     return start_time
 
 
+def save_observations_incremental(df, stations):
+    """
+    Perform rollups (month, week, day, hour) for a subset of data (e.g. one station, one month).
+    Does NOT update ImportState or handle YearData recomputation.
+    """
+    df = prepare_observations_dataframe(df)
+
+    save_months(df, stations)
+    save_weeks(df, stations)
+    save_days(df, stations)
+    save_hours(df, stations)
+
+
+def import_eco_visio_windowed(import_state):
+    """
+    Fetch Eco-Visio traffic data for EC stations in month-by-month windows.
+    Processes stations sequentially to avoid high memory usage.
+    """
+    start_time = get_start_time(ECO_COUNTER, import_state)
+    # End date is tomorrow morning to ensure we get all data from today
+    end_date_limit = datetime.now(TIMEZONE).date() + timedelta(days=1)
+
+    # We process month by month, starting from the first day of the start_time month
+    current_window_start = start_time.replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0
+    )
+
+    station_key_map = build_station_key_map()
+    if not station_key_map:
+        logger.error(
+            "No Eco-Visio sites found for any configured API key; aborting without advancing ImportState."
+        )
+        return
+
+    # Cache clients by API key to reuse sessions and respect rate limits
+    clients = {}
+
+    try:
+        while current_window_start.date() < end_date_limit:
+            window_year = current_window_start.year
+            window_month = current_window_start.month
+
+            # Calculate next month start
+            if window_month == 12:
+                next_window_start = current_window_start.replace(
+                    year=window_year + 1, month=1
+                )
+            else:
+                next_window_start = current_window_start.replace(month=window_month + 1)
+
+            # Cap the window end at tomorrow morning
+            current_window_end = min(
+                next_window_start,
+                TIMEZONE.localize(
+                    datetime.combine(end_date_limit, datetime.min.time())
+                ),
+            )
+
+            logger.info(
+                f"Processing EC month window: {current_window_start.strftime('%Y-%m')} "
+                f"({current_window_start.date()} to {current_window_end.date()})"
+            )
+
+            stations = Station.objects.filter(csv_data_source=ECO_COUNTER)
+            for station in stations:
+                api_key = station_key_map.get(station.station_id)
+                if not api_key:
+                    logger.warning(
+                        f"No Eco-Visio API key found for station {station.name} ({station.station_id})"
+                    )
+                    continue
+
+                # Get or create client for this API key
+                if api_key not in clients:
+                    clients[api_key] = EcoVisioAPIClient(api_key=api_key)
+                client = clients[api_key]
+
+                # Determine start date for this station in this window.
+                # Use max(window_start, station.data_from_date rounded to 1st of month)
+                if station.data_from_date:
+                    station_earliest = station.data_from_date.replace(day=1)
+                    fetch_start = max(current_window_start.date(), station_earliest)
+                else:
+                    fetch_start = current_window_start.date()
+
+                if fetch_start >= current_window_end.date():
+                    continue
+
+                try:
+                    raw_traffic = client.get_raw_traffic(
+                        site_id=int(station.station_id),
+                        start_date=fetch_start,
+                        end_date=current_window_end.date(),
+                        travel_modes=get_supported_travel_modes(),
+                        gap_filling=True,
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    logger.error(
+                        f"Error fetching Eco-Visio data for station {station.name} ({station.station_id}): {exc}"
+                    )
+                    continue
+
+                df = transform_raw_traffic_to_dataframe(raw_traffic, station.name)
+                # Try to free memory from the raw response early
+                del raw_traffic
+                gc.collect()
+
+                if df.empty:
+                    continue
+
+                # Save data for THIS station only
+                save_observations_incremental(df, [station])
+                del df
+                gc.collect()
+
+            # After processing all stations for this month window, update YearData for this year
+            # Recompute up to the current window month to ensure partial years are correct
+            save_current_year(stations, window_year, window_month)
+
+            # Update ImportState to the end of the processed window.
+            # Using the window end avoids advancing into the future when the window was capped at "tomorrow".
+            import_state.current_year_number = current_window_end.year
+            import_state.current_month_number = current_window_end.month
+            import_state.current_day_number = current_window_end.day
+            import_state.save()
+
+            current_window_start = next_window_start
+            gc.collect()
+    finally:
+        # Close all client sessions
+        for client in clients.values():
+            client.close()
+
+    add_additional_data_to_stations(ECO_COUNTER)
+    logger.info("EC windowed initial import completed.")
+
+
 def get_eco_visio_csv_data(start_time):
     """
     Fetch Eco-Visio traffic data for all EC stations and map it to CSV format.
@@ -426,47 +603,45 @@ def get_eco_visio_csv_data(start_time):
     global_start_date = start_time.date()
     end_date = datetime.now(TIMEZONE).date() + timedelta(days=1)
     dataframes = []
-    api_keys = get_eco_visio_api_keys()
 
     # Build mapping: station_id -> api_key
-    station_key_map = {}
-    for api_key in api_keys:
-        try:
-            with EcoVisioAPIClient(api_key=api_key) as client:
-                sites = client.get_all_sites()
-            for site in sites:
-                station_id = str(site.get("id"))
-                if station_id not in station_key_map:
-                    station_key_map[station_id] = api_key
-        except Exception as exc:  # noqa: BLE001
-            logger.error(f"Failed to fetch sites for mapping with an API key: {exc}")
-            continue
+    station_key_map = build_station_key_map()
+    # Cache clients by API key to reuse sessions and respect rate limits
+    clients = {}
 
-    for station in Station.objects.filter(csv_data_source=ECO_COUNTER):
-        api_key = station_key_map.get(station.station_id)
-        if not api_key:
-            logger.warning(
-                f"No Eco-Visio API key found for station {station.name} ({station.station_id})"
-            )
-            continue
+    try:
+        for station in Station.objects.filter(csv_data_source=ECO_COUNTER):
+            api_key = station_key_map.get(station.station_id)
+            if not api_key:
+                logger.warning(
+                    f"No Eco-Visio API key found for station {station.name} ({station.station_id})"
+                )
+                continue
 
-        # Determine start date for this station.
-        # Use firstData from the API (Station.data_from_date) if available,
-        # rounded down to the 1st of the month.
-        if station.data_from_date:
-            station_start_date = station.data_from_date.replace(day=1)
-        else:
-            station_start_date = global_start_date
+            # Get or create client for this API key
+            if api_key not in clients:
+                clients[api_key] = EcoVisioAPIClient(api_key=api_key)
+            client = clients[api_key]
 
-        if station_start_date > end_date:
-            logger.warning(
-                f"Skipping Eco-Visio data for station {station.name} ({station.station_id}): "
-                f"start date {station_start_date} is after end date {end_date}"
-            )
-            continue
+            # Determine start date for this station.
+            # Use the later of:
+            #  - import_state-derived start (global_start_date)
+            #  - station-specific firstData (data_from_date rounded to 1st)
+            if station.data_from_date:
+                station_start_date = max(
+                    station.data_from_date.replace(day=1), global_start_date
+                )
+            else:
+                station_start_date = global_start_date
 
-        try:
-            with EcoVisioAPIClient(api_key=api_key) as client:
+            if station_start_date > end_date:
+                logger.warning(
+                    f"Skipping Eco-Visio data for station {station.name} ({station.station_id}): "
+                    f"start date {station_start_date} is after end date {end_date}"
+                )
+                continue
+
+            try:
                 raw_traffic = client.get_raw_traffic(
                     site_id=int(station.station_id),
                     start_date=station_start_date,
@@ -474,24 +649,28 @@ def get_eco_visio_csv_data(start_time):
                     travel_modes=get_supported_travel_modes(),
                     gap_filling=True,
                 )
-        except (EcoVisioAPIError, TypeError, ValueError) as exc:
-            logger.error(
-                f"Eco-Visio API error for station {station.name} ({station.station_id}): {exc}"
-            )
-            continue
-        except Exception as exc:  # noqa: BLE001
-            logger.error(
-                f"Unexpected error fetching Eco-Visio data for station {station.name} ({station.station_id}): {exc}"
-            )
-            continue
+            except (EcoVisioAPIError, TypeError, ValueError) as exc:
+                logger.error(
+                    f"Eco-Visio API error for station {station.name} ({station.station_id}): {exc}"
+                )
+                continue
+            except Exception as exc:  # noqa: BLE001
+                logger.error(
+                    f"Unexpected error fetching Eco-Visio data for station {station.name} ({station.station_id}): {exc}"
+                )
+                continue
 
-        df = transform_raw_traffic_to_dataframe(raw_traffic, station.name)
-        if df.empty:
-            logger.warning(
-                f"No Eco-Visio data for station {station.name} between {station_start_date} and {end_date}"
-            )
-            continue
-        dataframes.append(df)
+            df = transform_raw_traffic_to_dataframe(raw_traffic, station.name)
+            if df.empty:
+                logger.warning(
+                    f"No Eco-Visio data for station {station.name} between {station_start_date} and {end_date}"
+                )
+                continue
+            dataframes.append(df)
+    finally:
+        # Close all client sessions
+        for client in clients.values():
+            client.close()
 
     combined_df = combine_station_dataframes(dataframes)
     if combined_df.empty:
@@ -552,16 +731,34 @@ def import_data(counters, initial_import=False, force=False):
         # Before deleting state and data, check that data is available.
         if not force and import_state and initial_import:
             start_time = get_start_time(counter, import_state)
-            # Handle Telraam data differently in save_telraam_data method as the souurce data is static CSV files.
+            # Handle Telraam data differently in save_telraam_data method as the source data is static CSV files.
             if counter != TELRAAM_COUNTER:
-                csv_data = get_csv_data(
-                    counter, import_state, start_time, verbose=False
-                )
-                if len(csv_data) == 0:
-                    logger.info(
-                        "No data to retrieve, skipping initial import. Use --force to discard."
+                if counter == ECO_COUNTER:
+                    # For EC initial import, we check availability by fetching sites
+                    api_keys = get_eco_visio_api_keys()
+                    has_data = False
+                    for api_key in api_keys:
+                        try:
+                            with EcoVisioAPIClient(api_key=api_key) as client:
+                                if client.get_all_sites():
+                                    has_data = True
+                                    break
+                        except Exception:  # noqa: BLE001
+                            continue
+                    if not has_data:
+                        logger.info(
+                            "No Eco-Visio sites found, skipping initial import. Use --force to discard."
+                        )
+                        continue
+                else:
+                    csv_data = get_csv_data(
+                        counter, import_state, start_time, verbose=False
                     )
-                    continue
+                    if len(csv_data) == 0:
+                        logger.info(
+                            "No data to retrieve, skipping initial import. Use --force to discard."
+                        )
+                        continue
 
         if initial_import:
             handle_initial_import(counter)
@@ -572,6 +769,10 @@ def import_data(counters, initial_import=False, force=False):
                 "ImportState instance not found, try importing with the '--init' argument."
             )
             break
+
+        if counter == ECO_COUNTER and initial_import:
+            import_eco_visio_windowed(import_state)
+            continue
 
         start_time = get_start_time(counter, import_state)
 
@@ -608,6 +809,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             "--initial-import",
+            "--init",
             type=str,
             nargs="+",
             default=False,

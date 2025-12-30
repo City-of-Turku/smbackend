@@ -36,6 +36,8 @@ Run before continuous imports:
 ```
 Example: `./manage.py import_counter_data --init EC TC`
 
+For Eco-Visio (EC), the initial import is performed in monthly windows for each station sequentially to minimize memory usage (avoiding OOM). The progress is saved to `ImportState`, allowing the import to resume from the last completed month if interrupted.
+
 ### Continuous import
 Hourly imports:
 ```
@@ -58,6 +60,7 @@ To load Telraam data into the database, import the raw data first with the `impo
 ## Troubleshooting
 - EC 401/403 responses: check `ECO_VISIO_API_KEYS`/`ECO_VISIO_API_URL` and key permissions.
 - EC 429 or rate-limit warnings: the client retries using API headers; rerun after the cooldown if imports still fail.
+- EC OOM or container crash: the initial import for EC is now windowed and resumable. If it crashes, simply rerun the same command; it will pick up from the last completed month window.
 - "No Eco-Visio data..." warnings: verify the station exists within Southwestern Finland, has a valid `station_id`, and the requested time range contains data.
 - "Start time ... not found" during imports: data may start later than expected; rerun with `--init` to reset state if needed.
 - CSV-based counters (TC/LC) can change column layouts; rerun `./manage.py import_counter_data --init` before resuming continuous imports.

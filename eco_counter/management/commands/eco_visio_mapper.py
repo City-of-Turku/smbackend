@@ -284,7 +284,7 @@ def _normalize_timestamp(timestamp_str: Optional[str]) -> Optional[str]:
         # Parse ISO 8601 timestamp (handles timezone)
         # Example: "2024-01-01T00:00:00+02:00" -> "2024-01-01T00:00"
         dt = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
-        # Convert to local time representation (strip timezone for consistency)
+        # Format to the importer-expected string (drops timezone offset information)
         return dt.strftime("%Y-%m-%dT%H:%M")
     except (ValueError, AttributeError) as e:
         logger.warning(f"Failed to parse timestamp '{timestamp_str}': {e}")

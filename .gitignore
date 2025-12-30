@@ -25,6 +25,8 @@ smbackend/test/tpr_mock_data/*.json
 
 # Misc
 .vscode/*
+.cursor
 
 # Secrets
 secrets.*
+

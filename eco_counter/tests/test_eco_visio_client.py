@@ -153,7 +153,7 @@ class TestMakeRequest:
         mock_get.assert_called_once_with(
             "https://api.eco-counter.com/api/v2/test",
             params={"key": "value"},
-            timeout=90,
+            timeout=120,
         )
 
     def test_request_updates_rate_limit_info(self):
