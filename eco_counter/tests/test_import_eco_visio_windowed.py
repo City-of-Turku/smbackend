@@ -9,12 +9,7 @@ from eco_counter.constants import ECO_COUNTER
 from eco_counter.management.commands.import_counter_data import (
     import_eco_visio_windowed,
 )
-from eco_counter.models import (
-    ImportState,
-    MonthData,
-    Station,
-    YearData,
-)
+from eco_counter.models import ImportState, MonthData, Station, YearData
 
 
 @pytest.mark.django_db
