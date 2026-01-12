@@ -1,55 +1,72 @@
 # Eco-counter Turku Importer
 
-Imports/Processes data from:
-https://data.turku.fi/2yxpk2imqi2mzxpa6e6knq 
-Imports both "Liikennelasketa-Ilmaisintiedot 15 min aikaväleillä"(Traffic Counter) and "Eco-Counter" (Eco Counter) datas. Imports/processes "LAM-Counter" (LAM Counter) data from https://www.digitraffic.fi/tieliikenne/lam/ and
-Telraam data from https://telraam-api.net/.
+Imports and processes counter data for the Turku region:
+- Eco Counter (EC) via Eco-Visio API v2
+- Traffic Counter (TC) CSV (15 min intervals)
+- LAM Counter (LC) from Digitraffic
+- Telraam (TR) from Telraam API
 
-## Installation:
-Add following lines to the .env:
-ECO_COUNTER_STATIONS_URL=https://dev.turku.fi/datasets/ecocounter/liikennelaskimet.geojson
-ECO_COUNTER_OBSERVATIONS_URL=https://data.turku.fi/cjtv3brqr7gectdv7rfttc/counters-15min.csv
-TRAFFIC_COUNTER_OBSERVATIONS_BASE_URL=https://data.turku.fi/2yxpk2imqi2mzxpa6e6knq/
-LAM_COUNTER_STATIONS_URL=https://tie.digitraffic.fi/api/v3/metadata/tms-stations
-LAM_COUNTER_API_BASE_URL=https://tie-lam-test.digitraffic.fi
-Note, The urls can change. Up-to-date urls can be found at:
-https://www.avoindata.fi/data/fi/dataset/turun-seudun-liikennemaaria
-and
-https://www.digitraffic.fi/tieliikenne/lam/
-Telraam API token, required when fetching Telraam data to csv (import_telraam_to_csv.py) https://telraam.helpspace-docs.io/article/27/you-wish-more-data-and-statistics-telraam-api
-TELRAAM_TOKEN=
+## Environment
+Add the following to `.env` (update URLs if the data sources change):
+- `ECO_VISIO_API_KEYS=` **(required)** Comma-separated list of API keys for Eco-Visio.
+- `ECO_VISIO_API_URL=https://api.eco-counter.com/api/v2` (override if needed)
+- `ECO_COUNTER_OBSERVATIONS_URL=https://data.turku.fi/cjtv3brqr7gectdv7rfttc/counters-15min.csv` (kept for backward compatibility, still required by the importer)
+- `TRAFFIC_COUNTER_OBSERVATIONS_BASE_URL=https://data.turku.fi/2yxpk2imqi2mzxpa6e6knq/`
+- `LAM_COUNTER_STATIONS_URL=https://tie.digitraffic.fi/api/v3/metadata/tms-stations`
+- `LAM_COUNTER_API_BASE_URL=https://tie-lam-test.digitraffic.fi`
+- `TELRAAM_TOKEN=` Telraam API token (used for Telraam data and `import_telraam_to_csv.py`)
+
+Up-to-date open data URLs can be found at https://www.avoindata.fi/data/fi/dataset/turun-seudun-liikennemaaria and https://www.digitraffic.fi/tieliikenne/lam/.
+
+## Eco-Visio (Eco Counter)
+- EC stations and observations are fetched directly from Eco-Visio API v2 using `ECO_VISIO_API_KEYS`.
+- Multiple API keys are supported to combine data from different accounts. Sites are deduplicated by `station_id`.
+- Stations are pulled with segment geometry, filtered to the Southwestern Finland polygon, and stored with transformed geometry.
+- Raw traffic is retrieved per station in ≤31-day chunks with rate-limit-aware retries; native granularity (15 min / 1 h) is preserved, and existing aggregation logic handles rollups.
+- Travel modes map to existing columns (bike→P, pedestrian→J, car/motorized→A, bus→B; undefined directions are split evenly between K/P).
+- Legacy EC endpoints/models remain unchanged; only the data source is now the Eco-Visio API.
+- Initial imports for Eco-Visio data start from 2025-01-01 (earlier dates are not fetched).
 
 ## Importing
 
-### Initial Import
-The initial import, this must be done before starting with the continous incremental imports:
+### Initial import
+Run before continuous imports:
+```
 ./manage.py import_counter_data --init COUNTERS
-e.g. ./manage.py import_counter_data --init EC TC
-The counters are EC(Eco Counter), TC(Traffic Counter), LC(Lam Counter) and TR(Telraam Counter).
+```
+Example: `./manage.py import_counter_data --init EC TC`
 
-### Continous Import
-For continous (hourly) imports run:
+For Eco-Visio (EC), the initial import is performed in monthly windows for each station sequentially to minimize memory usage (avoiding OOM). The progress is saved to `ImportState`, allowing the import to resume from the last completed month if interrupted.
+
+### Continuous import
+Hourly imports:
+```
 ./manage.py import_counter_data --counters COUNTERS
-e.g. ./manage.py import_counter_data --counters EC TC
-Counter names are: EC (Eco Counter), TC (Traffic Counter), LC (Lam Counter) and TR (Telraam Counter).
-Note, Traffic Counter data is updated once a week and Lam Counter data once a day.
+```
+Example: `./manage.py import_counter_data --counters EC TC`
+
+Counter names: EC (Eco Counter), TC (Traffic Counter), LC (Lam Counter), TR (Telraam Counter). Traffic Counter data updates weekly; Lam Counter daily.
 
 ## Deleting data
-To delete data use the delete_counter_data management command.
-e.g. to delete all Lam Counter data type:
+Use the `delete_counter_data` management command.
+Example (delete all Lam Counter data):
 ```
 ./manage.py delete_counter_data --counters LC
 ```
 
-### Importing Telraam raw data
-In order to import Telraam data into the database the raw data has to be imported. The raw data is imported with the _import_telraam_to_csv_ management command.
-The imported should be set to be run once a hour (see: https://github.com/City-of-Turku/smbackend/wiki/Celery-Tasks#telraam-to-csv-eco_countertasksimport_telraam_to_csv )
-Telraam raw data is imported to PROJECT_ROOT/media/telraam_data/. 
+## Importing Telraam raw data
+To load Telraam data into the database, import the raw data first with the `import_telraam_to_csv` management command. Schedule it hourly (see: https://github.com/City-of-Turku/smbackend/wiki/Celery-Tasks#telraam-to-csv-eco_countertasksimport_telraam_to_csv). Telraam raw data is stored in `PROJECT_ROOT/media/telraam_data/`.
 
 ## Troubleshooting
-For reasons unknown, the amount of sensors can sometimes change in the source csv file, e.g. the amount of columns changes. If this happens, run the initial import: ./manage.py import_counter_data --init and after that it is safe to run the importer as normal.
+- EC 401/403 responses: check `ECO_VISIO_API_KEYS`/`ECO_VISIO_API_URL` and key permissions.
+- EC 429 or rate-limit warnings: the client retries using API headers; rerun after the cooldown if imports still fail.
+- EC OOM or container crash: the initial import for EC is now windowed and resumable. If it crashes, simply rerun the same command; it will pick up from the last completed month window.
+- "No Eco-Visio data..." warnings: verify the station exists within Southwestern Finland, has a valid `station_id`, and the requested time range contains data.
+- "Start time ... not found" during imports: data may start later than expected; rerun with `--init` to reset state if needed.
+- CSV-based counters (TC/LC) can change column layouts; rerun `./manage.py import_counter_data --init` before resuming continuous imports.
 
 ## Testing
-If changes are made to the importer, run tests that verifies the correctness with:
+If changes are made to the importer, run:
+```
 pytest -m test_import_counter_data
-
+```

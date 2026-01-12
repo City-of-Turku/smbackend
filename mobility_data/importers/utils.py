@@ -13,7 +13,7 @@ from django import db
 from django.conf import settings
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.gdal import DataSource as GDALDataSource
-from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.geos import GEOSGeometry, Polygon
 from munigeo.models import (
     Address,
     AdministrativeDivision,
@@ -23,6 +23,10 @@ from munigeo.models import (
     Street,
 )
 
+from mobility_data.importers.constants import (
+    SOUTHWEST_FINLAND_BOUNDARY,
+    SOUTHWEST_FINLAND_BOUNDARY_SRID,
+)
 from mobility_data.models import ContentType, DataSource, MobileUnit
 from services.models import Unit
 
@@ -102,6 +106,14 @@ class ZippedShapefileDataSource:
 
 def fetch_json(url):
     response = requests.get(url)
+    assert response.status_code == 200, "Fetching {} status code: {}".format(
+        url, response.status_code
+    )
+    return response.json()
+
+
+def fetch_json_with_headers(url, headers):
+    response = requests.get(url, headers=headers)
     assert response.status_code == 200, "Fetching {} status code: {}".format(
         url, response.status_code
     )
@@ -246,7 +258,7 @@ def get_street_name_and_number(address):
     return street_name, street_number
 
 
-def locates_in_turku(feature, source_data_srid):
+def locates_in_turku(wkt, source_data_srid):
     """
     Returns True if the geometry of the feature is inside the boundaries
     of Turku.
@@ -256,9 +268,17 @@ def locates_in_turku(feature, source_data_srid):
     turku_boundary = AdministrativeDivisionGeometry.objects.get(
         division=division_turku
     ).boundary
-    geometry = GEOSGeometry(feature.geom.wkt, srid=source_data_srid)
+    geometry = GEOSGeometry(wkt, srid=source_data_srid)
     geometry.transform(settings.DEFAULT_SRID)
     return turku_boundary.contains(geometry)
+
+
+def locates_in_south_western_finland(point):
+    """
+    Returns True if the geometry of the feature is inside the boundaries of South Western Finland.
+    """
+    polygon = Polygon(SOUTHWEST_FINLAND_BOUNDARY, srid=SOUTHWEST_FINLAND_BOUNDARY_SRID)
+    return polygon.covers(point)
 
 
 def get_file_name_from_data_source(content_type):

@@ -110,7 +110,7 @@ def get_yit_routes_mock_data(num_elements):
     return data[:num_elements]
 
 
-# Both Destia and Infraroad uses the fluentprogress API
+# Destia uses the fluentprogress API
 def get_fluentprogress_works_mock_data(num_elements):
     current_date = datetime.now().date().strftime(DATE_FORMATS[INFRAROAD])
     location_history = [
@@ -257,8 +257,9 @@ def get_kuntec_units_mock_data(num_elements):
             "created_at": "2019-11-05T10:10:38Z",
             "io_din": [
                 {"no": 1, "label": "Auraus", "state": 1},
-                {"no": 2, "label": "Hiekoitus", "state": 1},
-                {"no": 3, "label": "Muu ty\u00f6", "state": 0},
+                {"no": 2, "label": "Hiekoitus", "state": 0},
+                # Commented, as io_din state check removed in importer
+                # {"no": 3, "label": "Muu ty\u00f6", "state": 0},
             ],
         },
         {
@@ -454,3 +455,80 @@ def get_test_fixture_data_layer(file_name):
     ds = get_data_source(file_name)
     assert len(ds) == 1
     return ds[0]
+
+
+def get_routa_works_mock_data(num_elements):
+    current_date = int(datetime.now().timestamp())
+    streets = [
+        {
+            "id": 1,
+            "geometry": [
+                {
+                    "x": 22.24957474,
+                    "y": 60.49515401,
+                }
+            ],
+            "tasks": [
+                {
+                    "name": "Auraus",
+                    "time": current_date,
+                },
+                {
+                    "name": "Hiekoitus",
+                    "time": current_date + 3600,
+                },
+            ],
+        },
+        {
+            "id": 2,
+            "geometry": [
+                {
+                    "x": 22.24957474,
+                    "y": 60.49515848,
+                }
+            ],
+            "tasks": [
+                {
+                    "name": "Puhtaanapito",
+                    "time": current_date + 1234,
+                },
+                {
+                    "name": "Tarkastusajo",
+                    "time": current_date + 3600,
+                },
+            ],
+        },
+        {
+            "id": 3,
+            "geometry": [
+                {
+                    "x": 22.24944127,
+                    "y": 60.49519463,
+                }
+            ],
+            "tasks": [
+                {
+                    "name": "Hiekoitus",
+                    "time": current_date + 123456,
+                },
+            ],
+        },
+    ]
+    assert num_elements <= len(streets)
+    data = streets[:num_elements]
+    return data
+
+
+def get_routa_units_mock_data(num_elements):
+    current_date = datetime.now().date().strftime(DATE_FORMATS[INFRAROAD])
+    data = [
+        {
+            "id": 123,
+            "last_location": {
+                "timestamp": f"{current_date} 06:31:34",
+                "events": ["infraroad"],
+            },
+        },
+    ]
+    assert num_elements <= len(data)
+    return data[:num_elements]
