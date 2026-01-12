@@ -80,7 +80,14 @@ class Command(BaseCommand):
                 else HISTORY_SIZES[provider].get(FETCH_SIZE, None)
             )
             match provider.upper():
-                case PROVIDER_TYPES.DESTIA | PROVIDER_TYPES.INFRAROAD:
+                case PROVIDER_TYPES.DESTIA:
+                    num_created_units, num_del_units = create_maintenance_units(
+                        provider
+                    )
+                    num_created_works, num_del_works = create_maintenance_works(
+                        provider, history_size, fetch_size
+                    )
+                case PROVIDER_TYPES.INFRAROAD:
                     num_created_units, num_del_units = create_maintenance_units(
                         provider
                     )
@@ -119,12 +126,8 @@ class Command(BaseCommand):
                 f"Created {num_created_works} Works of total {tot_num_works} Works for provider {provider}"
             )
 
-            if num_created_works > 0:
-                precalculate_geometry_history(provider)
-            else:
-                logger.warning(
-                    f"No works created for {provider}, skipping geometry history population."
-                )
+            precalculate_geometry_history(provider)
+
             end_time = datetime.now()
             duration = end_time - start_time
             logger.info(

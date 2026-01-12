@@ -1,8 +1,6 @@
 #!/bin/bash
 set -e
 
-cp -r data_from_github/* data
-
 # Enable SSH and give it access to app setting env variables
 if [[ "$ENABLE_SSH" = "true" ]]; then
     service ssh start

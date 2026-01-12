@@ -1,4 +1,5 @@
 import io
+import json
 import logging
 from datetime import date, timedelta
 
@@ -16,6 +17,7 @@ from eco_counter.constants import (
     COUNTERS,
     COUNTERS_LIST,
     ECO_COUNTER,
+    ECO_COUNTER_STATIONS_GEOJSON,
     INDEX_COLUMN_NAME,
     LAM_COUNTER,
     LAM_STATION_LOCATIONS,
@@ -34,9 +36,11 @@ from eco_counter.constants import (
     TRAFFIC_COUNTER_CSV_URLS,
     TRAFFIC_COUNTER_METADATA_GEOJSON,
 )
+from eco_counter.management.commands.eco_visio_client import EcoVisioAPIClient
 from eco_counter.models import Day, DayData, Station, YearData
 from eco_counter.tests.constants import TEST_COLUMN_NAMES
-from mobility_data.importers.utils import get_root_dir
+from mobility_data.importers.constants import SOUTHWEST_FINLAND_BOUNDARY_SRID
+from mobility_data.importers.utils import get_root_dir, locates_in_south_western_finland
 
 logger = logging.getLogger("eco_counter")
 Q_EXP = Q(value_at__gt=0) | Q(value_pt__gt=0) | Q(value_jt__gt=0) | Q(value_bt__gt=0)
@@ -184,10 +188,6 @@ def get_dataframe(url):
     return csv_data
 
 
-def get_eco_counter_csv():
-    return get_dataframe(settings.ECO_COUNTER_OBSERVATIONS_URL)
-
-
 def get_traffic_counter_csv(start_year=2015):
     """
     This function returns traffic counter data in a format supported by the counter.
@@ -261,7 +261,7 @@ def get_lam_dataframe(csv_url):
     assert (
         response.status_code == 200
     ), "Fetching LAM data from {} , status code {}".format(
-        settings.ECO_COUNTER_STATIONS_URL, response.status_code
+        response.url, response.status_code
     )
     string_data = response.content
     csv_data = pd.read_csv(io.StringIO(string_data.decode("utf-8")), delimiter=";")
@@ -322,7 +322,12 @@ def get_lam_counter_csv(start_date):
                 station.station_id, direction, start_date, today
             )
             # Read the direction, e.g., Vaasa
-            direction_name = df["suuntaselite"].iloc[0]
+            try:
+                direction_name = df["suuntaselite"].iloc[0]
+            except IndexError as e:
+                logger.warning(f"Discarding station {station} IndexError: {e}")
+                continue
+
             # From the mappings determine the 'keskustaan päin' or 'poispäin keskustasta' direction.
             try:
                 direction_value = LAM_STATIONS_DIRECTION_MAPPINGS[
@@ -410,16 +415,126 @@ def get_traffic_counter_stations():
 
 def get_eco_counter_stations():
     stations = []
-    response = requests.get(settings.ECO_COUNTER_STATIONS_URL)
-    assert (
-        response.status_code == 200
-    ), "Fetching stations from {} , status code {}".format(
-        settings.ECO_COUNTER_STATIONS_URL, response.status_code
-    )
-    response_json = response.json()
-    features = response_json["features"]
+    data_file = f"{get_root_dir()}/eco_counter/data/{ECO_COUNTER_STATIONS_GEOJSON}"
+    json_data = None
+    with open(data_file, "r") as file:
+        json_data = json.load(file)
+    features = json_data.get("features", None)
     for feature in features:
         stations.append(ObservationStation(ECO_COUNTER, feature))
+    return stations
+
+
+def _parse_eco_visio_date(date_str):
+    """Parse an Eco-Visio ISO-8601 date string into a ``date`` or return ``None``."""
+    if not date_str:
+        return None
+    try:
+        return dateutil.parser.isoparse(date_str).date()
+    except (ValueError, TypeError) as exc:
+        logger.warning(f"Could not parse Eco-Visio date '{date_str}': {exc}")
+        return None
+
+
+def _segments_to_geometry(segments, srid):
+    """Convert Eco-Visio segment GeoJSON into geometry in the default SRID."""
+    if not segments:
+        return None
+    try:
+        geometry = GEOSGeometry(json.dumps(segments))
+        if geometry.srid is None and srid:
+            geometry.srid = srid
+        geometry.transform(settings.DEFAULT_SRID)
+        return geometry
+    except Exception as exc:
+        logger.warning(f"Could not parse Eco-Visio segments: {exc}")
+        return None
+
+
+def get_eco_visio_api_keys():
+    """Return a list of Eco-Visio API keys from settings."""
+    if hasattr(settings, "ECO_VISIO_API_KEYS") and settings.ECO_VISIO_API_KEYS:
+        return settings.ECO_VISIO_API_KEYS
+    return []
+
+
+def get_eco_visio_stations():
+    """Fetch Eco-Visio sites, filter to Southwestern Finland, and normalize into station dicts.
+
+    Steps:
+    - Iterate over all configured API keys.
+    - Call the Eco-Visio API requesting site segments for each key.
+    - Skip sites missing id/coordinates or outside the Southwestern Finland boundary.
+    - Deduplicate sites by station_id (first occurrence wins).
+    - Transform point locations and optional segment geometries to ``settings.DEFAULT_SRID``.
+    - Parse first/last data dates to ``date`` objects.
+    - Return a list of station dictionaries ready for import/mapping.
+    """
+    stations = []
+    seen_station_ids = set()
+    source_srid = SOUTHWEST_FINLAND_BOUNDARY_SRID
+    api_keys = get_eco_visio_api_keys()
+
+    for api_key in api_keys:
+        try:
+            with EcoVisioAPIClient(api_key=api_key) as client:
+                sites = client.get_all_sites(include=["segments"])
+            logger.info(
+                f"Fetched {len(sites)} Eco-Visio sites for an API key before filtering"
+            )
+
+            for site in sites:
+                station_id = site.get("id")
+                if station_id is None:
+                    logger.warning(f"Skipping Eco-Visio site without id: {site}")
+                    continue
+
+                if station_id in seen_station_ids:
+                    continue
+                seen_station_ids.add(station_id)
+
+                location_data = site.get("location") or {}
+                lat = location_data.get("lat")
+                lon = location_data.get("lon")
+                if lat is None or lon is None:
+                    logger.warning(
+                        f"Skipping Eco-Visio site {station_id}: missing location"
+                    )
+                    continue
+                try:
+                    location_src = Point(lon, lat, srid=source_srid)
+                except (TypeError, ValueError) as exc:
+                    logger.warning(
+                        f"Skipping Eco-Visio site {station_id}: invalid coordinates ({exc})"
+                    )
+                    continue
+                if not locates_in_south_western_finland(location_src):
+                    logger.info(
+                        f"Skipping Eco-Visio site {station_id} outside Southwestern Finland"
+                    )
+                    continue
+                location = GEOSGeometry(location_src.wkt, srid=source_srid)
+                location.transform(settings.DEFAULT_SRID)
+
+                geometry = _segments_to_geometry(site.get("segments"), source_srid)
+                name = site.get("name") or f"Eco-Visio site {station_id}"
+                stations.append(
+                    {
+                        "station_id": str(station_id),
+                        "name": name,
+                        "location": location,
+                        "geometry": geometry,
+                        "data_from_date": _parse_eco_visio_date(site.get("firstData")),
+                        "data_until_date": _parse_eco_visio_date(site.get("lastData")),
+                    }
+                )
+        except Exception as exc:  # noqa: BLE001
+            logger.error(f"Failed to fetch sites with an Eco-Visio API key: {exc}")
+            continue
+
+    logger.info(
+        f"Prepared {len(stations)} Eco-Visio stations within Southwestern Finland"
+    )
     return stations
 
 
@@ -623,7 +738,7 @@ def save_stations(csv_data_source):
         case COUNTERS.LAM_COUNTER:
             stations = get_lam_counter_stations()
         case COUNTERS.ECO_COUNTER:
-            stations = get_eco_counter_stations()
+            stations = get_eco_visio_stations()
         case COUNTERS.TRAFFIC_COUNTER:
             stations = get_traffic_counter_stations()
     object_ids = list(
@@ -631,20 +746,38 @@ def save_stations(csv_data_source):
             "id", flat=True
         )
     )
-    for station in stations:
-        obj, created = Station.objects.get_or_create(
-            name=station.name,
-            name_sv=station.name_sv,
-            name_en=station.name_en,
-            location=station.location,
-            geometry=station.geometry,
-            station_id=station.station_id,
-            csv_data_source=csv_data_source,
-        )
-        if obj.id in object_ids:
-            object_ids.remove(obj.id)
-        if created:
-            num_created += 1
+    if csv_data_source == COUNTERS.ECO_COUNTER:
+        for station in stations:
+            obj, created = Station.objects.update_or_create(
+                station_id=station["station_id"],
+                csv_data_source=csv_data_source,
+                defaults={
+                    "name": station["name"],
+                    "location": station["location"],
+                    "geometry": station["geometry"],
+                    "data_from_date": station["data_from_date"],
+                    "data_until_date": station["data_until_date"],
+                },
+            )
+            if obj.id in object_ids:
+                object_ids.remove(obj.id)
+            if created:
+                num_created += 1
+    else:
+        for station in stations:
+            obj, created = Station.objects.get_or_create(
+                name=station.name,
+                name_sv=station.name_sv,
+                name_en=station.name_en,
+                location=station.location,
+                geometry=station.geometry,
+                station_id=station.station_id,
+                csv_data_source=csv_data_source,
+            )
+            if obj.id in object_ids:
+                object_ids.remove(obj.id)
+            if created:
+                num_created += 1
     Station.objects.filter(id__in=object_ids).delete()
     logger.info(
         f"Deleted {len(object_ids)} obsolete Stations for counter {csv_data_source}"

@@ -14,6 +14,8 @@ TRAFFIC_COUNTER_START_YEAR = 2015
 # defined in env variable TRAFFIC_COUNTER_OBSERVATIONS_BASE_URL.
 # Change end year when data for the next year is available.
 TRAFFIC_COUNTER_END_YEAR = datetime.today().year
+
+# Eco Counter fallback start year for initial import. If API does not provide start date, use this.
 ECO_COUNTER_START_YEAR = 2020
 LAM_COUNTER_START_YEAR = 2010
 TELRAAM_COUNTER_START_YEAR = 2023
@@ -50,6 +52,7 @@ COUNTER_START_YEARS = {
 }
 
 TRAFFIC_COUNTER_METADATA_GEOJSON = "traffic_counter_metadata.geojson"
+ECO_COUNTER_STATIONS_GEOJSON = "eco_counter_stations.geojson"
 LAM_STATIONS_API_FETCH_URL = (
     settings.LAM_COUNTER_API_BASE_URL
     + "?api=liikennemaara&tyyppi=h&pvm={start_date}&loppu={end_date}"
