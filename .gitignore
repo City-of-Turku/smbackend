@@ -6,6 +6,7 @@ data/*
 !data/accessibility_rules.csv
 .idea
 .coverage
+/postgres-data
 venv_smbackend
 venv
 env/
@@ -24,6 +25,8 @@ smbackend/test/tpr_mock_data/*.json
 
 # Misc
 .vscode/*
+.cursor
 
 # Secrets
 secrets.*
+

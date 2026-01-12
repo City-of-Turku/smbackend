@@ -80,7 +80,14 @@ class Command(BaseCommand):
                 else HISTORY_SIZES[provider].get(FETCH_SIZE, None)
             )
             match provider.upper():
-                case PROVIDER_TYPES.DESTIA | PROVIDER_TYPES.INFRAROAD:
+                case PROVIDER_TYPES.DESTIA:
+                    num_created_units, num_del_units = create_maintenance_units(
+                        provider
+                    )
+                    num_created_works, num_del_works = create_maintenance_works(
+                        provider, history_size, fetch_size
+                    )
+                case PROVIDER_TYPES.INFRAROAD:
                     num_created_units, num_del_units = create_maintenance_units(
                         provider
                     )

@@ -22,6 +22,7 @@ from .constants import (
     CONTRACTS,
     EVENT_MAPPINGS,
     EVENTS,
+    INFRAROAD,
     KUNTEC,
     KUNTEC_KEY,
     ROUTES,
@@ -53,7 +54,10 @@ TURKU_BOUNDARY = get_turku_boundary()
 
 
 def get_json_data(url):
-    response = requests.get(url)
+    if url.startswith(URLS[INFRAROAD][WORKS].split("=")[0] + "="):
+        response = requests.get(url, headers=URLS[INFRAROAD][TOKEN])
+    else:
+        response = requests.get(url)
     if response.status_code != 200:
         logger.warning(
             f"Fetching Maintenance Unit {url} status code: {response.status_code} response: {response.content}"
@@ -183,7 +187,7 @@ def get_linestrings_from_points(objects, queryset, provider):
 def precalculate_geometry_history(provider):
     """
     Function that populates the GeometryHistory model for a provider.
-    LineString geometrys in MaintenanceWorks will be added as they are.
+    LineString geometries in MaintenanceWorks will be added as they are.
     """
     GeometryHistory.objects.filter(provider=provider).delete()
     objects = []
@@ -419,9 +423,16 @@ def create_maintenance_works(provider, history_size, fetch_size):
     )
     for unit in MaintenanceUnit.objects.filter(provider=provider):
         json_data = get_json_data(
-            URLS[provider][WORKS].format(id=unit.unit_id, history_size=fetch_size)
+            URLS[provider][WORKS].format(
+                id=unit.unit_id,
+                history_size=fetch_size,
+                start=import_from_date_time.strftime("%Y-%m-%dT%H:%M"),
+                end=datetime.now().strftime("%Y-%m-%dT%H:%M"),
+            )
         )
-        if "location_history" in json_data:
+        if provider == INFRAROAD:
+            json_data = transform_infraroad_routa(json_data)
+        elif "location_history" in json_data:
             json_data = json_data["location_history"]
         else:
             logger.warning(f"Location history not found for unit: {unit.unit_id}")
@@ -430,7 +441,7 @@ def create_maintenance_works(provider, history_size, fetch_size):
             timestamp = datetime.strptime(
                 work["timestamp"], TIMESTAMP_FORMATS[provider]
             ).replace(tzinfo=zoneinfo.ZoneInfo("Europe/Helsinki"))
-            # Discard events older then import_from_date_time as they will
+            # Discard events older than import_from_date_time as they will
             # never be displayed
             if timestamp < import_from_date_time:
                 continue
@@ -476,7 +487,18 @@ def create_maintenance_units(provider):
     objs_to_delete = list(
         MaintenanceUnit.objects.filter(provider=provider).values_list("id", flat=True)
     )
-    for unit in get_json_data(URLS[provider][UNITS]):
+    # Infraroad is not dependant on individual units, so use one unit for everything
+    if provider == INFRAROAD:
+        contract_number = re.search(r"contract=(\d+)", URLS[INFRAROAD][WORKS])
+        unit_data = [
+            {
+                "id": contract_number.group(1) if contract_number else provider,
+                "last_location": {"events": ["infraroad"]},
+            }
+        ]
+    else:
+        unit_data = get_json_data(URLS[provider][UNITS])
+    for unit in unit_data:
         # The names of the unit is derived from the events.
         names = [n for n in unit["last_location"]["events"]]
         filter = {
@@ -638,3 +660,22 @@ def get_yit_access_token():
 
 def is_nested_coordinates(coordinates):
     return bool(np.array(coordinates).ndim > 1)
+
+
+# Infraroad swithced from Fluentprogress to Routa as API provider
+# Using current info, transforming that data into a list that existing functions can use
+def transform_infraroad_routa(work):
+    events = []
+    for street in work:
+        for geom in street["geometry"]:
+            for task in street["tasks"]:
+                timestamp = datetime.fromtimestamp(task["time"]).strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                )
+                coords = f"({geom['x']} {geom['y']})"
+                event_name = task["name"]
+
+                events.append(
+                    {"timestamp": timestamp, "coords": coords, "events": [event_name]}
+                )
+    return events

@@ -70,6 +70,8 @@ env = environ.Env(
     EMAIL_PORT=(int, None),
     EMAIL_USE_TLS=(bool, None),
     TELRAAM_TOKEN=(str, None),
+    ECO_VISIO_API_URL=(str, None),
+    ECO_VISIO_API_KEYS=(list, []),
     DJANGO_LOG_LEVEL=(str, "INFO"),
     TURKU_SERVICES_IMPORT_LOG_LEVEL=(str, "INFO"),
     SEARCH_LOG_LEVEL=(str, "INFO"),
@@ -80,6 +82,8 @@ env = environ.Env(
     MAINTENANCE_LOG_LEVEL=(str, "INFO"),
     ENVIRONMENT_DATA_LOG_LEVEL=(str, "INFO"),
     EXCEPTIONAL_SITUATIONS_LOG_LEVEL=(str, "INFO"),
+    ROUTA_API_KEY=(str, ""),
+    ROUTA_API_URL=(str, ""),
 )
 
 
@@ -455,3 +459,7 @@ YIT_CONTRACTS_URL = env("YIT_CONTRACTS_URL")
 YIT_TOKEN_URL = env("YIT_TOKEN_URL")
 KUNTEC_KEY = env("KUNTEC_KEY")
 TELRAAM_TOKEN = env("TELRAAM_TOKEN")
+ROUTA_API_KEY = env("ROUTA_API_KEY")
+ROUTA_API_URL = env("ROUTA_API_URL")
+ECO_VISIO_API_URL = env("ECO_VISIO_API_URL")
+ECO_VISIO_API_KEYS = env("ECO_VISIO_API_KEYS")
