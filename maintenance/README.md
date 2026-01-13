@@ -40,5 +40,17 @@ e.g., to delete all street maintenance history for provider 'destia':
 ./manage.py delete_street_maintenance_history destia
 ```
 
-## API
-See: specificatin.swagger.yaml
+## Ski trails
+To periodically import ski trails maintenance history use Celery, for more information [see](https://github.com/City-of-Turku/smbackend/wiki/Celery-Tasks#unit-maintenance).
+
+### Ski trails
+Before importing the ski trails maintenance history the ski trails must be imported. To import type:
+```
+./manage.py import_ski_trails
+```
+
+### Ski trails maintenance history
+To import the maintenance history, type:
+```
+./manage.py import_ski_trails_maintenance_history
+```

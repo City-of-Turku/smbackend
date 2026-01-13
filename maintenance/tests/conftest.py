@@ -16,8 +16,14 @@ from maintenance.management.commands.constants import (
     KUNTEC,
     LIUKKAUDENTORJUNTA,
 )
-from maintenance.models import DEFAULT_SRID, GeometryHistory
+from maintenance.models import (
+    DEFAULT_SRID,
+    GeometryHistory,
+    UnitMaintenance,
+    UnitMaintenanceGeometry,
+)
 from mobility_data.tests.conftest import TURKU_WKT
+from services.models import Unit
 
 UTC_TIMEZONE = pytz.timezone("UTC")
 
@@ -25,6 +31,11 @@ UTC_TIMEZONE = pytz.timezone("UTC")
 @pytest.fixture
 def api_client():
     return APIClient()
+
+
+@pytest.fixture
+def now():
+    return datetime.now(UTC_TIMEZONE)
 
 
 @pytest.mark.django_db
@@ -96,3 +107,37 @@ def administrative_division_geometry(administrative_division):
         id=1, division_id=1, boundary=turku_multipoly
     )
     return adm_div_geom
+
+
+@pytest.fixture
+def unit_maintenance_geometries():
+    geometry = GEOSGeometry("LINESTRING(0 0, 1 1, 2 2)")
+    UnitMaintenanceGeometry.objects.create(geometry_id=863, geometry=geometry)
+    UnitMaintenanceGeometry.objects.create(geometry_id=864, geometry=geometry)
+    return UnitMaintenanceGeometry.objects.all()
+
+
+@pytest.fixture
+def units(now):
+    Unit.objects.create(
+        id=801, name="Oriketo-Räntämäki -kuntorata", last_modified_time=now
+    )
+    Unit.objects.create(id=784, name="Härkämäen kuntorata", last_modified_time=now)
+    return Unit.objects.all()
+
+
+@pytest.fixture
+def unit_maintenances(now, units):
+    UnitMaintenance.objects.create(
+        target=UnitMaintenance.SKI_TRAIL,
+        unit=units.get(id=801),
+        last_imported_time=now,
+        maintained_at=now + timedelta(days=1),
+    )
+    UnitMaintenance.objects.create(
+        target=UnitMaintenance.SKI_TRAIL,
+        unit=units.get(id=784),
+        last_imported_time=now,
+        maintained_at=now - timedelta(days=1),
+    )
+    return UnitMaintenance.objects.all()
