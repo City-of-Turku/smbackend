@@ -99,10 +99,18 @@ class UnitMaintenanceViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = UnitMaintenaceFilterSet
 
+    @method_decorator(cache_page(60 * 15))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
 
 class UnitMaintenanceGeometryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = UnitMaintenanceGeometry.objects.all()
     serializer_class = UnitMaintenanceGeometrySerializer
+
+    @method_decorator(cache_page(60 * 15))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 class ActiveEventsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):

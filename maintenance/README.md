@@ -29,7 +29,7 @@ To import KUNTEC and INFRAROAD street maintenance history:
 ```
 Note, only the MaintenanceWorks and MaintenanceUnits for the given provider from the latest import are stored and the rest are deleted. The GeometryHistory is generated only if more than one MaintenanceWork is created.
 
-### Periodically imorting
+### Periodically importing
 To periodically import data use Celery, for more information [see](https://github.com/City-of-Turku/smbackend/wiki/Celery-Tasks#street-maintenance-history-street_maintenancetasksimport_street_maintenance_history).
 
 
@@ -53,4 +53,10 @@ Before importing the ski trails maintenance history the ski trails must be impor
 To import the maintenance history, type:
 ```
 ./manage.py import_ski_trails_maintenance_history
+```
+
+## Ice tracks maintenance history
+To import the maintenance history, type:
+```
+./manage.py import_ice_tracks_maintenance_history
 ```

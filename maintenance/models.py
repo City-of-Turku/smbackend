@@ -27,7 +27,7 @@ class UnitMaintenance(models.Model):
         max_length=16, choices=CONDITION_CHOICES, default=UNDEFINED
     )
     target = models.CharField(max_length=16, choices=TARGET_CHOICES, default=SKI_TRAIL)
-    maintained_at = models.DateTimeField()
+    maintained_at = models.DateTimeField(null=True, blank=True)
     last_imported_time = models.DateTimeField(help_text="Time of last data import")
     unit = models.ForeignKey(
         Unit,
