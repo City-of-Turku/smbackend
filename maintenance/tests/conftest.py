@@ -35,7 +35,7 @@ def api_client():
 
 @pytest.fixture
 def now():
-    return datetime.now().replace(tzinfo=timezone.get_default_timezone())
+    return datetime.now(UTC_TIMEZONE)
 
 
 @pytest.mark.django_db
