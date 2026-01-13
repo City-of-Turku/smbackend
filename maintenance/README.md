@@ -29,11 +29,11 @@ To import KUNTEC and INFRAROAD street maintenance history:
 ```
 Note, only the MaintenanceWorks and MaintenanceUnits for the given provider from the latest import are stored and the rest are deleted. The GeometryHistory is generated only if more than one MaintenanceWork is created.
 
-### Periodically imorting
+### Periodically importing
 To periodically import data use Celery, for more information [see](https://github.com/City-of-Turku/smbackend/wiki/Celery-Tasks#street-maintenance-history-street_maintenancetasksimport_street_maintenance_history).
 
 
-### Deleting street maintenance history for a provider
+## Deleting street maintenance history for a provider
 It is possible to delete street maintenance history for a provider.
 e.g., to delete all street maintenance history for provider 'destia':
 ```
