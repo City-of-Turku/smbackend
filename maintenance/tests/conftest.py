@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 
 import pytest
+import pytz
 from django.contrib.gis.geos import GEOSGeometry, LineString
-from django.utils import timezone
 from munigeo.models import (
     AdministrativeDivision,
     AdministrativeDivisionGeometry,
@@ -24,6 +24,10 @@ from maintenance.models import (
 )
 from mobility_data.tests.conftest import TURKU_WKT
 from services.models import Unit
+from maintenance.models import DEFAULT_SRID, GeometryHistory
+from mobility_data.tests.conftest import TURKU_WKT
+
+UTC_TIMEZONE = pytz.timezone("UTC")
 
 
 @pytest.fixture
@@ -38,7 +42,8 @@ def now():
 
 @pytest.mark.django_db
 @pytest.fixture
-def geometry_historys(now):
+def geometry_historys():
+    now = datetime.now(UTC_TIMEZONE)
     geometry = LineString((0, 0), (0, 50), (50, 50), (50, 0), (0, 0), sird=DEFAULT_SRID)
     GeometryHistory.objects.create(
         timestamp=now,

@@ -33,7 +33,7 @@ Note, only the MaintenanceWorks and MaintenanceUnits for the given provider from
 To periodically import data use Celery, for more information [see](https://github.com/City-of-Turku/smbackend/wiki/Celery-Tasks#street-maintenance-history-street_maintenancetasksimport_street_maintenance_history).
 
 
-### Deleting street maintenance history for a provider
+## Deleting street maintenance history for a provider
 It is possible to delete street maintenance history for a provider.
 e.g., to delete all street maintenance history for provider 'destia':
 ```
