@@ -24,8 +24,6 @@ from maintenance.models import (
 )
 from mobility_data.tests.conftest import TURKU_WKT
 from services.models import Unit
-from maintenance.models import DEFAULT_SRID, GeometryHistory
-from mobility_data.tests.conftest import TURKU_WKT
 
 UTC_TIMEZONE = pytz.timezone("UTC")
 
