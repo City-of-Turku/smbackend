@@ -3,7 +3,7 @@ from rest_framework import routers
 
 from . import views
 
-app_name = "street_maintenance"
+app_name = "maintenance"
 
 router = routers.DefaultRouter()
 router.register("active_events", views.ActiveEventsViewSet, basename="active_events")
@@ -20,6 +20,5 @@ router.register(
 )
 
 urlpatterns = [
-    # re_path("^street_maintenance/active_events", )
-    path("", include(router.urls), name="street_maintenance"),
+    path("", include(router.urls), name="maintenance"),
 ]

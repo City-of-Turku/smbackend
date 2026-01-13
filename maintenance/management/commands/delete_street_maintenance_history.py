@@ -2,11 +2,11 @@ import logging
 
 from django.core.management import BaseCommand
 
-from street_maintenance.models import GeometryHistory, MaintenanceUnit
+from maintenance.models import GeometryHistory, MaintenanceUnit
 
 from .constants import PROVIDERS
 
-logger = logging.getLogger("mobility_data")
+logger = logging.getLogger("maintenance")
 
 # Add deprecated provider name 'AUTORI'
 PROVIDERS.append("AUTORI")

@@ -1,9 +1,9 @@
 swagger: "2.0"
 
 info:
-  description: "Street maintenance API that serves history data of maintenance works, active events and provides history as generated geometries."
+  description: "Maintenance API that serves history data of maintenance works, active events and provides history as generated geometries."
   version: "1.0.0"
-  title: "Street Maintenance History"  
+  title: Maintenance History"  
   
 schemes:
 - "https"

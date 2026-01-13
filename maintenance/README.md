@@ -1,8 +1,9 @@
-# Street Maintenance history
+# Maintenance history
 
-Django app for importing and serving street maintenance data.
+Django app for importing, processing and serving maintenance data.
 
-## Importer
+## Street maintenance history
+### Importer
 Name:
 import_street_maintenance_history 
 

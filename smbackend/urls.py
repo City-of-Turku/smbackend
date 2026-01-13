@@ -11,8 +11,9 @@ import bicycle_network.api.urls
 import eco_counter.api.urls
 import environment_data.api.urls
 import exceptional_situations.api.urls
+import maintenance.api.urls
+import maintenance.api.urls_street_maintenance
 import mobility_data.api.urls
-import street_maintenance.api.urls
 from iot.api import IoTViewSet
 from observations.api import views as observations_views
 from observations.views import obtain_auth_token
@@ -78,8 +79,14 @@ urlpatterns = [
         name="exceptional_situations",
     ),
     re_path(
+        r"^maintenance/",
+        include(maintenance.api.urls),
+        name="maintenance",
+    ),
+    # Keep backward compatibility to street_maintenance API
+    re_path(
         r"^street_maintenance/",
-        include(street_maintenance.api.urls),
+        include(maintenance.api.urls_street_maintenance),
         name="street_maintenance",
     ),
     re_path(r"", include(shortcutter_urls)),
