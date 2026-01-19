@@ -39,12 +39,17 @@ def save_maintenance_history(json_data):
             continue
 
         external_id = properties.get("external_id", None)
-        if external_id:
-            try:
-                unit = Unit.objects.get(id=external_id)
-            except Unit.DoesNotExist:
-                logger.error(f"Unit {external_id} not found, skipping...")
-                continue
+        if not external_id:
+            logger.warning(
+                f"'external_id' not found for feature: {feature}, skipping..."
+            )
+            continue
+
+        try:
+            unit = Unit.objects.get(id=external_id)
+        except Unit.DoesNotExist:
+            logger.error(f"Unit {external_id} not found, skipping...")
+            continue
 
         filter = {
             "unit": unit,
