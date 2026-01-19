@@ -2,6 +2,7 @@ from django.contrib.gis.geos import LineString, Point
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
+import json
 
 from maintenance.models import (
     GeometryHistory,
@@ -20,6 +21,27 @@ class UnitMaintenanceGeometrySerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
+        
+        # DRF doesn't serialize GeometryField by default, so we need to handle it manually
+        # Convert geometry to GeoJSON format
+        if instance.geometry:
+            # Ensure geometry is in SRID 4326 (GeoJSON standard)
+            geom = instance.geometry
+            if geom.srid and geom.srid != 4326:
+                geom = geom.clone()
+                geom.transform(4326)
+            
+            # Convert to GeoJSON using Django's built-in geojson property
+            try:
+                ret["geometry"] = json.loads(geom.geojson)
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error converting geometry to GeoJSON: {e}")
+                ret["geometry"] = None
+        else:
+            ret["geometry"] = None
+        
         # If nested in UnitMaintenanceSerializer
         if (
             self.context.get("request", False)
