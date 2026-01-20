@@ -51,8 +51,18 @@ class UnitMaintenanceGeometrySerializer(serializers.ModelSerializer):
         return ret
 
 
+class UnitInfoSerializer(serializers.Serializer):
+    """Serializer for Unit information nested in UnitMaintenance"""
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    description = serializers.CharField(allow_null=True, required=False)
+    street_address = serializers.CharField(allow_null=True, required=False)
+    address_zip = serializers.CharField(allow_null=True, required=False)
+
+
 class UnitMaintenanceSerializer(serializers.ModelSerializer):
     geometries = UnitMaintenanceGeometrySerializer(many=True, read_only=True)
+    unit = serializers.SerializerMethodField()
 
     class Meta:
         model = UnitMaintenance
@@ -65,6 +75,12 @@ class UnitMaintenanceSerializer(serializers.ModelSerializer):
             "last_imported_time",
             "geometries",
         ]
+
+    def get_unit(self, obj):
+        """Return Unit information as an object if unit exists"""
+        if obj.unit:
+            return UnitInfoSerializer(obj.unit).data
+        return None
 
 
 class GeometryHistorySerializer(serializers.ModelSerializer):
