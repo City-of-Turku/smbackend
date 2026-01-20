@@ -705,3 +705,76 @@ def transform_infraroad_routa(work):
                     {"timestamp": timestamp, "coords": coords, "events": [event_name]}
                 )
     return events
+
+
+def get_or_create_sports_facility_unit(
+    geometry_id, name, description=None, address=None, zip_code=None, geometry=None
+):
+    """
+    Get or create a Unit record for a sports facility (ski trail or ice track).
+    
+    Uses geometry_id with an offset to generate a unique Unit ID.
+    Sports facilities use Unit IDs starting from 100000 to avoid conflicts.
+    
+    Args:
+        geometry_id: The geometry_id from UnitMaintenanceGeometry (used as base for Unit ID)
+        name: Name of the facility
+        description: Optional description
+        address: Optional street address
+        zip_code: Optional postal code
+        geometry: Optional geometry object (will be transformed to PROJECTION_SRID)
+    
+    Returns:
+        Unit instance
+    """
+    from django.utils import timezone
+    from munigeo.utils import get_default_srid
+    from services.models import Unit
+    
+    # Use geometry_id + offset to generate unique Unit ID
+    # Offset ensures we don't conflict with regular Unit IDs
+    SPORTS_FACILITIES_UNIT_ID_OFFSET = 100000
+    unit_id = SPORTS_FACILITIES_UNIT_ID_OFFSET + geometry_id
+    
+    try:
+        unit = Unit.objects.get(id=unit_id)
+        unit_created = False
+    except Unit.DoesNotExist:
+        unit = Unit(id=unit_id)
+        unit_created = True
+    
+    # Update fields
+    unit.name = name
+    if description:
+        unit.description = description
+    if address:
+        unit.street_address = address
+    if zip_code:
+        unit.address_zip = zip_code
+    
+    # Set geometry if provided (transform from DEFAULT_SRID to PROJECTION_SRID)
+    if geometry:
+        from maintenance.models import DEFAULT_SRID
+        projection_srid = get_default_srid()
+        
+        # Clone and transform geometry
+        geom = geometry.clone()
+        if geom.srid != projection_srid:
+            geom.transform(projection_srid)
+        
+        # For Point geometries, set location; for LineString, set geometry
+        from django.contrib.gis.geos import Point
+        if isinstance(geometry, Point):
+            unit.location = geom
+        else:
+            unit.geometry = geom
+    
+    unit.last_modified_time = timezone.now()
+    unit.save()
+    
+    if unit_created:
+        logger.info(f"Created Unit {unit_id} for sports facility '{name}' (geometry_id: {geometry_id})")
+    else:
+        logger.debug(f"Updated Unit {unit_id} for sports facility '{name}' (geometry_id: {geometry_id})")
+    
+    return unit
