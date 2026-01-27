@@ -30,7 +30,9 @@ def save_maintenance_history(json_data):
         logger.error("No features found in JSON response.")
         return
 
-    logger.info(f"Processing {len(features)} features from ice tracks maintenance history API")
+    logger.info(
+        f"Processing {len(features)} features from ice tracks maintenance history API"
+    )
 
     for feature in features:
         properties = feature.get("properties", None)
@@ -52,10 +54,12 @@ def save_maintenance_history(json_data):
         try:
             geometry, geometry_created = UnitMaintenanceGeometry.objects.get_or_create(
                 geometry_id=geometry_id,
-                defaults={"geometry": None}  # Will be set below
+                defaults={"geometry": None},  # Will be set below
             )
         except Exception as exp:
-            logger.error(f"Error getting/creating geometry for geometry_id={geometry_id}: {exp}")
+            logger.error(
+                f"Error getting/creating geometry for geometry_id={geometry_id}: {exp}"
+            )
             continue
 
         # Get or create Unit record for this ice track
@@ -96,7 +100,9 @@ def save_maintenance_history(json_data):
                 unit_maintenance.unit = unit
         else:
             # Create a new UnitMaintenance for this geometry
-            unit_maintenance = UnitMaintenance(unit=unit, target=UnitMaintenance.ICE_TRACK)
+            unit_maintenance = UnitMaintenance(
+                unit=unit, target=UnitMaintenance.ICE_TRACK
+            )
             is_created = True
         maintained_at = properties.get("conditioned_at", None)
         if maintained_at:
@@ -125,11 +131,17 @@ def save_maintenance_history(json_data):
         try:
             unit_maintenance.save()
             if is_created:
-                logger.info(f"Created UnitMaintenance for ice track (geometry_id: {geometry_id})")
+                logger.info(
+                    f"Created UnitMaintenance for ice track (geometry_id: {geometry_id})"
+                )
             else:
-                logger.debug(f"Updated UnitMaintenance for ice track (geometry_id: {geometry_id})")
+                logger.debug(
+                    f"Updated UnitMaintenance for ice track (geometry_id: {geometry_id})"
+                )
         except Exception as exp:
-            logger.error(f"Unable to save ice track maintenance history for geometry_id={geometry_id}, reason: {exp}")
+            logger.error(
+                f"Unable to save ice track maintenance history for geometry_id={geometry_id}, reason: {exp}"
+            )
             continue
 
         # Update geometry with Point coordinates and link to unit_maintenance
@@ -154,7 +166,9 @@ def save_maintenance_history(json_data):
         geometry.unit_maintenance = unit_maintenance
         geometry.save()
         num_geometry_linked += 1
-        logger.debug(f"Linked geometry {geometry_id} to unit_maintenance {unit_maintenance.id}")
+        logger.debug(
+            f"Linked geometry {geometry_id} to unit_maintenance {unit_maintenance.id}"
+        )
 
         if is_created:
             num_created += 1

@@ -770,8 +770,12 @@ def get_or_create_sports_facility_unit(
     unit.save()
 
     if unit_created:
-        logger.info(f"Created Unit {unit_id} for sports facility '{name}' (geometry_id: {geometry_id})")
+        logger.info(
+            f"Created Unit {unit_id} for sports facility '{name}' (geometry_id: {geometry_id})"
+        )
     else:
-        logger.debug(f"Updated Unit {unit_id} for sports facility '{name}' (geometry_id: {geometry_id})")
+        logger.debug(
+            f"Updated Unit {unit_id} for sports facility '{name}' (geometry_id: {geometry_id})"
+        )
 
     return unit

@@ -36,6 +36,7 @@ class UnitMaintenanceGeometrySerializer(serializers.ModelSerializer):
                 ret["geometry"] = json.loads(geom.geojson)
             except Exception as e:
                 import logging
+
                 logger = logging.getLogger(__name__)
                 logger.error(f"Error converting geometry to GeoJSON: {e}")
                 ret["geometry"] = None
@@ -53,6 +54,7 @@ class UnitMaintenanceGeometrySerializer(serializers.ModelSerializer):
 
 class UnitInfoSerializer(serializers.Serializer):
     """Serializer for Unit information nested in UnitMaintenance"""
+
     id = serializers.IntegerField()
     name = serializers.CharField()
     description = serializers.CharField(allow_null=True, required=False)

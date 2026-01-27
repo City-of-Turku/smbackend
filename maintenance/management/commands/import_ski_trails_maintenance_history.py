@@ -66,7 +66,9 @@ def save_maintenance_history(json_data):
 
         geometry_id = properties.get("location_id", None)
         if not geometry_id:
-            logger.warning(f"No location_id found in properties for feature '{name}', skipping...")
+            logger.warning(
+                f"No location_id found in properties for feature '{name}', skipping..."
+            )
             continue
 
         # Get geometry by geometry_id (construction_point_id)
@@ -100,7 +102,9 @@ def save_maintenance_history(json_data):
                 unit_maintenance.unit = unit
         else:
             # Create a new UnitMaintenance for this geometry
-            unit_maintenance = UnitMaintenance(unit=unit, target=UnitMaintenance.SKI_TRAIL)
+            unit_maintenance = UnitMaintenance(
+                unit=unit, target=UnitMaintenance.SKI_TRAIL
+            )
             is_created = True
 
         # Map conditioned field to condition
@@ -124,18 +128,26 @@ def save_maintenance_history(json_data):
         try:
             unit_maintenance.save()
             if is_created:
-                logger.info(f"Created UnitMaintenance for '{name}' (geometry_id: {geometry_id})")
+                logger.info(
+                    f"Created UnitMaintenance for '{name}' (geometry_id: {geometry_id})"
+                )
             else:
-                logger.debug(f"Updated UnitMaintenance for '{name}' (geometry_id: {geometry_id})")
+                logger.debug(
+                    f"Updated UnitMaintenance for '{name}' (geometry_id: {geometry_id})"
+                )
         except Exception as exp:
-            logger.error(f"Unable to save ski trail maintenance history for '{name}', reason: {exp}")
+            logger.error(
+                f"Unable to save ski trail maintenance history for '{name}', reason: {exp}"
+            )
             continue
 
         # Link geometry to unit_maintenance
         geometry.unit_maintenance = unit_maintenance
         geometry.save()
         num_geometry_linked += 1
-        logger.debug(f"Linked geometry {geometry_id} to unit_maintenance {unit_maintenance.id}")
+        logger.debug(
+            f"Linked geometry {geometry_id} to unit_maintenance {unit_maintenance.id}"
+        )
 
         if is_created:
             num_created += 1
@@ -163,7 +175,9 @@ class Command(BaseCommand):
             if not json_data:
                 logger.error("Failed to fetch JSON data from API")
                 return
-            logger.info(f"Successfully fetched JSON data. Keys: {list(json_data.keys())}")
+            logger.info(
+                f"Successfully fetched JSON data. Keys: {list(json_data.keys())}"
+            )
             save_maintenance_history(json_data)
             logger.info("Ski trails maintenance history import completed.")
         except Exception as e:
