@@ -64,18 +64,17 @@ def save_maintenance_history(json_data):
         address = properties.get("address", None)
         zip_code = properties.get("zip", None)
         description = properties.get("description", None)
-        
+
         # Get geometry from feature (Point) for location
         geometry_data = feature.get("geometry", None)
         point_geometry = None
         if geometry_data:
             coordinates = geometry_data.get("coordinates", None)
             if coordinates and len(coordinates) == 2:
-                from django.contrib.gis.geos import Point
                 lon = coordinates[0]
                 lat = coordinates[1]
                 point_geometry = Point(lon, lat, srid=DEFAULT_SRID)
-        
+
         unit = get_or_create_sports_facility_unit(
             geometry_id=geometry_id,
             name=name,
@@ -84,7 +83,7 @@ def save_maintenance_history(json_data):
             zip_code=zip_code,
             geometry=point_geometry,
         )
-        
+
         # Determine which UnitMaintenance to use/update
         # Strategy: Link maintenance to geometry via geometry_id
         # Each geometry gets its own UnitMaintenance record (or reuses existing)
@@ -144,7 +143,7 @@ def save_maintenance_history(json_data):
                 geometry.geometry = point
             else:
                 logger.warning(
-                    f"Missing or invalid field 'coordinates' for feature geometry_id={geometry_id}, skipping geometry update..."
+                    f"Missing or invalid field 'coordinates' for feature geometry_id={geometry_id}, skipping."
                 )
         else:
             logger.warning(
