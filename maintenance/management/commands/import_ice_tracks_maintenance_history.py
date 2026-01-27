@@ -113,7 +113,7 @@ def save_maintenance_history(json_data):
 
         if condition_val is None:
             condition = UnitMaintenance.UNDEFINED
-        elif condition_val is True:
+        elif bool(condition_val):
             condition = UnitMaintenance.USABLE
         else:
             condition = UnitMaintenance.UNUSABLE
