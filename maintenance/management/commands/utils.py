@@ -765,7 +765,7 @@ def get_or_create_sports_facility_unit(
             unit.location = geom
         else:
             unit.geometry = geom
-    
+
     unit.last_modified_time = timezone.now()
     unit.save()
 

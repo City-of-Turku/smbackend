@@ -21,7 +21,7 @@ class UnitMaintenanceGeometrySerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
-        
+
         # DRF doesn't serialize GeometryField by default, so we need to handle it manually
         # Convert geometry to GeoJSON format
         if instance.geometry:
@@ -30,7 +30,7 @@ class UnitMaintenanceGeometrySerializer(serializers.ModelSerializer):
             if geom.srid and geom.srid != 4326:
                 geom = geom.clone()
                 geom.transform(4326)
-            
+
             # Convert to GeoJSON using Django's built-in geojson property
             try:
                 ret["geometry"] = json.loads(geom.geojson)
@@ -41,7 +41,7 @@ class UnitMaintenanceGeometrySerializer(serializers.ModelSerializer):
                 ret["geometry"] = None
         else:
             ret["geometry"] = None
-        
+
         # If nested in UnitMaintenanceSerializer
         if (
             self.context.get("request", False)

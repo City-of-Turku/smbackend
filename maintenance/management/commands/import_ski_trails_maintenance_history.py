@@ -26,7 +26,7 @@ def save_maintenance_history(json_data):
     num_skipped_invalid_date = 0
     num_geometry_linked = 0
     num_geometry_not_found = 0
-    
+
     features = json_data.get("features", None)
     if not features:
         logger.error("No features found in JSON response.")
@@ -45,20 +45,21 @@ def save_maintenance_history(json_data):
         if not name:
             logger.warning(f"Feature missing 'name' property: {properties}")
             continue
-            
+
         date_str = properties.get("date", None)
         if not date_str:
             logger.warning(f"Feature '{name}' missing 'date' field, skipping...")
             num_skipped_invalid_date += 1
             continue
-            
+
         try:
             maintained_at = TIMEZONE.localize(
                 datetime.strptime(date_str, SKI_TRAILS_DATE_FIELD_FORMAT)
             )
         except ValueError as exp:
             logger.error(
-                f"Skipping feature '{name}', invalid 'date' field '{date_str}' (expected format: {SKI_TRAILS_DATE_FIELD_FORMAT}), reason: {exp}."
+                f"Skipping feature '{name}', invalid 'date' field '{date_str}'"
+                f"(expected format: {SKI_TRAILS_DATE_FIELD_FORMAT}), reason: {exp}."
             )
             num_skipped_invalid_date += 1
             continue
@@ -86,7 +87,7 @@ def save_maintenance_history(json_data):
             description=properties.get("description", None),
             geometry=geometry.geometry,
         )
-        
+
         # Determine which UnitMaintenance to use/update
         # Strategy: Link maintenance to geometry via geometry_id
         # Each geometry gets its own UnitMaintenance record (or reuses existing)
