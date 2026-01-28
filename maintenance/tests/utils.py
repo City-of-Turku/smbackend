@@ -430,6 +430,8 @@ def get_ski_trails_maintenance_history_mock_data():
                     "distance": 0,
                     "hours_ago": 720,
                     "days_ago": 30,
+                    "conditioned": 1,
+                    "condition_note": null,
                 },
                 "geometry": {
                     "coordinates": [22.312831834656, 60.47943016396],
