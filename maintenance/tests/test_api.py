@@ -51,7 +51,7 @@ def test_unit_maintenance_list_unit_parameter(api_client, unit_maintenances):
     url = reverse("maintenance:unit_maintenance-list") + "?unit=801"
     response = api_client.get(url)
     assert response.json()["count"] == 1
-    assert response.json()["results"][0]["unit"] == 801
+    assert response.json()["results"][0]["unit"]["id"] == 801
 
 
 @pytest.mark.django_db
@@ -75,13 +75,13 @@ def test_unit_maintenance_list_maintained_at_parameter(
         + f"?maintained_at__gte={now.strftime(SKI_TRAILS_DATE_FIELD_FORMAT)}"
     )
     response = api_client.get(url)
-    assert response.json()["results"][0]["unit"] == 801
+    assert response.json()["results"][0]["unit"]["id"] == 801
     url = (
         reverse("maintenance:unit_maintenance-list")
         + f"?maintained_at__lte={now.strftime(SKI_TRAILS_DATE_FIELD_FORMAT)}"
     )
     response = api_client.get(url)
-    assert response.json()["results"][0]["unit"] == 784
+    assert response.json()["results"][0]["unit"]["id"] == 784
 
 
 @pytest.mark.django_db
