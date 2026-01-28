@@ -13,7 +13,6 @@ from django.contrib.gis.geos import LineString, Point
 from django.utils import timezone
 from munigeo.models import AdministrativeDivision, AdministrativeDivisionGeometry
 from munigeo.utils import get_default_srid
-from services.models import Unit
 
 from maintenance.models import (
     DEFAULT_SRID,
@@ -22,6 +21,7 @@ from maintenance.models import (
     MaintenanceWork,
     UnitMaintenance,
 )
+from services.models import Unit
 
 from .constants import (
     CONTRACTS,
