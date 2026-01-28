@@ -11,8 +11,9 @@ from django.conf import settings
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import LineString, Point
 from django.utils import timezone
-from munigeo.models import AdministrativeDivision, AdministrativeDivisionGeometry, Unit
+from munigeo.models import AdministrativeDivision, AdministrativeDivisionGeometry
 from munigeo.utils import get_default_srid
+from services.models import Unit
 
 from maintenance.models import (
     DEFAULT_SRID,
