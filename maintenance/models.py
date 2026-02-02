@@ -46,7 +46,7 @@ class UnitMaintenanceGeometry(models.Model):
     geometry = models.GeometryField(srid=DEFAULT_SRID, null=True)
     unit_maintenance = models.ForeignKey(
         UnitMaintenance,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name="geometries",
         null=True,
         blank=True,

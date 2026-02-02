@@ -156,9 +156,12 @@ def save_maintenance_history(json_data):
         if unit_maintenance.id in objs_to_delete:
             objs_to_delete.remove(unit_maintenance.id)
 
-    UnitMaintenance.objects.filter(id__in=objs_to_delete).delete()
+    num_deleted = 0
+    if num_geometry_linked > 0:
+        num_deleted = len(objs_to_delete)
+        UnitMaintenance.objects.filter(id__in=objs_to_delete).delete()
     summary = (
-        f"Created {num_created}, updated {num_updated}, deleted {len(objs_to_delete)} ski trail maintenance histories. "
+        f"Created {num_created}, updated {num_updated}, deleted {num_deleted} ski trail maintenance histories. "
         f"Skipped {num_skipped_invalid_date} due to invalid date. "
         f"Linked {num_geometry_linked} geometries, {num_geometry_not_found} geometries not found."
     )

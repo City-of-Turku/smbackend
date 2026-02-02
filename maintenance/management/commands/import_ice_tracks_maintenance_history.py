@@ -177,9 +177,12 @@ def save_maintenance_history(json_data):
         if unit_maintenance.id in objs_to_delete:
             objs_to_delete.remove(unit_maintenance.id)
 
-    UnitMaintenance.objects.filter(id__in=objs_to_delete).delete()
+    num_deleted = 0
+    if num_geometry_linked > 0:
+        num_deleted = len(objs_to_delete)
+        UnitMaintenance.objects.filter(id__in=objs_to_delete).delete()
     summary = (
-        f"Created {num_created}, updated {num_updated}, deleted {len(objs_to_delete)} ice track maintenance histories. "
+        f"Created {num_created}, updated {num_updated}, deleted {num_deleted} ice track maintenance histories. "
         f"Linked {num_geometry_linked} geometries."
     )
     logger.info(summary)
