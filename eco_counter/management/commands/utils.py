@@ -732,6 +732,7 @@ def get_or_create_telraam_station(station):
 def save_stations(csv_data_source, delete_missing=True):
     stations = []
     num_created = 0
+    num_updated = 0
     match csv_data_source:
         # case COUNTERS.TELRAAM_COUNTER:
         # Telraam station are handled differently as they are dynamic
@@ -764,9 +765,19 @@ def save_stations(csv_data_source, delete_missing=True):
                 defaults=defaults,
             )
             if not created:
-                for key, value in defaults.items():
-                    setattr(obj, key, value)
-                obj.save()
+                changed = any(
+                    getattr(obj, key) != value for key, value in defaults.items()
+                )
+                if changed:
+                    for key, value in defaults.items():
+                        setattr(obj, key, value)
+                    obj.save()
+                    num_updated += 1
+                    logger.info(
+                        "Updated Station for counter %s with station_id %s",
+                        csv_data_source,
+                        station["station_id"],
+                    )
             if delete_missing and obj.id in object_ids:
                 object_ids.remove(obj.id)
             if created:
@@ -799,6 +810,10 @@ def save_stations(csv_data_source, delete_missing=True):
     logger.info(
         f"Created {num_created} Stations of total {num_stations} Stations for counter {csv_data_source}."
     )
+    if (num_updated > 0):
+        logger.info(
+            f"Updated {num_updated} Stations for counter {csv_data_source}."
+        )
 
 
 def get_test_dataframe(counter):
