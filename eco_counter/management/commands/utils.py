@@ -729,7 +729,7 @@ def get_or_create_telraam_station(station):
     return obj
 
 
-def save_stations(csv_data_source):
+def save_stations(csv_data_source, delete_missing=True):
     stations = []
     num_created = 0
     match csv_data_source:
@@ -741,25 +741,33 @@ def save_stations(csv_data_source):
             stations = get_eco_visio_stations()
         case COUNTERS.TRAFFIC_COUNTER:
             stations = get_traffic_counter_stations()
-    object_ids = list(
-        Station.objects.filter(csv_data_source=csv_data_source).values_list(
-            "id", flat=True
+    object_ids = []
+    if delete_missing:
+        object_ids = list(
+            Station.objects.filter(csv_data_source=csv_data_source).values_list(
+                "id", flat=True
+            )
         )
-    )
     if csv_data_source == COUNTERS.ECO_COUNTER:
         for station in stations:
-            obj, created = Station.objects.update_or_create(
+            defaults = {
+                "name": station["name"],
+                "location": station["location"],
+                "geometry": station["geometry"],
+                "data_from_date": station["data_from_date"],
+                "data_until_date": station["data_until_date"],
+            }
+            # Explicitly assign + save to ensure updates are persisted for GIS fields.
+            obj, created = Station.objects.get_or_create(
                 station_id=station["station_id"],
                 csv_data_source=csv_data_source,
-                defaults={
-                    "name": station["name"],
-                    "location": station["location"],
-                    "geometry": station["geometry"],
-                    "data_from_date": station["data_from_date"],
-                    "data_until_date": station["data_until_date"],
-                },
+                defaults=defaults,
             )
-            if obj.id in object_ids:
+            if not created:
+                for key, value in defaults.items():
+                    setattr(obj, key, value)
+                obj.save()
+            if delete_missing and obj.id in object_ids:
                 object_ids.remove(obj.id)
             if created:
                 num_created += 1
@@ -774,14 +782,19 @@ def save_stations(csv_data_source):
                 station_id=station.station_id,
                 csv_data_source=csv_data_source,
             )
-            if obj.id in object_ids:
+            if delete_missing and obj.id in object_ids:
                 object_ids.remove(obj.id)
             if created:
                 num_created += 1
-    Station.objects.filter(id__in=object_ids).delete()
-    logger.info(
-        f"Deleted {len(object_ids)} obsolete Stations for counter {csv_data_source}"
-    )
+    if delete_missing:
+        Station.objects.filter(id__in=object_ids).delete()
+        logger.info(
+            f"Deleted {len(object_ids)} obsolete Stations for counter {csv_data_source}"
+        )
+    else:
+        logger.info(
+            f"Skipped deletion of obsolete Stations for counter {csv_data_source}"
+        )
     num_stations = Station.objects.filter(csv_data_source=csv_data_source).count()
     logger.info(
         f"Created {num_created} Stations of total {num_stations} Stations for counter {csv_data_source}."
