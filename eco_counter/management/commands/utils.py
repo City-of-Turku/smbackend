@@ -810,10 +810,8 @@ def save_stations(csv_data_source, delete_missing=True):
     logger.info(
         f"Created {num_created} Stations of total {num_stations} Stations for counter {csv_data_source}."
     )
-    if (num_updated > 0):
-        logger.info(
-            f"Updated {num_updated} Stations for counter {csv_data_source}."
-        )
+    if num_updated > 0:
+        logger.info(f"Updated {num_updated} Stations for counter {csv_data_source}.")
 
 
 def get_test_dataframe(counter):
