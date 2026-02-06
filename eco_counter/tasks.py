@@ -41,3 +41,8 @@ def import_telraam_to_csv(*args, name="import_telraam_to_csv"):
         management.call_command("import_telraam_to_csv", args)
     else:
         management.call_command("import_telraam_to_csv")
+
+
+@shared_task_email
+def refresh_eco_visio_stations(name="refresh_eco_visio_stations"):
+    management.call_command("refresh_eco_visio_stations")
