@@ -561,11 +561,9 @@ features:
         wfs_type: int
 
   - content_type_name: BrushSaltedBicycleNetwork
-    wfs_url: "https://turku.asiointi.fi/teklaogcweb/wfs.ashx"
     wfs_layer: GIS:Harjasuolatut_pyoratiet
 
   - content_type_name: BrushSandedBicycleNetwork
-    wfs_url: "https://turku.asiointi.fi/teklaogcweb/wfs.ashx"
     wfs_layer: GIS:Harjahiekoitetut_pyoratiet
 
   - content_type_name: SpeedLimitZone

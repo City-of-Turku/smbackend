@@ -72,7 +72,7 @@ param routaApiKey string = ''
 param routaApiUrl string = ''
 
 // Prod
-param uiAppSettings object = {
+/* param uiAppSettings object = {
   ACCESSIBILITY_SENTENCE_API: 'https://tpr.hel.fi/kapaesteettomyys/api/v1/accessibility/servicepoints/d26b5f28-41c6-40a3-99f9-a1b762cc8191'
   ACCESSIBLE_MAP_URL: '${tileserverUrl}/styles/high-contrast-map-layer/{z}/{x}/{y}'
   AIR_MONITORING_API: '${apiUrl}/environment_data/api/v1'
@@ -116,10 +116,10 @@ param uiAppSettings object = {
   THEME_PKG: '1'
   USE_PTV_ACCESSIBILITY_API: 'true'
   WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false'
-}
+} */
 
 // Test
-/* param uiAppSettings object = {
+param uiAppSettings object = {
   ACCESSIBILITY_SENTENCE_API: 'https://tpr.hel.fi/kapaesteettomyys/api/v1/accessibility/servicepoints/d26b5f28-41c6-40a3-99f9-a1b762cc8191'
   ACCESSIBLE_MAP_URL: '${tileserverUrl}/styles/high-contrast-map-layer/{z}/{x}/{y}'
   AIR_MONITORING_API: '${apiUrl}/environment_data/api/v1'
@@ -163,10 +163,10 @@ param uiAppSettings object = {
   THEME_PKG: '1'
   USE_PTV_ACCESSIBILITY_API: 'true'
   WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false'
-} */
+}
 
 // Prod
-param apiAppSettings object = {
+/* param apiAppSettings object = {
   ACCESSIBILITY_SYSTEM_ID: 'd26b5f28-41c6-40a3-99f9-a1b762cc8191'
   ADDITIONAL_INSTALLED_APPS: 'smbackend_turku,ptv'
   ALLOWED_HOSTS: '${apiInternalUrl},169.254.129.6,127.0.0.1,localhost,palvelukartta-api.turku.fi,palvelukartta.turku.fi'
@@ -228,7 +228,7 @@ param apiAppSettings object = {
   TRAFFIC_COUNTER_OBSERVATIONS_BASE_URL: 'https://data.turku.fi/2yxpk2imqi2mzxpa6e6knq/'
   TURKU_API_KEY: turkuApiKey
   TURKU_SERVICES_IMPORT_LOG_LEVEL: 'INFO'
-  TURKU_WFS_URL: 'https://opaskartta.turku.fi/TeklaOGCWeb/WFS.ashx'
+  TURKU_WFS_URL: 'https://turku.asiointi.fi/teklaogcweb/wfs.ashx'
   USE_X_FORWARDED_HOST: 'True'
   WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false'
   WEBSITES_PORT: '8000'
@@ -240,10 +240,10 @@ param apiAppSettings object = {
   YIT_SCOPE: 'api://7f45c30e-cc67-4a93-85f1-0149b44c1cdf/.default'
   YIT_TOKEN_URL: 'https://login.microsoftonline.com/86792d09-0d81-4899-8d66-95dfc96c8014/oauth2/v2.0/token?Scope=api://7f45c30e-cc67-4a93-85f1-0149b44c1cdf/.default'
   YIT_VEHICLES_URL: 'https://api.autori.io/api/dailymaintenance-a3/route/types/vehicle/'
-}
+} */
 
 // Test
-/* param apiAppSettings object = {
+param apiAppSettings object = {
   ACCESSIBILITY_SYSTEM_ID: 'd26b5f28-41c6-40a3-99f9-a1b762cc8191'
   ADDITIONAL_INSTALLED_APPS: 'smbackend_turku,ptv'
   ALLOWED_HOSTS: '${apiInternalUrl},127.0.0.1,localhost,testipalvelukartta-api.turku.fi,testipalvelukartta.turku.fi'
@@ -305,7 +305,7 @@ param apiAppSettings object = {
   TRAFFIC_COUNTER_OBSERVATIONS_BASE_URL: 'https://data.turku.fi/2yxpk2imqi2mzxpa6e6knq/'
   TURKU_API_KEY: turkuApiKey
   TURKU_SERVICES_IMPORT_LOG_LEVEL: 'INFO'
-  TURKU_WFS_URL: 'https://opaskartta.turku.fi/TeklaOGCWeb/WFS.ashx'
+  TURKU_WFS_URL: 'https://turku.asiointi.fi/teklaogcweb/wfs.ashx'
   WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false'
   WEBSITES_PORT: '8000'
   YIT_CLIENT_ID: '01797d9f-1ab5-4d01-880d-01dfa4925a27'
@@ -316,7 +316,7 @@ param apiAppSettings object = {
   YIT_SCOPE: 'api://7f45c30e-cc67-4a93-85f1-0149b44c1cdf/.default'
   YIT_TOKEN_URL: 'https://login.microsoftonline.com/86792d09-0d81-4899-8d66-95dfc96c8014/oauth2/v2.0/token?Scope=api://7f45c30e-cc67-4a93-85f1-0149b44c1cdf/.default'
   YIT_VEHICLES_URL: 'https://api.autori.io/api/dailymaintenance-a3/route/types/vehicle/'
-} */
+}
 
 @allowed([
   0
