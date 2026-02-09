@@ -4,7 +4,7 @@ features:
     # Name of the WFS layer.
     wfs_layer: GIS:Liikennemerkit
     # Optional, the URL of the WFS, default=TURKU_WFS_URL.
-    wfs_url: http://opaskartta.turku.fi/TeklaOGCWeb/WFS.ashx
+    wfs_url: https://turku.asiointi.fi/teklaogcweb/wfs.ashx
     # Optional, Max number of features to be include when fetching data from WFS.
     wfs_version: 1.0.0
     # Optional, version of the WFS, default=1.0.0
