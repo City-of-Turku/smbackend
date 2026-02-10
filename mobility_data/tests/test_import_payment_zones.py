@@ -1,7 +1,7 @@
 """
 Note, namespace declaration:
 http://www.tekla.com/schemas/GIS
-https://opaskartta.turku.fi/TeklaOGCWeb/WFS.ashx
+https://turku.asiointi.fi/teklaogcweb/wfs.ashx
 ?SERVICE=WFS&REQUEST=DescribeFeatureType&typeName=GIS:Pysakoinnin_maksuvyohykkeet "
 has been removed from the test input data, as it causes GDAL
 DataSource to fail when loading data.

@@ -3,7 +3,7 @@ Note, namespace declaration:
 xsi:schemaLocation="http://www.opengis.net/wfs
 http://schemas.opengis.net/wfs/1.0.0/WFS-basic.xsd
 http://www.tekla.com/schemas/GIS
-https://opaskartta.turku.fi/TeklaOGCWeb/WFS.ashx?SERVICE=WFS&REQUEST=DescribeFeatureType&typeName=GIS:Varusteet "
+https://turku.asiointi.fi/teklaogcweb/wfs.ashx?SERVICE=WFS&REQUEST=DescribeFeatureType&typeName=GIS:Varusteet "
 has been removed from the test input data, as it causes GDAL
 DataSource to fail when loading data.
 """

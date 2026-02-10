@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:GIS="http://www.tekla.com/schemas/GIS" xmlns="http://www.tekla.com/schemas/GIS" xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/WFS-basic.xsd http://www.tekla.com/schemas/GIS https://opaskartta.turku.fi/TeklaOGCWeb/WFS.ashx?SERVICE=WFS&amp;REQUEST=DescribeFeatureType&amp;typeName=GIS:Osoitteet ">
+<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:GIS="http://www.tekla.com/schemas/GIS" xmlns="http://www.tekla.com/schemas/GIS" xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/WFS-basic.xsd http://www.tekla.com/schemas/GIS https://turku.asiointi.fi/teklaogcweb/wfs.ashx?SERVICE=WFS&amp;REQUEST=DescribeFeatureType&amp;typeName=GIS:Osoitteet ">
  <gml:boundedBy>
   <gml:Box srsName="http://www.opengis.net/gml/srs/epsg.xml#3877">
    <gml:coordinates>23458147.254,6697796.876 23467402.988,6721220.091</gml:coordinates>
