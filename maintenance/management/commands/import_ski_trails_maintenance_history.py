@@ -93,7 +93,10 @@ def save_maintenance_history(json_data):
         # Determine which UnitMaintenance to use/update
         # Strategy: One UnitMaintenance per geometry (one-to-one). Each geometry
         # gets its own record
-        if geometry.unit_maintenance and geometry.unit_maintenance.geometries.count() == 1:
+        if (
+            geometry.unit_maintenance
+            and geometry.unit_maintenance.geometries.count() == 1
+        ):
             # This geometry is the only one linked to this record
             unit_maintenance = geometry.unit_maintenance
             is_created = False
