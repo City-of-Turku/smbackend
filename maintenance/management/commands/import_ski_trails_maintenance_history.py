@@ -91,17 +91,17 @@ def save_maintenance_history(json_data):
         )
 
         # Determine which UnitMaintenance to use/update
-        # Strategy: Link maintenance to geometry via geometry_id
-        # Each geometry gets its own UnitMaintenance record (or reuses existing)
-        if geometry.unit_maintenance:
-            # Geometry already linked, update existing record
+        # Strategy: One UnitMaintenance per geometry (one-to-one). Each geometry
+        # gets its own record
+        if geometry.unit_maintenance and geometry.unit_maintenance.geometries.count() == 1:
+            # This geometry is the only one linked to this record
             unit_maintenance = geometry.unit_maintenance
             is_created = False
-            # Update unit if it was None before
             if unit_maintenance.unit != unit:
                 unit_maintenance.unit = unit
         else:
-            # Create a new UnitMaintenance for this geometry
+            # No link, or this UnitMaintenance is shared by multiple geometries
+            # (bad state): give this geometry its own UnitMaintenance
             unit_maintenance = UnitMaintenance(
                 unit=unit, target=UnitMaintenance.SKI_TRAIL
             )
