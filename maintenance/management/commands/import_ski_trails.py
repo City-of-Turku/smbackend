@@ -10,12 +10,12 @@ from maintenance.models import UnitMaintenance, UnitMaintenanceGeometry
 from services.models import Unit
 
 from .utils import (
-    SPORTS_FACILITY_UNIT_ID_OFFSET,
     apply_maintenance_unit_description_json,
     get_data_layer,
     get_or_create_sports_facility_unit,
     get_unit_maintenance_description_source,
     merge_ski_trail_unit_description,
+    SPORTS_FACILITY_UNIT_ID_OFFSET,
 )
 
 logger = logging.getLogger(__name__)

@@ -807,11 +807,7 @@ def _is_ski_trail_description_json(obj):
 
 
 def _is_ice_track_description_json(obj):
-    return (
-        isinstance(obj, dict)
-        and "condition_note" in obj
-        and "description" in obj
-    )
+    return isinstance(obj, dict) and "condition_note" in obj and "description" in obj
 
 
 def _ski_json_str(value):
@@ -892,9 +888,11 @@ def merge_ice_track_unit_description(
     return _services_unit_description_json_string(
         {
             "condition_note": cn_out,
-            "description": ""
-            if cur.get("description") is None
-            else str(cur.get("description", "")),
+            "description": (
+                ""
+                if cur.get("description") is None
+                else str(cur.get("description", ""))
+            ),
         }
     )
 

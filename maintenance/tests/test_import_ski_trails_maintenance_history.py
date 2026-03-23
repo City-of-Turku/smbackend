@@ -1,8 +1,7 @@
+import json
 from unittest.mock import patch
 
 import pytest
-
-import json
 
 from maintenance.models import SPORT_NAMES_UNIT_EXTRA_KEY, UnitMaintenance
 
@@ -20,7 +19,9 @@ def test_parse_trilingual_name():
 
 
 def test_sanitize_maintenance_condition_note():
-    from maintenance.management.commands.utils import sanitize_maintenance_condition_note
+    from maintenance.management.commands.utils import (
+        sanitize_maintenance_condition_note,
+    )
 
     assert sanitize_maintenance_condition_note(None) is None
     assert sanitize_maintenance_condition_note("") is None
@@ -47,7 +48,11 @@ def test_merge_ski_trail_unit_description_sanitizes_stored_note_without_overwrit
     from maintenance.management.commands.utils import merge_ski_trail_unit_description
 
     existing = json.dumps(
-        {"length": "1", "lights": "", "condition_note": "null<attention>null</attention>"}
+        {
+            "length": "1",
+            "lights": "",
+            "condition_note": "null<attention>null</attention>",
+        }
     )
     out = merge_ski_trail_unit_description(existing, condition_note=None)
     data = json.loads(out)
