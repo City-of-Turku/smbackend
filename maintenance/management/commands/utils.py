@@ -55,7 +55,10 @@ def get_turku_boundary():
     try:
         division_turku = AdministrativeDivision.objects.get(name="Turku")
         adm_geom = AdministrativeDivisionGeometry.objects.get(division=division_turku)
-    except (AdministrativeDivision.DoesNotExist, AdministrativeDivisionGeometry.DoesNotExist):
+    except (
+        AdministrativeDivision.DoesNotExist,
+        AdministrativeDivisionGeometry.DoesNotExist,
+    ):
         return None
     turku_boundary = adm_geom.boundary
     turku_boundary.transform(DEFAULT_SRID)
@@ -411,7 +414,9 @@ def create_kuntec_maintenance_works(history_size):
                         # Create linestring that is inside the boundary of Turku
                         # and discard parts of the geometry if they are outside the boundary.
                         if turku_boundary is not None:
-                            geometry = get_linestring_in_boundary(geometry, turku_boundary)
+                            geometry = get_linestring_in_boundary(
+                                geometry, turku_boundary
+                            )
                             if not geometry:
                                 continue
                         timestamp = route["start"]["time"]
