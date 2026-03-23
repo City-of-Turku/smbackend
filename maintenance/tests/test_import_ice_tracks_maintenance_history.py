@@ -1,12 +1,31 @@
+import json
 from datetime import datetime
 from unittest.mock import patch
 
 import pytest
 
 from maintenance.management.commands.constants import ICE_TRACKS_DATE_FIELD_FORMAT
-from maintenance.models import UnitMaintenance
+from maintenance.management.commands.utils import merge_ice_track_unit_description
+from maintenance.models import SPORT_NAMES_UNIT_EXTRA_KEY, UnitMaintenance
 
 from .utils import get_ice_tracks_maintenance_history_mock_data
+
+
+def test_merge_ice_wraps_legacy_plain_description():
+    legacy = "<p>Vanha HTML</p>"
+    out = merge_ice_track_unit_description(
+        legacy, condition_note="Huom", description=None
+    )
+    data = json.loads(out)
+    assert data == {"condition_note": "Huom", "description": "<p>Vanha HTML</p>"}
+
+
+def test_merge_ice_condition_note_faulty_null_becomes_json_null():
+    out = merge_ice_track_unit_description(
+        None, condition_note="null<attention>null</attention>", description=""
+    )
+    data = json.loads(out)
+    assert data["condition_note"] is None
 
 
 @pytest.mark.django_db(transaction=True)
@@ -40,6 +59,17 @@ def test_import_ice_tracks_maintenance_history(
     # geometry_id 928 -> unit_id 100928
     assert um1.unit.id == 100928
     assert um1.unit.name == "Frantsinkenttä"
+    assert um1.unit.name_fi == "Frantsinkenttä"
+    assert um1.unit.name_sv == "Frantsis plan"
+    assert um1.unit.name_en == "Frantsi field"
+    assert um1.unit.extra[SPORT_NAMES_UNIT_EXTRA_KEY] == {
+        "fi": "Frantsinkenttä",
+        "sv": "Frantsis plan",
+        "en": "Frantsi field",
+    }
+    ice_desc = json.loads(um1.unit.description)
+    assert ice_desc["condition_note"] == "Jää hyvä"
+    assert ice_desc["description"] == ""
     assert um1.unit.street_address == "Prelaatinpolku 7"
     assert um1.unit.address_zip == "20540"
     assert um1.maintained_at == TIMEZONE.localize(

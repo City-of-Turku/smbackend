@@ -9,6 +9,7 @@ from maintenance.models import (
     GeometryHistory,
     MaintenanceUnit,
     MaintenanceWork,
+    SPORT_NAMES_UNIT_EXTRA_KEY,
     UnitMaintenance,
     UnitMaintenanceGeometry,
 )
@@ -58,9 +59,42 @@ class UnitInfoSerializer(serializers.Serializer):
 
     id = serializers.IntegerField()
     name = serializers.CharField()
+    name_fi = serializers.SerializerMethodField()
+    name_sv = serializers.SerializerMethodField()
+    name_en = serializers.SerializerMethodField()
     description = serializers.CharField(allow_null=True, required=False)
     street_address = serializers.CharField(allow_null=True, required=False)
     address_zip = serializers.CharField(allow_null=True, required=False)
+
+    def _sport_names(self, obj):
+        if not obj.extra:
+            return None
+        sn = obj.extra.get(SPORT_NAMES_UNIT_EXTRA_KEY)
+        return sn if isinstance(sn, dict) else None
+
+    def get_name_fi(self, obj):
+        if getattr(obj, "name_fi", None):
+            return obj.name_fi
+        sn = self._sport_names(obj)
+        if sn and sn.get("fi"):
+            return sn["fi"]
+        return obj.name
+
+    def get_name_sv(self, obj):
+        if getattr(obj, "name_sv", None):
+            return obj.name_sv
+        sn = self._sport_names(obj)
+        if sn and sn.get("sv"):
+            return sn["sv"]
+        return obj.name
+
+    def get_name_en(self, obj):
+        if getattr(obj, "name_en", None):
+            return obj.name_en
+        sn = self._sport_names(obj)
+        if sn and sn.get("en"):
+            return sn["en"]
+        return obj.name
 
 
 class UnitMaintenanceSerializer(serializers.ModelSerializer):

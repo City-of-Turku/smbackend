@@ -9,7 +9,14 @@ from django.core.management.base import BaseCommand
 from maintenance.models import DEFAULT_SRID, UnitMaintenance, UnitMaintenanceGeometry
 
 from .constants import ICE_TRACKS_DATE_FIELD_FORMAT
-from .utils import get_json_data, get_or_create_sports_facility_unit
+from .utils import (
+    apply_maintenance_unit_description_json,
+    get_json_data,
+    get_or_create_sports_facility_unit,
+    get_unit_maintenance_description_source,
+    maintenance_import_property_value,
+    merge_ice_track_unit_description,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -67,8 +74,6 @@ def save_maintenance_history(json_data):
         name = properties.get("name", None)
         address = properties.get("address", None)
         zip_code = properties.get("zip", None)
-        description = properties.get("description", None)
-
         # Get geometry from feature (Point) for location
         geometry_data = feature.get("geometry", None)
         point_geometry = None
@@ -82,10 +87,29 @@ def save_maintenance_history(json_data):
         unit = get_or_create_sports_facility_unit(
             geometry_id=geometry_id,
             name=name,
-            description=description,
             address=address,
             zip_code=zip_code,
             geometry=point_geometry,
+        )
+        if unit is None:
+            logger.warning(
+                f"Ice track geometry_id={geometry_id}: skip — no name and unit does not exist yet"
+            )
+            continue
+
+        note_val = maintenance_import_property_value(properties, "condition_note")
+        if note_val is not None:
+            note_val = note_val.strip()
+        desc_val = maintenance_import_property_value(properties, "description")
+
+        existing_desc = get_unit_maintenance_description_source(unit)
+        apply_maintenance_unit_description_json(
+            unit,
+            merge_ice_track_unit_description(
+                existing_desc,
+                condition_note=note_val,
+                description=desc_val,
+            ),
         )
 
         # Determine which UnitMaintenance to use/update

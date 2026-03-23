@@ -1,3 +1,4 @@
+import json
 import logging
 import re
 import zoneinfo
@@ -19,6 +20,7 @@ from maintenance.models import (
     GeometryHistory,
     MaintenanceUnit,
     MaintenanceWork,
+    SPORT_NAMES_UNIT_EXTRA_KEY,
     UnitMaintenance,
 )
 from services.models import Unit
@@ -41,6 +43,9 @@ from .constants import (
 )
 
 logger = logging.getLogger("maintenance")
+
+SPORTS_FACILITY_UNIT_ID_OFFSET = 100000
+
 # In seconds
 MAX_WORK_LENGTH = 60
 VALID_LINESTRING_MAX_POINT_DISTANCE = 0.01
@@ -710,8 +715,248 @@ def transform_infraroad_routa(work):
     return events
 
 
+def _nonempty_str(value):
+    return value is not None and str(value).strip() != ""
+
+
+_NULL_WORD_IN_CONDITION_NOTE = re.compile(r"\bnull\b", re.IGNORECASE)
+
+
+def sanitize_maintenance_condition_note(value):
+    """
+    Normalize API/legacy condition_note for JSON: None becomes JSON null.
+    Treats missing/blank, JSON null, the literal \"null\", and strings containing
+    the word \"null\" (e.g. model garbage like null<attention>null</attention>) as absent.
+    """
+    if value is None:
+        return None
+    s = str(value).strip()
+    if not s:
+        return None
+    if s.lower() == "null":
+        return None
+    if _NULL_WORD_IN_CONDITION_NOTE.search(s):
+        return None
+    return s
+
+
+def _bootstrap_sports_facility_name_without_translations(raw):
+    """
+    Display name when the source has no reliable per-language strings (e.g. ski
+    maintenance). Uses the segment before the first '|' so piped placeholders are
+    not stored verbatim on the unit.
+    """
+    if not _nonempty_str(raw):
+        return ""
+    text = str(raw).strip()
+    first = text.split("|", 1)[0].strip()
+    return first or text
+
+
+def parse_trilingual_name(raw):
+    """
+    Parse finnish|swedish|english from the source name field.
+    If there is no '|', use the same string for all languages.
+    With two segments (fi|sv), English falls back to Finnish.
+    """
+    if raw is None:
+        return "", "", ""
+    text = str(raw).strip()
+    if not text:
+        return "", "", ""
+    parts = [p.strip() for p in text.split("|")]
+    if len(parts) == 1:
+        n = parts[0]
+        return n, n, n
+    if len(parts) == 2:
+        fi, sv = parts[0], parts[1]
+        return fi, sv, fi
+    return parts[0], parts[1], parts[2]
+
+
+def apply_sport_facility_trilingual_names(unit, name_fi, name_sv, name_en):
+    """Set unit.name, name_fi/sv/en (DB), and extra sport_names for sports imports."""
+    sf = name_fi or ""
+    sv = name_sv if name_sv else sf
+    sen = name_en if name_en else sf
+    unit.name = sf
+    unit.name_fi = sf
+    unit.name_sv = sv
+    unit.name_en = sen
+    extra = dict(unit.extra) if unit.extra else {}
+    extra[SPORT_NAMES_UNIT_EXTRA_KEY] = {"fi": sf, "sv": sv, "en": sen}
+    unit.extra = extra
+
+
+def _services_unit_description_json_string(payload: dict) -> str:
+    """
+    Value for services_unit.description: a single JSON object as a Unicode string
+    (json.dumps), never a Python dict.
+    """
+    return json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+
+
+def _is_ski_trail_description_json(obj):
+    return (
+        isinstance(obj, dict)
+        and "length" in obj
+        and "lights" in obj
+        and "condition_note" in obj
+        and "description" not in obj
+    )
+
+
+def _is_ice_track_description_json(obj):
+    return (
+        isinstance(obj, dict)
+        and "condition_note" in obj
+        and "description" in obj
+    )
+
+
+def _ski_json_str(value):
+    return "" if value is None else str(value)
+
+
+def merge_ski_trail_unit_description(
+    existing_text, length=None, lights=None, condition_note=None
+) -> str:
+    """
+    Returns stringified JSON for services_unit.description:
+    {"length":"","lights":"","condition_note":<str or JSON null>}
+    None for length/lights/condition_note means leave the previous value when
+    merging from API; condition_note is normalized (faulty \"null\" values -> JSON null).
+    """
+    cur = None
+    if existing_text:
+        try:
+            parsed = json.loads(existing_text)
+            if _is_ski_trail_description_json(parsed):
+                cur = parsed
+        except (json.JSONDecodeError, TypeError):
+            pass
+    if cur is None:
+        cur = {"length": "", "lights": "", "condition_note": ""}
+    if length is not None:
+        cur["length"] = _ski_json_str(length)
+    if lights is not None:
+        cur["lights"] = _ski_json_str(lights)
+    if condition_note is not None:
+        cur["condition_note"] = condition_note
+    cn_out = (
+        sanitize_maintenance_condition_note(condition_note)
+        if condition_note is not None
+        else sanitize_maintenance_condition_note(cur.get("condition_note"))
+    )
+    return _services_unit_description_json_string(
+        {
+            "length": _ski_json_str(cur.get("length", "")),
+            "lights": _ski_json_str(cur.get("lights", "")),
+            "condition_note": cn_out,
+        }
+    )
+
+
+def merge_ice_track_unit_description(
+    existing_text, condition_note=None, description=None
+) -> str:
+    """
+    Returns stringified JSON for services_unit.description:
+    {"condition_note":<str or JSON null>,"description":"<html from API>"}
+    None means leave previous value when existing JSON is ice-shaped.
+    Non-JSON existing text is treated as legacy HTML and wrapped in description.
+    condition_note is normalized like merge_ski_trail_unit_description.
+    """
+    cur = None
+    if existing_text is not None and str(existing_text).strip():
+        try:
+            parsed = json.loads(existing_text)
+            if _is_ice_track_description_json(parsed):
+                cur = parsed
+            else:
+                # Other JSON shape or unknown structure — preserve raw text in description
+                cur = {"condition_note": "", "description": str(existing_text)}
+        except (json.JSONDecodeError, TypeError):
+            cur = {"condition_note": "", "description": str(existing_text)}
+    if cur is None:
+        cur = {"condition_note": "", "description": ""}
+    if condition_note is not None:
+        cur["condition_note"] = condition_note
+    if description is not None:
+        cur["description"] = str(description)
+    cn_out = (
+        sanitize_maintenance_condition_note(condition_note)
+        if condition_note is not None
+        else sanitize_maintenance_condition_note(cur.get("condition_note"))
+    )
+    return _services_unit_description_json_string(
+        {
+            "condition_note": cn_out,
+            "description": ""
+            if cur.get("description") is None
+            else str(cur.get("description", "")),
+        }
+    )
+
+
+def maintenance_import_property_value(properties, key):
+    """
+    Value for merging into description JSON: None if key absent (do not overwrite),
+    otherwise string (empty string if API sent null).
+    """
+    if key not in properties:
+        return None
+    v = properties[key]
+    if v is None:
+        return ""
+    return str(v)
+
+
+def get_unit_maintenance_description_source(unit):
+    """
+    Current description text for merge_* helpers.
+    With django-modeltranslation, the same JSON should live in description_fi/sv/en;
+    read the first non-empty language column.
+    """
+    for lang_code, _ in settings.LANGUAGES:
+        fname = f"description_{lang_code}"
+        if hasattr(unit, fname):
+            val = getattr(unit, fname, None)
+            if val is not None and str(val).strip():
+                return str(val)
+    val = getattr(unit, "description", None)
+    if val is not None and str(val).strip():
+        return str(val)
+    return None
+
+
+def apply_maintenance_unit_description_json(unit, json_string: str) -> None:
+    """
+    Persist stringified JSON on Unit.description for all configured languages.
+    Saving only ``description`` / partial update_fields leaves description_sv/en
+    stale when modeltranslation is enabled.
+    """
+    unit.last_modified_time = timezone.now()
+    update_fields = ["last_modified_time"]
+    for lang_code, _ in settings.LANGUAGES:
+        fname = f"description_{lang_code}"
+        if hasattr(unit, fname):
+            setattr(unit, fname, json_string)
+            update_fields.append(fname)
+    if len(update_fields) == 1:
+        unit.description = json_string
+        update_fields.append("description")
+    unit.save(update_fields=update_fields)
+
+
 def get_or_create_sports_facility_unit(
-    geometry_id, name, description=None, address=None, zip_code=None, geometry=None
+    geometry_id,
+    name,
+    description=None,
+    address=None,
+    zip_code=None,
+    geometry=None,
+    update_translation_names=True,
 ):
     """
     Get or create a Unit record for a sports facility (ski trail or ice track).
@@ -721,11 +966,14 @@ def get_or_create_sports_facility_unit(
 
     Args:
         geometry_id: The geometry_id from UnitMaintenanceGeometry (used as base for Unit ID)
-        name: Name of the facility
-        description: Optional description
+        name: Name of the facility (optionally finnish|swedish|english)
+        description: Deprecated, ignored; use merge_*_unit_description on the unit.
         address: Optional street address
         zip_code: Optional postal code
         geometry: Optional geometry object (will be transformed to PROJECTION_SRID)
+        update_translation_names: If False (ski maintenance import), do not change
+            names on an existing unit; new units get a single bootstrap name (first
+            segment before ``|``). Geometry imports should pass True to apply piped names.
 
     Returns:
         Unit instance
@@ -733,20 +981,38 @@ def get_or_create_sports_facility_unit(
 
     # Use geometry_id + offset to generate unique Unit ID
     # Offset ensures we don't conflict with regular Unit IDs
-    sports_facilities_unit_id_offset = 100000
-    unit_id = sports_facilities_unit_id_offset + geometry_id
+    unit_id = SPORTS_FACILITY_UNIT_ID_OFFSET + geometry_id
 
     try:
         unit = Unit.objects.get(id=unit_id)
         unit_created = False
     except Unit.DoesNotExist:
+        if not _nonempty_str(name):
+            return None
         unit = Unit(id=unit_id)
         unit_created = True
 
-    # Update fields
-    unit.name = name
-    if description:
-        unit.description = description
+    # Names: geometry / ice imports use piped translations; ski maintenance must not
+    # overwrite existing name_fi/sv/en (see update_translation_names).
+    if unit_created:
+        if update_translation_names:
+            name_fi, name_sv, name_en = parse_trilingual_name(name)
+            if not name_fi:
+                fallback = str(name).strip()
+                name_fi = name_sv = name_en = fallback
+            apply_sport_facility_trilingual_names(unit, name_fi, name_sv, name_en)
+        else:
+            bootstrap = _bootstrap_sports_facility_name_without_translations(name)
+            if bootstrap:
+                apply_sport_facility_trilingual_names(
+                    unit, bootstrap, bootstrap, bootstrap
+                )
+    elif update_translation_names and _nonempty_str(name):
+        name_fi, name_sv, name_en = parse_trilingual_name(name)
+        if not name_fi:
+            fallback = str(name).strip()
+            name_fi = name_sv = name_en = fallback
+        apply_sport_facility_trilingual_names(unit, name_fi, name_sv, name_en)
     if address:
         unit.street_address = address
     if zip_code:
@@ -770,13 +1036,14 @@ def get_or_create_sports_facility_unit(
     unit.last_modified_time = timezone.now()
     unit.save()
 
+    label = unit.name or f"id {unit_id}"
     if unit_created:
         logger.info(
-            f"Created Unit {unit_id} for sports facility '{name}' (geometry_id: {geometry_id})"
+            f"Created Unit {unit_id} for sports facility '{label}' (geometry_id: {geometry_id})"
         )
     else:
         logger.debug(
-            f"Updated Unit {unit_id} for sports facility '{name}' (geometry_id: {geometry_id})"
+            f"Updated Unit {unit_id} for sports facility '{label}' (geometry_id: {geometry_id})"
         )
 
     return unit

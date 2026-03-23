@@ -9,7 +9,14 @@ from django.core.management.base import BaseCommand
 from maintenance.models import UnitMaintenance, UnitMaintenanceGeometry
 
 from .constants import SKI_TRAILS_DATE_FIELD_FORMAT
-from .utils import get_json_data, get_or_create_sports_facility_unit
+from .utils import (
+    apply_maintenance_unit_description_json,
+    get_json_data,
+    get_or_create_sports_facility_unit,
+    get_unit_maintenance_description_source,
+    maintenance_import_property_value,
+    merge_ski_trail_unit_description,
+)
 
 logger = logging.getLogger(__name__)
 TIMEZONE = pytz.timezone("Europe/Helsinki")
@@ -86,9 +93,18 @@ def save_maintenance_history(json_data):
         unit = get_or_create_sports_facility_unit(
             geometry_id=geometry_id,
             name=name,
-            description=properties.get("description", None),
             geometry=geometry.geometry,
+            update_translation_names=False,
         )
+        if unit is None:
+            logger.error(
+                f"Could not resolve Unit for ski trail geometry_id={geometry_id}, name={name!r}"
+            )
+            continue
+
+        length_val = maintenance_import_property_value(properties, "length")
+        lights_val = maintenance_import_property_value(properties, "lights")
+        note_val = maintenance_import_property_value(properties, "condition_note")
 
         # Determine which UnitMaintenance to use/update
         # Strategy: One UnitMaintenance per geometry (one-to-one). Each geometry
@@ -147,6 +163,18 @@ def save_maintenance_history(json_data):
         # Link geometry to unit_maintenance
         geometry.unit_maintenance = unit_maintenance
         geometry.save()
+
+        existing_desc = get_unit_maintenance_description_source(unit)
+        apply_maintenance_unit_description_json(
+            unit,
+            merge_ski_trail_unit_description(
+                existing_desc,
+                length=length_val,
+                lights=lights_val,
+                condition_note=note_val,
+            ),
+        )
+
         num_geometry_linked += 1
         logger.debug(
             f"Linked geometry {geometry_id} to unit_maintenance {unit_maintenance.id}"
