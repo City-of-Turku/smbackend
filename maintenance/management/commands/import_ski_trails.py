@@ -65,6 +65,9 @@ def save_trails(layer):
     num_updated = 0
     num_units_synced = 0
     skip_geom_logged = False
+    # GeoJSON may repeat the same construction_point_id; only the first saved row
+    # should set translated unit names (later rows are often test duplicates).
+    geometry_ids_name_synced = set()
     for feature in layer:
         is_created = False
         is_updated = False
@@ -131,11 +134,15 @@ def save_trails(layer):
                 trail_name = _feature_first_nonempty_string(
                     feature, ("name", "nimi", "title")
                 )
+                sync_trilingual_names = geometry_id not in geometry_ids_name_synced
                 unit = get_or_create_sports_facility_unit(
                     geometry_id=geometry_id,
                     name=trail_name,
                     geometry=geometry,
+                    update_translation_names=sync_trilingual_names,
                 )
+                if unit is not None and sync_trilingual_names:
+                    geometry_ids_name_synced.add(geometry_id)
                 if unit is None:
                     try:
                         unit = Unit.objects.get(

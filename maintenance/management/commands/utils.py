@@ -54,16 +54,12 @@ VALID_LINESTRING_MAX_POINT_DISTANCE = 0.01
 def get_turku_boundary():
     try:
         division_turku = AdministrativeDivision.objects.get(name="Turku")
-    except AdministrativeDivision.DoesNotExist:
+        adm_geom = AdministrativeDivisionGeometry.objects.get(division=division_turku)
+    except (AdministrativeDivision.DoesNotExist, AdministrativeDivisionGeometry.DoesNotExist):
         return None
-    turku_boundary = AdministrativeDivisionGeometry.objects.get(
-        division=division_turku
-    ).boundary
+    turku_boundary = adm_geom.boundary
     turku_boundary.transform(DEFAULT_SRID)
     return turku_boundary
-
-
-TURKU_BOUNDARY = get_turku_boundary()
 
 
 def get_json_data(url):
@@ -298,6 +294,11 @@ def create_yit_maintenance_works(access_token, history_size):
             "id", flat=True
         )
     )
+    turku_boundary = get_turku_boundary()
+    if turku_boundary is None:
+        logger.warning(
+            "Turku administrative boundary not found; YIT works are not clipped to city boundary."
+        )
     num_created = 0
     for route in routes:
         if len(route["geography"]["features"]) > 1:
@@ -313,9 +314,10 @@ def create_yit_maintenance_works(access_token, history_size):
             continue
         # Create linestring that is inside the boundary of Turku
         # and discard parts of the geometry if they are outside the boundary.
-        geometry = get_linestring_in_boundary(geometry, TURKU_BOUNDARY)
-        if not geometry:
-            continue
+        if turku_boundary is not None:
+            geometry = get_linestring_in_boundary(geometry, turku_boundary)
+            if not geometry:
+                continue
         events = []
         original_event_names = []
         operations = route["operations"]
@@ -370,6 +372,11 @@ def create_kuntec_maintenance_works(history_size):
             "id", flat=True
         )
     )
+    turku_boundary = get_turku_boundary()
+    if turku_boundary is None:
+        logger.warning(
+            "Turku administrative boundary not found; Kuntec works are not clipped to city boundary."
+        )
     for unit in MaintenanceUnit.objects.filter(provider=KUNTEC):
         url = URLS[KUNTEC][WORKS].format(
             key=KUNTEC_KEY, start=start, end=end, unit_id=unit.unit_id
@@ -403,9 +410,10 @@ def create_kuntec_maintenance_works(history_size):
                             continue
                         # Create linestring that is inside the boundary of Turku
                         # and discard parts of the geometry if they are outside the boundary.
-                        geometry = get_linestring_in_boundary(geometry, TURKU_BOUNDARY)
-                        if not geometry:
-                            continue
+                        if turku_boundary is not None:
+                            geometry = get_linestring_in_boundary(geometry, turku_boundary)
+                            if not geometry:
+                                continue
                         timestamp = route["start"]["time"]
                         filter = {
                             "timestamp": timestamp,
@@ -461,8 +469,8 @@ def create_maintenance_works(provider, history_size, fetch_size):
             coords = work["coords"]
             coords = [float(c) for c in re.sub(r"[()]", "", coords).split(" ")]
             point = Point(coords[0], coords[1], srid=DEFAULT_SRID)
-            # discard events outside Turku.
-            if not turku_boundary.covers(point):
+            # discard events outside Turku when boundary data exists
+            if turku_boundary is not None and not turku_boundary.covers(point):
                 continue
 
             events = []
