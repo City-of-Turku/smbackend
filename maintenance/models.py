@@ -6,6 +6,9 @@ from services.models import Unit
 
 DEFAULT_SRID = 4326
 
+# services.Unit.extra — names from finnish|swedish|english (not a DB column)
+SPORT_NAMES_UNIT_EXTRA_KEY = "sport_names"
+
 
 class UnitMaintenance(models.Model):
     """
@@ -46,7 +49,7 @@ class UnitMaintenanceGeometry(models.Model):
     geometry = models.GeometryField(srid=DEFAULT_SRID, null=True)
     unit_maintenance = models.ForeignKey(
         UnitMaintenance,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name="geometries",
         null=True,
         blank=True,

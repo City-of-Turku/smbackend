@@ -72,7 +72,6 @@ param routaApiKey string = ''
 param routaApiUrl string = ''
 
 @description('Email addresses for alert action group (from secrets.json). Receivers are named generically (EmailAction-0, etc.).')
-@secure()
 param alertEmailAddresses array = []
 
 @description('Set true for production (higher SKUs and prod app settings), false for test.')

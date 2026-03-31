@@ -3,7 +3,7 @@
 Django app for importing and serving data from external sources.  
 Add the TURKU_WFS_URL for the WFS server to the env, e.g.
 ```
-TURKU_WFS_URL=https://opaskartta.turku.fi/TeklaOGCWeb/WFS.ashx
+TURKU_WFS_URL=https://turku.asiointi.fi/teklaogcweb/wfs.ashx
 ```
 
 ## importers

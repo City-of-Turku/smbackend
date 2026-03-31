@@ -150,7 +150,7 @@ content_types:
       en: Recreational routes in Southwest Finland
   # End of lounaistieto shapefile importer content types
   
-  # Content types importer from opaskarta.turku.fi
+  # Content types importer from turku.asiointi.fi
   - content_type_name: GuestMarina
     name:
       fi: Vierasvenesatama
@@ -436,7 +436,7 @@ content_types:
       fi: KatuAlueTieto
       sv: GatuOmrådeInformation
       en: StreetAreaInformation
-  # End of content types importer from opaskarta.turku.fi
+  # End of content types importer from turku.asiointi.fi
 
   - content_type_name: Underpass
     name:
