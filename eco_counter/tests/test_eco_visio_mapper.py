@@ -50,7 +50,7 @@ class TestGetMovementTypeCode:
             "car": "A",
             "motorized": "A",
             "bus": "B",
-            "scooter": "P",
+            "scooter": "S",
             "motorbike": "A",
             "truck": "A",
             "cargobike": "P",
@@ -139,9 +139,9 @@ class TestGetColumnSuffix:
         """Test motorized + in = AK (mapped to car)."""
         assert get_column_suffix("motorized", "in") == "AK"
 
-    def test_scooter_out_returns_pp(self):
-        """Test scooter + out = PP (mapped to bike)."""
-        assert get_column_suffix("scooter", "out") == "PP"
+    def test_scooter_out_returns_sp(self):
+        """Test scooter + out = SP."""
+        assert get_column_suffix("scooter", "out") == "SP"
 
     def test_minibus_in_returns_bk(self):
         """Test minibus + in = BK (mapped to bus)."""
@@ -445,7 +445,7 @@ class TestTransformRawTrafficToDataframe:
                 ],
             },
             {
-                "travelMode": "scooter",  # Also maps to P
+                "travelMode": "scooter",
                 "direction": "in",
                 "data": [
                     {"timestamp": "2024-01-01T00:00:00+02:00", "counts": 3},
@@ -454,8 +454,9 @@ class TestTransformRawTrafficToDataframe:
         ]
         result = transform_raw_traffic_to_dataframe(raw_data, "Station1")
 
-        # bike (PK) + scooter (PK) should be aggregated
-        assert result.loc[0, "Station1 PK"] == 8
+        # bike stays in PK while scooter is split into dedicated SK
+        assert result.loc[0, "Station1 PK"] == 5
+        assert result.loc[0, "Station1 SK"] == 3
 
     def test_series_without_data_key(self):
         """Test handling series without 'data' key."""
@@ -819,6 +820,13 @@ class TestGetTravelModeDescription:
         assert "B" in result
         assert "Bussi" in result or "bus" in result
 
+    def test_scooter_description(self):
+        """Test description for scooter."""
+        result = get_travel_mode_description("scooter")
+        assert "scooter" in result
+        assert "S" in result
+        assert "Scooter" in result
+
     def test_unmapped_mode_description(self):
         """Test description for unmapped mode."""
         result = get_travel_mode_description("horse")
@@ -866,8 +874,8 @@ class TestMappingConstants:
             assert direction in DIRECTION_MAPPING, f"Missing direction: {direction}"
 
     def test_travel_mode_codes_valid(self):
-        """Test that all mapped travel mode codes are valid (A, P, J, B, or None)."""
-        valid_codes = {"A", "P", "J", "B", None}
+        """Test that all mapped travel mode codes are valid (A, P, J, B, S, or None)."""
+        valid_codes = {"A", "P", "J", "B", "S", None}
         for mode, code in TRAVEL_MODE_MAPPING.items():
             assert code in valid_codes, f"Invalid code {code} for mode {mode}"
 

@@ -19,11 +19,12 @@ https://github.com/City-of-Turku/smbackend/wiki/Celery-Tasks
 
 
 ## Manually Importing data
-Note, All imports can and is recommended to be run from the Admin using Celery Tasks.
-
+The imports must be done in a certain order. Outside a development environment it's recommended to use Celery tasks to run commands.
 ```
 ./manage.py geo_import finland --municipalities
-./manage.py turku_services_import services accessibility units divisions addresses
+./manage.py turku_services_import addresses 
+./manage.py turku_services_import divisions
+./manage.py turku_services_import services accessibility units  
 ```
 
 

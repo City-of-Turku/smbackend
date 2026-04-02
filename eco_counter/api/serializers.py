@@ -1,4 +1,3 @@
-from django.db.models import Q
 from rest_framework import serializers
 
 from ..models import (
@@ -13,22 +12,7 @@ from ..models import (
     Year,
     YearData,
 )
-
-VALUE_FIELDS = [
-    "value_ak",
-    "value_ap",
-    "value_at",
-    "value_pk",
-    "value_pp",
-    "value_pt",
-    "value_jk",
-    "value_jp",
-    "value_jt",
-    "value_bk",
-    "value_bp",
-    "value_bt",
-]
-Q_EXP = Q(value_at__gt=0) | Q(value_pt__gt=0) | Q(value_jt__gt=0) | Q(value_bt__gt=0)
+from ..movement_types import HOUR_VALUE_FIELDS, VALUE_FIELDS
 
 
 class StationSerializer(serializers.ModelSerializer):
@@ -175,20 +159,7 @@ class HourDataSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = HourData
-        fields = [
-            "id",
-            "station",
-            "day_info",
-            "values_ak",
-            "values_ap",
-            "values_at",
-            "values_pk",
-            "values_pp",
-            "values_pt",
-            "values_jk",
-            "values_jp",
-            "values_jt",
-        ]
+        fields = ["id", "station", "day_info"] + HOUR_VALUE_FIELDS
 
 
 class DayDataSerializer(serializers.ModelSerializer):

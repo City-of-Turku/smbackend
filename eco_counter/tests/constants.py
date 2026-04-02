@@ -13,6 +13,8 @@ ECO_COUNTER_TEST_COLUMN_NAMES = [
     "Auransilta PP",
     "Auransilta BK",
     "Auransilta BP",
+    "Auransilta SK",
+    "Auransilta SP",
 ]
 
 TRAFFIC_COUNTER_TEST_COLUMN_NAMES = [
