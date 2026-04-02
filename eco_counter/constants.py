@@ -9,14 +9,14 @@ from requests.packages.urllib3.util.retry import Retry
 
 INDEX_COLUMN_NAME = "startTime"
 
-TRAFFIC_COUNTER_START_YEAR = 2023
+TRAFFIC_COUNTER_START_YEAR = 2015
 # Manually define the end year, as the source data comes from the page
 # defined in env variable TRAFFIC_COUNTER_OBSERVATIONS_BASE_URL.
 # Change end year when data for the next year is available.
 TRAFFIC_COUNTER_END_YEAR = datetime.today().year
 
 # Eco Counter fallback start year for initial import. If API does not provide start date, use this.
-ECO_COUNTER_START_YEAR = 2023
+ECO_COUNTER_START_YEAR = 2020
 LAM_COUNTER_START_YEAR = 2010
 TELRAAM_COUNTER_START_YEAR = 2023
 
