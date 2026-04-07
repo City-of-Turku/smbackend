@@ -12,7 +12,7 @@ from ..models import (
     Year,
     YearData,
 )
-from ..movement_types import HOUR_VALUE_FIELDS, VALUE_FIELDS
+from ..movement_types import VALUE_FIELDS
 
 
 class StationSerializer(serializers.ModelSerializer):
@@ -159,7 +159,23 @@ class HourDataSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = HourData
-        fields = ["id", "station", "day_info"] + HOUR_VALUE_FIELDS
+        fields = [
+            "id",
+            "station",
+            "day_info",
+            "values_ak",
+            "values_ap",
+            "values_at",
+            "values_pk",
+            "values_pp",
+            "values_pt",
+            "values_jk",
+            "values_jp",
+            "values_jt",
+            "values_sk",
+            "values_sp",
+            "values_st",
+        ]
 
 
 class DayDataSerializer(serializers.ModelSerializer):
