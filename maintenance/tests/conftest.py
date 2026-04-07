@@ -90,7 +90,7 @@ def administrative_division_type():
 @pytest.mark.django_db
 @pytest.fixture
 def administrative_division(administrative_division_type):
-    adm_div = AdministrativeDivision.objects.get_or_create(
+    adm_div, _ = AdministrativeDivision.objects.get_or_create(
         id=1, name="Turku", origin_id=853, type_id=1
     )
     return adm_div

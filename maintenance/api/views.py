@@ -81,10 +81,12 @@ class UnitMaintenaceFilterSet(django_filters.FilterSet):
     maintained_at__lte = django_filters.DateTimeFilter(
         method="filter_maintained_at__lte"
     )
+    # Explicitly define target filter to use iexact by default when 'target' parameter is used
+    target = django_filters.CharFilter(field_name="target", lookup_expr="iexact")
 
     class Meta:
         model = UnitMaintenance
-        fields = {"target": ["iexact"], "unit": ["exact"]}
+        fields = {"unit": ["exact"]}
 
     def filter_maintained_at__gte(self, queryset, fields, maintained_at):
         return queryset.filter(maintained_at__gte=maintained_at)
