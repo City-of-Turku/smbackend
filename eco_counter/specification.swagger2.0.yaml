@@ -92,18 +92,6 @@ definitions:
         type: array
         items: 
           type: integer
-      values_bk:
-        type: array
-        items:
-          type: integer
-      values_bp:
-        type: array
-        items:
-          type: integer
-      values_bt:
-        type: array
-        items:
-          type: integer
       values_sk:
         type: array
         items:
