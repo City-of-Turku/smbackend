@@ -44,12 +44,21 @@ def test_is_active(api_client, is_active_fixtures):
 
 @pytest.mark.django_db
 def test_hour_data(api_client, hour_data):
+    hour_data.values_sk = [v + 100 for v in range(1, 25)]
+    hour_data.values_sp = [v + 200 for v in range(1, 25)]
+    hour_data.values_st = [
+        hour_data.values_sk[i] + hour_data.values_sp[i] for i in range(24)
+    ]
+    hour_data.save()
     url = reverse("eco_counter:hour_data-list")
     response = api_client.get(url)
     assert response.status_code == 200
     for i in range(24):
         assert response.json()["results"][0]["values_ak"][i] == hour_data.values_ak[i]
         assert response.json()["results"][0]["values_ap"][i] == hour_data.values_ap[i]
+        assert response.json()["results"][0]["values_sk"][i] == hour_data.values_sk[i]
+        assert response.json()["results"][0]["values_sp"][i] == hour_data.values_sp[i]
+        assert response.json()["results"][0]["values_st"][i] == hour_data.values_st[i]
 
 
 @pytest.mark.django_db
@@ -57,6 +66,11 @@ def test_day_data(
     api_client,
     day_datas,
 ):
+    for i, day_data in enumerate(day_datas, start=1):
+        day_data.value_sk = i
+        day_data.value_sp = i + 10
+        day_data.value_st = day_data.value_sk + day_data.value_sp
+        day_data.save()
     url = reverse("eco_counter:day_data-list")
     response = api_client.get(url)
     assert response.status_code == 200
@@ -68,6 +82,9 @@ def test_day_data(
         assert results[i]["value_ap"] == day_datas[6 - i].value_ap
         assert results[i]["value_jk"] == day_datas[6 - i].value_jk
         assert results[i]["value_jp"] == day_datas[6 - i].value_jp
+        assert results[i]["value_sk"] == day_datas[6 - i].value_sk
+        assert results[i]["value_sp"] == day_datas[6 - i].value_sp
+        assert results[i]["value_st"] == day_datas[6 - i].value_st
 
 
 @pytest.mark.django_db
@@ -303,3 +320,11 @@ def test_station(api_client, stations, year_datas, day_datas):
     url = reverse("eco_counter:stations-list") + "?data_type=p"
     response = api_client.get(url)
     assert response.json()["count"] == 0
+    year_datas[0].value_sk = 2
+    year_datas[0].value_sp = 3
+    year_datas[0].value_st = 5
+    year_datas[0].save()
+    url = reverse("eco_counter:stations-list") + "?data_type=s"
+    response = api_client.get(url)
+    assert response.json()["count"] == 1
+    assert response.json()["results"][0]["name"] == TEST_EC_STATION_NAME

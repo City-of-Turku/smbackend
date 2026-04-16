@@ -5,7 +5,7 @@ This module provides data mapping functionality to transform Eco-Visio API
 responses into the DataFrame format expected by the existing eco_counter import logic.
 
 The existing system uses Finnish abbreviations for movement types and directions:
-- Movement types: A (auto/car), P (pyörä/bike), J (jalankulkija/pedestrian), B (bussi/bus)
+- Movement types: A (auto/car), P (pyörä/bike), J (jalankulkija/pedestrian), B (bussi/bus), S (scooter)
 - Directions: K (keskustaan/towards center), P (poispäin/away from center)
 
 The Eco-Visio API uses:
@@ -22,7 +22,7 @@ import pandas as pd
 logger = logging.getLogger("eco_counter")
 
 
-# Mapping from Eco-Visio travel modes to existing movement type codes
+# Mapping from Eco-Visio travel modes to movement type codes
 TRAVEL_MODE_MAPPING = {
     "bike": "P",  # Pyörä (bicycle)
     "pedestrian": "J",  # Jalankulkija (pedestrian)
@@ -32,7 +32,7 @@ TRAVEL_MODE_MAPPING = {
     # Additional modes that might be encountered
     "horse": None,  # Not mapped
     "kayak": None,  # Not mapped
-    "scooter": "P",  # Map to bicycle category
+    "scooter": "S",  # Dedicated scooter category
     "motorbike": "A",  # Map to car/motorized category
     "truck": "A",  # Map to car/motorized category
     "cargobike": "P",  # Map to bicycle category
@@ -56,7 +56,7 @@ def get_movement_type_code(travel_mode: str) -> Optional[str]:
         travel_mode: Eco-Visio travel mode (bike, pedestrian, car, etc.)
 
     Returns:
-        Movement type code (A, P, J, B) or None if not mappable
+        Movement type code (A, P, J, B, S) or None if not mappable
     """
     return TRAVEL_MODE_MAPPING.get(travel_mode.lower())
 
@@ -364,5 +364,6 @@ def get_travel_mode_description(travel_mode: str) -> str:
         "P": "Pyörä (bicycle)",
         "J": "Jalankulkija (pedestrian)",
         "B": "Bussi (bus)",
+        "S": "Scooter",
     }
     return f"{travel_mode} -> {code} ({code_names.get(code, 'unknown')})"

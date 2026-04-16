@@ -38,6 +38,7 @@ from eco_counter.models import (
     Year,
     YearData,
 )
+from eco_counter.movement_types import ALL_TYPE_DIRS, STATION_TYPES, TYPE_DIRS
 
 from .eco_visio_client import EcoVisioAPIClient, EcoVisioAPIError
 from .eco_visio_mapper import (
@@ -80,6 +81,7 @@ Movement types:
 (P)yörä, bicycle
 (J)alankulkija, pedestrian
 (B)ussi, bus
+(S)cooter
 Direction types:
 (K)eskustaan päin, towards the center
 (P)poispäin keskustasta, away from the center
@@ -88,15 +90,6 @@ The naming convention is derived from the eco-counter source data that was the
 original data source.
 
 """
-STATION_TYPES = [
-    ("ak", "ap", "at"),
-    ("pk", "pp", "pt"),
-    ("jk", "jp", "jt"),
-    ("bk", "bp", "bt"),
-]
-
-TYPE_DIRS = ["AK", "AP", "JK", "JP", "BK", "BP", "PK", "PP"]
-ALL_TYPE_DIRS = TYPE_DIRS + ["AT", "JT", "BT", "PT"]
 
 
 def delete_tables(
@@ -683,21 +676,18 @@ def get_eco_visio_csv_data(start_time):
 
 
 def get_csv_data(counter, import_state, start_time, verbose=True):
-    match counter:
-        # case COUNTERS.TELRAAM_COUNTER:
-        # Telraam counters are handled differently due to their dynamic nature
-        case COUNTERS.LAM_COUNTER:
-            csv_data = get_lam_counter_csv(start_time.date())
-        case COUNTERS.ECO_COUNTER:
-            csv_data = get_eco_visio_csv_data(start_time)
-        case COUNTERS.TRAFFIC_COUNTER:
-            if import_state.current_year_number:
-                start_year = import_state.current_year_number
-            else:
-                start_year = TRAFFIC_COUNTER_START_YEAR
-            csv_data = get_traffic_counter_csv(start_year=start_year)
-        case _:
-            raise ValueError(f"Unsupported counter type: {counter}")
+    if counter == COUNTERS.LAM_COUNTER:
+        csv_data = get_lam_counter_csv(start_time.date())
+    elif counter == COUNTERS.ECO_COUNTER:
+        csv_data = get_eco_visio_csv_data(start_time)
+    elif counter == COUNTERS.TRAFFIC_COUNTER:
+        if import_state.current_year_number:
+            start_year = import_state.current_year_number
+        else:
+            start_year = TRAFFIC_COUNTER_START_YEAR
+        csv_data = get_traffic_counter_csv(start_year=start_year)
+    else:
+        raise ValueError(f"Unsupported counter type: {counter}")
 
     if csv_data.empty:
         logger.warning(f"No data retrieved for counter {counter}")

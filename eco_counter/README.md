@@ -23,7 +23,7 @@ Up-to-date open data URLs can be found at https://www.avoindata.fi/data/fi/datas
 - Multiple API keys are supported to combine data from different accounts. Sites are deduplicated by `station_id`.
 - Stations are pulled with segment geometry, filtered to the Southwestern Finland polygon, and stored with transformed geometry.
 - Raw traffic is retrieved per station in ≤31-day chunks with rate-limit-aware retries; native granularity (15 min / 1 h) is preserved, and existing aggregation logic handles rollups.
-- Travel modes map to existing columns (bike→P, pedestrian→J, car/motorized→A, bus→B; undefined directions are split evenly between K/P).
+- Travel modes map to movement columns (bike→P, pedestrian→J, car/motorized→A, bus→B, scooter→S; undefined directions are split evenly between K/P).
 - Legacy EC endpoints/models remain unchanged; only the data source is now the Eco-Visio API.
 - Initial imports for Eco-Visio data start from 2025-01-01 (earlier dates are not fetched).
 
@@ -37,6 +37,20 @@ Run before continuous imports:
 Example: `./manage.py import_counter_data --init EC TC`
 
 For Eco-Visio (EC), the initial import is performed in monthly windows for each station sequentially to minimize memory usage (avoiding OOM). The progress is saved to `ImportState`, allowing the import to resume from the last completed month if interrupted.
+
+### Scooter strict-split rollout
+Scooter data is stored in dedicated `S*` fields (`value_sk`, `value_sp`, `value_st` and hourly `values_s*`) and is no longer merged into bicycle totals.
+
+Recommended rollout:
+1. Deploy schema/backend changes.
+2. Run continuous imports so new data starts filling `S*` fields.
+3. Re-import historical EC data if historical scooter separation is needed.
+4. Switch frontend to use scooter as a separate category.
+
+Historical backfill command example:
+```
+./manage.py import_counter_data --init EC --force
+```
 
 ### Continuous import
 Hourly imports:
