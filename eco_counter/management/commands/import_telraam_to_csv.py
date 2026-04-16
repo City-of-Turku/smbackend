@@ -226,6 +226,8 @@ def save_dataframe(from_date: date = True) -> datetime:
     utc_offset = pytz.timezone("Europe/Helsinki").utcoffset(datetime.now())
     logger.info(f"Fetching Telraam data from {str(from_date)} to {str(date_today)}")
     cameras = get_telraam_cameras()
+    if not cameras:
+        raise RuntimeError("No Telraam cameras could be fetched. Aborting import, no data will be written.")
     for camera in cameras:
         start_date = from_date
         while start_date <= date_today:
