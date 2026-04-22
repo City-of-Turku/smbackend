@@ -1000,6 +1000,25 @@ resource webApps 'Microsoft.Web/sites@2023-12-01' = [
   }
 ]
 
+resource webAppDiagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = [
+  for i in range(0, length(webAppRequirements)): {
+    scope: webApps[i]
+    name: 'diagnostic-settings'
+    properties: {
+      workspaceId: workspace.id
+      logs: [
+        { category: 'AppServiceHTTPLogs', enabled: true, retentionPolicy: { enabled: false, days: 0 } }
+        { category: 'AppServiceConsoleLogs', enabled: true, retentionPolicy: { enabled: false, days: 0 } }
+        { category: 'AppServiceAppLogs', enabled: true, retentionPolicy: { enabled: false, days: 0 } }
+        { category: 'AppServicePlatformLogs', enabled: true, retentionPolicy: { enabled: false, days: 0 } }
+      ]
+      metrics: [
+        { category: 'AllMetrics', enabled: true, retentionPolicy: { enabled: false, days: 0 } }
+      ]
+    }
+  }
+]
+
 resource keyvault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: keyvaultName
   location: location

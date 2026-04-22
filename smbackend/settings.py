@@ -37,6 +37,7 @@ env = environ.Env(
     USE_X_FORWARDED_HOST=(bool, False),
     SENTRY_DSN=(str, ""),
     SENTRY_ENVIRONMENT=(str, ""),
+    APPLICATIONINSIGHTS_CONNECTION_STRING=(str, ""),
     COOKIE_PREFIX=(str, "servicemap"),
     INTERNAL_IPS=(list, []),
     CELERY_BROKER_URL=(str, "amqp://guest:guest@localhost:5672"),
@@ -451,6 +452,11 @@ sentry_sdk.init(
     send_default_pii=True,
     integrations=[DjangoIntegration()],
 )
+
+_ai_connection_string = env("APPLICATIONINSIGHTS_CONNECTION_STRING")
+if _ai_connection_string:
+    from azure.monitor.opentelemetry import configure_azure_monitor
+    configure_azure_monitor(connection_string=_ai_connection_string)
 
 COOKIE_PREFIX = env("COOKIE_PREFIX")
 INTERNAL_IPS = env("INTERNAL_IPS")
