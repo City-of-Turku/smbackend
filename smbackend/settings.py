@@ -456,6 +456,7 @@ sentry_sdk.init(
 _ai_connection_string = env("APPLICATIONINSIGHTS_CONNECTION_STRING")
 if _ai_connection_string:
     from azure.monitor.opentelemetry import configure_azure_monitor
+
     configure_azure_monitor(connection_string=_ai_connection_string)
 
 COOKIE_PREFIX = env("COOKIE_PREFIX")

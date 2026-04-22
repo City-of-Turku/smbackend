@@ -21,4 +21,6 @@ class Command(BaseCommand):
         url = options["url"]
         response = requests.get(url, timeout=10)
         response.raise_for_status()
-        logger.debug(f"Heartbeat sent successfully to {url} (HTTP {response.status_code})")
+        logger.debug(
+            f"Heartbeat sent successfully to {url} (HTTP {response.status_code})"
+        )
