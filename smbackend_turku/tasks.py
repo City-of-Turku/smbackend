@@ -93,3 +93,17 @@ def import_external_sources(name="import_external_sources"):
 @shared_task_email
 def delete_obsolete_external_units(name="delete_obsolete_external_units"):
     management.call_command("delete_obsolete_external_units")
+
+
+@shared_task_email
+def send_heartbeat(name="send_heartbeat", **kwargs):
+    """
+    Ping a heartbeat URL (e.g. a Betterstack heartbeat endpoint) to signal that
+    Celery is alive and the scheduled task ran successfully.
+
+    kwargs:
+        url (str): The heartbeat URL to ping. Required.
+    """
+    if "url" not in kwargs:
+        raise Exception("No required 'url' keyword argument in kwargs.")
+    management.call_command("send_heartbeat", url=kwargs["url"])

@@ -231,7 +231,7 @@ param apiAppSettingsProd object = {
   SERVER_EMAIL: 'palvelukartta@turku.fi'
   STATIC_ROOT: '/fileshare/staticroot'
   STATIC_URL: '/static/'
-  STREET_MAINTENANCE_LOG_LEVEL: 'INFO'
+  MAINTENANCE_LOG_LEVEL: 'INFO'
   TELRAAM_TOKEN: telraamToken
   TRAFFIC_COUNTER_OBSERVATIONS_BASE_URL: 'https://data.turku.fi/2yxpk2imqi2mzxpa6e6knq/'
   TURKU_API_KEY: turkuApiKey
@@ -308,7 +308,7 @@ param apiAppSettingsTest object = {
   SERVER_EMAIL: 'testipalvelukartta@turku.fi'
   STATIC_ROOT: '/fileshare/staticroot'
   STATIC_URL: '/static/'
-  STREET_MAINTENANCE_LOG_LEVEL: 'INFO'
+  MAINTENANCE_LOG_LEVEL: 'INFO'
   TELRAAM_TOKEN: telraamToken
   TRAFFIC_COUNTER_OBSERVATIONS_BASE_URL: 'https://data.turku.fi/2yxpk2imqi2mzxpa6e6knq/'
   TURKU_API_KEY: turkuApiKey
@@ -801,9 +801,9 @@ var serverfarmPlanSku = isProduction ? {
   family: 'Pv3'
   capacity: 1
 } : {
-  name: 'B2'
+  name: 'B3'
   tier: 'Basic'
-  size: 'B2'
+  size: 'B3'
   family: 'B'
   capacity: 1
 }
@@ -996,6 +996,25 @@ resource webApps 'Microsoft.Web/sites@2023-12-01' = [
           }
         )
       }
+    }
+  }
+]
+
+resource webAppDiagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = [
+  for i in range(0, length(webAppRequirements)): {
+    scope: webApps[i]
+    name: 'diagnostic-settings'
+    properties: {
+      workspaceId: workspace.id
+      logs: [
+        { category: 'AppServiceHTTPLogs', enabled: true, retentionPolicy: { enabled: false, days: 0 } }
+        { category: 'AppServiceConsoleLogs', enabled: true, retentionPolicy: { enabled: false, days: 0 } }
+        { category: 'AppServiceAppLogs', enabled: true, retentionPolicy: { enabled: false, days: 0 } }
+        { category: 'AppServicePlatformLogs', enabled: true, retentionPolicy: { enabled: false, days: 0 } }
+      ]
+      metrics: [
+        { category: 'AllMetrics', enabled: true, retentionPolicy: { enabled: false, days: 0 } }
+      ]
     }
   }
 ]
