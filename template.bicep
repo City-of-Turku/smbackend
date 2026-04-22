@@ -231,7 +231,7 @@ param apiAppSettingsProd object = {
   SERVER_EMAIL: 'palvelukartta@turku.fi'
   STATIC_ROOT: '/fileshare/staticroot'
   STATIC_URL: '/static/'
-  STREET_MAINTENANCE_LOG_LEVEL: 'INFO'
+  MAINTENANCE_LOG_LEVEL: 'INFO'
   TELRAAM_TOKEN: telraamToken
   TRAFFIC_COUNTER_OBSERVATIONS_BASE_URL: 'https://data.turku.fi/2yxpk2imqi2mzxpa6e6knq/'
   TURKU_API_KEY: turkuApiKey
@@ -308,7 +308,7 @@ param apiAppSettingsTest object = {
   SERVER_EMAIL: 'testipalvelukartta@turku.fi'
   STATIC_ROOT: '/fileshare/staticroot'
   STATIC_URL: '/static/'
-  STREET_MAINTENANCE_LOG_LEVEL: 'INFO'
+  MAINTENANCE_LOG_LEVEL: 'INFO'
   TELRAAM_TOKEN: telraamToken
   TRAFFIC_COUNTER_OBSERVATIONS_BASE_URL: 'https://data.turku.fi/2yxpk2imqi2mzxpa6e6knq/'
   TURKU_API_KEY: turkuApiKey
