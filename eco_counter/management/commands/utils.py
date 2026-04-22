@@ -542,6 +542,12 @@ def fetch_telraam_camera(mac_id):
     }
     url = TELRAAM_COUNTER_CAMERAS_URL.format(mac_id=mac_id)
     response = TELRAAM_HTTP.get(url, headers=headers)
+    if not response.ok:
+        logger.error(
+            f"Telraam API request failed for camera {mac_id}: "
+            f"HTTP {response.status_code} {response.reason}"
+        )
+        return None
     cameras = response.json().get("camera", None)
     if cameras:
         # Return first camera, as currently only one camera is
