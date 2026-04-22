@@ -801,9 +801,9 @@ var serverfarmPlanSku = isProduction ? {
   family: 'Pv3'
   capacity: 1
 } : {
-  name: 'B2'
+  name: 'B3'
   tier: 'Basic'
-  size: 'B2'
+  size: 'B3'
   family: 'B'
   capacity: 1
 }
