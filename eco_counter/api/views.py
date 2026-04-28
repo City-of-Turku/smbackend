@@ -20,6 +20,7 @@ from ..models import (
     Year,
     YearData,
 )
+from ..movement_types import DATA_TYPE_CHOICES, DATA_TYPE_TOTAL_FIELDS
 from .serializers import (
     DayDataSerializer,
     DaySerializer,
@@ -70,18 +71,15 @@ class StationViewSet(viewsets.ReadOnlyModelViewSet):
                 )
         if "data_type" in filters:
             data_type = filters["data_type"].lower()
-            data_types = ["a", "j", "b", "p"]
-            if data_type not in data_types:
+            if data_type not in DATA_TYPE_CHOICES:
                 raise ParseError(
-                    f"Valid 'data_type' choices are: {', '.join(data_types)}"
+                    f"Valid 'data_type' choices are: {', '.join(DATA_TYPE_CHOICES)}"
                 )
-            ids = []
-            data_type = data_type + "t"
-            for station in Station.objects.all():
-                filter = {"station": station, f"value_{data_type}__gt": 0}
-                if YearData.objects.filter(**filter).count() > 0:
-                    ids.append(station.id)
-            queryset = Station.objects.filter(id__in=ids)
+            station_ids = YearData.objects.filter(
+                station__in=queryset,
+                **{f"{DATA_TYPE_TOTAL_FIELDS[data_type]}__gt": 0},
+            ).values_list("station_id", flat=True)
+            queryset = queryset.filter(id__in=station_ids)
 
         page = self.paginate_queryset(queryset)
         serializer = StationSerializer(page, many=True)

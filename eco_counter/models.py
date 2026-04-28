@@ -60,6 +60,9 @@ class CounterData(models.Model):
     value_bk = models.PositiveIntegerField(default=0)
     value_bp = models.PositiveIntegerField(default=0)
     value_bt = models.PositiveIntegerField(default=0)
+    value_sk = models.PositiveIntegerField(default=0)
+    value_sp = models.PositiveIntegerField(default=0)
+    value_st = models.PositiveIntegerField(default=0)
 
     class Meta:
         abstract = True
@@ -200,6 +203,9 @@ class HourData(models.Model):
     values_bk = ArrayField(models.PositiveSmallIntegerField(), default=list)
     values_bp = ArrayField(models.PositiveSmallIntegerField(), default=list)
     values_bt = ArrayField(models.PositiveSmallIntegerField(), default=list)
+    values_sk = ArrayField(models.PositiveSmallIntegerField(), default=list)
+    values_sp = ArrayField(models.PositiveSmallIntegerField(), default=list)
+    values_st = ArrayField(models.PositiveSmallIntegerField(), default=list)
 
     class Meta:
         ordering = ["-day__date"]

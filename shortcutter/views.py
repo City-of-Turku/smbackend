@@ -12,4 +12,4 @@ def unit_short_url(request, unit_id):
     if not unit_url:
         return HttpResponseNotImplemented()
 
-    return redirect(unit_url.format(id=unit_id))
+    return redirect(unit_url.format(id=int(unit_id)))

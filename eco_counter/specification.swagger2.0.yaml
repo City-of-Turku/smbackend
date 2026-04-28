@@ -91,7 +91,19 @@ definitions:
       values_jt:
         type: array
         items: 
-          type: integer   
+          type: integer
+      values_sk:
+        type: array
+        items:
+          type: integer
+      values_sp:
+        type: array
+        items:
+          type: integer
+      values_st:
+        type: array
+        items:
+          type: integer
 
   day_data:
     type: object
@@ -127,7 +139,19 @@ definitions:
       value_jp:
         type: integer
       value_jt:
-        type: integer 
+        type: integer
+      value_bk:
+        type: integer
+      value_bp:
+        type: integer
+      value_bt:
+        type: integer
+      value_sk:
+        type: integer
+      value_sp:
+        type: integer
+      value_st:
+        type: integer
         
   week_data:
     type: object
@@ -170,7 +194,19 @@ definitions:
       value_jp:
         type: integer
       value_jt:
-        type: integer 
+        type: integer
+      value_bk:
+        type: integer
+      value_bp:
+        type: integer
+      value_bt:
+        type: integer
+      value_sk:
+        type: integer
+      value_sp:
+        type: integer
+      value_st:
+        type: integer
       
   month_data:
     type: object
@@ -206,7 +242,19 @@ definitions:
       value_jp:
         type: integer
       value_jt:
-        type: integer 
+        type: integer
+      value_bk:
+        type: integer
+      value_bp:
+        type: integer
+      value_bt:
+        type: integer
+      value_sk:
+        type: integer
+      value_sp:
+        type: integer
+      value_st:
+        type: integer
 
   year_data:
     type: object
@@ -240,7 +288,19 @@ definitions:
       value_jp:
         type: integer
       value_jt:
-        type: integer 
+        type: integer
+      value_bk:
+        type: integer
+      value_bp:
+        type: integer
+      value_bt:
+        type: integer
+      value_sk:
+        type: integer
+      value_sp:
+        type: integer
+      value_st:
+        type: integer
 
 paths:
   /stations/:
@@ -252,7 +312,7 @@ paths:
         name: counter_type
         type: string
       - in: query
-        description: "The data type of the counter: A(car), B(bus), J(pedestrian) or P(bicycle). Returns stations containing data of the specified type."
+        description: "The data type of the counter: A(car), B(bus), J(pedestrian), P(bicycle) or S(scooter). Returns stations containing data of the specified type."
         name: data_type
         type: string
       responses:

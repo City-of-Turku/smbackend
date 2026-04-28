@@ -3,7 +3,7 @@ from datetime import datetime
 
 from django.core.management import BaseCommand
 
-from street_maintenance.models import MaintenanceUnit, MaintenanceWork
+from maintenance.models import MaintenanceUnit, MaintenanceWork
 
 from .constants import (
     FETCH_SIZE,
@@ -23,7 +23,7 @@ from .utils import (
     precalculate_geometry_history,
 )
 
-logger = logging.getLogger("street_maintenance")
+logger = logging.getLogger("maintenance")
 
 
 class Command(BaseCommand):

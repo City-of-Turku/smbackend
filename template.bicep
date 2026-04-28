@@ -71,8 +71,61 @@ param routaApiKey string = ''
 @secure()
 param routaApiUrl string = ''
 
-// Prod
-param uiAppSettings object = {
+@description('Email addresses for alert action group (from secrets.json). Receivers are named generically (EmailAction-0, etc.).')
+param alertEmailAddresses array = []
+
+@description('Set true for production (higher SKUs and prod app settings), false for test.')
+param isProduction bool = false
+
+// UI app settings - Production
+param uiAppSettingsProd object = {
+  ACCESSIBILITY_SENTENCE_API: 'https://tpr.hel.fi/kapaesteettomyys/api/v1/accessibility/servicepoints/d26b5f28-41c6-40a3-99f9-a1b762cc8191'
+  ACCESSIBLE_MAP_URL: '${tileserverUrl}/styles/high-contrast-map-layer/{z}/{x}/{y}'
+  AIR_MONITORING_API: '${apiUrl}/environment_data/api/v1'
+  CITIES: 'turku,kaarina,naantali,raisio'
+  DIGITRANSIT_API: 'https://api.digitransit.fi/routing/v2/waltti/gtfs/v1'
+  DIGITRANSIT_API_KEY: digitransitApiKey
+  EVENTS_API: 'https://linkedevents-api.turku.fi/v1'
+  FEEDBACK_ADDITIONAL_INFO_LINK: 'https://opaskartta.turku.fi/eFeedback/fi/Home/AboutService'
+  FEEDBACK_ADDITIONAL_INFO_LINK_EN: 'https://opaskartta.turku.fi/eFeedback/en/Home/AboutService'
+  FEEDBACK_ADDITIONAL_INFO_LINK_SV: 'https://opaskartta.turku.fi/eFeedback/sv/Home/AboutService'
+  FEEDBACK_IS_PUBLISHED: 'false'
+  FEEDBACK_URL: 'https://turku.asiointi.fi/eFeedback/'
+  INITIAL_MAP_POSITION: '60.451799,22.266414'
+  LANG: 'en_US.utf8'
+  LC_ALL: 'en_US.UTF-8'
+  LC_LANG: 'en_US.UTF-8'
+  MAPS: 'servicemap,accessible_map'
+  MATOMO_SITE_ID: '7'
+  MATOMO_URL: 'https://matomo.turku.fi'
+  MOBILITY_PLATFORM_API: apiUrl
+  MODE: 'production'
+  NODE_ENV: 'production'
+  OLD_MAP_LINK_EN: 'https://servicemap.turku.fi/'
+  OLD_MAP_LINK_FI: 'https://palvelukartta.turku.fi/'
+  OLD_MAP_LINK_SV: 'https://servicekarta.turku.fi/'
+  PARKING_SPACES_URL: 'https://parkkiopas.turku.fi/public/v1/parking_area/'
+  PARKING_STATISTICS_URL: 'https://parkkiopas.turku.fi/public/v1/parking_area_statistics/'
+  PORT: '2048'
+  PORTNET_API: 'https://meri.digitraffic.fi/api/port-call/v1'
+  PRODUCTION_PREFIX: 'SM'
+  RAILWAYS_API: 'https://rata.digitraffic.fi/api/v1'
+  REITTIOPAS_URL: 'https://reittiopas.foli.fi/reitti/'
+  RESERVATIONS_API: 'https://respa.turku.fi/v1'
+  ROADWORKS_API: '${apiUrl}/exceptional_situations/api/v1'
+  SERVICE_MAP_URL: '${tileserverUrl}/styles/hel-osm-bright/{z}/{x}/{y}'
+  SERVICEMAP_API: '${apiUrl}/api'
+  SERVICEMAP_API_VERSION: '/v2'
+  SHOW_AREA_SELECTION: 'true'
+  SHOW_READ_SPEAKER_BUTTON: 'false'
+  SSR_FETCH_TIMEOUT: '2500'
+  THEME_PKG: '1'
+  USE_PTV_ACCESSIBILITY_API: 'true'
+  WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false'
+}
+
+// UI app settings - Test (commented block was here)
+param uiAppSettingsTest object = {
   ACCESSIBILITY_SENTENCE_API: 'https://tpr.hel.fi/kapaesteettomyys/api/v1/accessibility/servicepoints/d26b5f28-41c6-40a3-99f9-a1b762cc8191'
   ACCESSIBLE_MAP_URL: '${tileserverUrl}/styles/high-contrast-map-layer/{z}/{x}/{y}'
   AIR_MONITORING_API: '${apiUrl}/environment_data/api/v1'
@@ -118,55 +171,10 @@ param uiAppSettings object = {
   WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false'
 }
 
-// Test
-/* param uiAppSettings object = {
-  ACCESSIBILITY_SENTENCE_API: 'https://tpr.hel.fi/kapaesteettomyys/api/v1/accessibility/servicepoints/d26b5f28-41c6-40a3-99f9-a1b762cc8191'
-  ACCESSIBLE_MAP_URL: '${tileserverUrl}/styles/high-contrast-map-layer/{z}/{x}/{y}'
-  AIR_MONITORING_API: '${apiUrl}/environment_data/api/v1'
-  CITIES: 'turku,kaarina,naantali,raisio'
-  DIGITRANSIT_API: 'https://api.digitransit.fi/routing/v1/routers/waltti/index/graphql'
-  DIGITRANSIT_API_KEY: digitransitApiKey
-  EVENTS_API: 'https://linkedevents-api.turku.fi/v1'
-  FEEDBACK_ADDITIONAL_INFO_LINK: 'https://opaskartta.turku.fi/eFeedback/fi/Home/AboutService'
-  FEEDBACK_ADDITIONAL_INFO_LINK_EN: 'https://opaskartta.turku.fi/eFeedback/en/Home/AboutService'
-  FEEDBACK_ADDITIONAL_INFO_LINK_SV: 'https://opaskartta.turku.fi/eFeedback/sv/Home/AboutService'
-  FEEDBACK_IS_PUBLISHED: 'false'
-  FEEDBACK_URL: 'https://turku.asiointi.fi/eFeedback/'
-  INITIAL_MAP_POSITION: '60.451799,22.266414'
-  LANG: 'en_US.utf8'
-  LC_ALL: 'en_US.UTF-8'
-  LC_LANG: 'en_US.UTF-8'
-  MAPS: 'servicemap,accessible_map'
-  MATOMO_SITE_ID: '7'
-  MATOMO_URL: 'https://matomo.turku.fi'
-  MOBILITY_PLATFORM_API: apiUrl
-  MODE: 'production'
-  NODE_ENV: 'production'
-  OLD_MAP_LINK_EN: 'https://servicemap.turku.fi/'
-  OLD_MAP_LINK_FI: 'https://palvelukartta.turku.fi/'
-  OLD_MAP_LINK_SV: 'https://servicekarta.turku.fi/'
-  PARKING_SPACES_URL: 'https://parkkiopas.turku.fi/public/v1/parking_area/'
-  PARKING_STATISTICS_URL: 'https://parkkiopas.turku.fi/public/v1/parking_area_statistics/'
-  PORT: '2048'
-  PORTNET_API: 'https://meri.digitraffic.fi/api/port-call/v1'
-  PRODUCTION_PREFIX: 'SM'
-  RAILWAYS_API: 'https://rata.digitraffic.fi/api/v1'
-  REITTIOPAS_URL: 'https://reittiopas.foli.fi/reitti/'
-  RESERVATIONS_API: 'https://respa.turku.fi/v1'
-  ROADWORKS_API: '${apiUrl}/exceptional_situations/api/v1'
-  SERVICE_MAP_URL: '${tileserverUrl}/styles/hel-osm-bright/{z}/{x}/{y}'
-  SERVICEMAP_API: '${apiUrl}/api'
-  SERVICEMAP_API_VERSION: '/v2'
-  SHOW_AREA_SELECTION: 'true'
-  SHOW_READ_SPEAKER_BUTTON: 'false'
-  SSR_FETCH_TIMEOUT: '2500'
-  THEME_PKG: '1'
-  USE_PTV_ACCESSIBILITY_API: 'true'
-  WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false'
-} */
+var uiAppSettings = isProduction ? uiAppSettingsProd : uiAppSettingsTest
 
-// Prod
-param apiAppSettings object = {
+// API app settings - Production
+param apiAppSettingsProd object = {
   ACCESSIBILITY_SYSTEM_ID: 'd26b5f28-41c6-40a3-99f9-a1b762cc8191'
   ADDITIONAL_INSTALLED_APPS: 'smbackend_turku,ptv'
   ALLOWED_HOSTS: '${apiInternalUrl},169.254.129.6,127.0.0.1,localhost,palvelukartta-api.turku.fi,palvelukartta.turku.fi'
@@ -223,12 +231,12 @@ param apiAppSettings object = {
   SERVER_EMAIL: 'palvelukartta@turku.fi'
   STATIC_ROOT: '/fileshare/staticroot'
   STATIC_URL: '/static/'
-  STREET_MAINTENANCE_LOG_LEVEL: 'INFO'
+  MAINTENANCE_LOG_LEVEL: 'INFO'
   TELRAAM_TOKEN: telraamToken
   TRAFFIC_COUNTER_OBSERVATIONS_BASE_URL: 'https://data.turku.fi/2yxpk2imqi2mzxpa6e6knq/'
   TURKU_API_KEY: turkuApiKey
   TURKU_SERVICES_IMPORT_LOG_LEVEL: 'INFO'
-  TURKU_WFS_URL: 'https://opaskartta.turku.fi/TeklaOGCWeb/WFS.ashx'
+  TURKU_WFS_URL: 'https://turku.asiointi.fi/teklaogcweb/wfs.ashx'
   USE_X_FORWARDED_HOST: 'True'
   WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false'
   WEBSITES_PORT: '8000'
@@ -242,8 +250,8 @@ param apiAppSettings object = {
   YIT_VEHICLES_URL: 'https://api.autori.io/api/dailymaintenance-a3/route/types/vehicle/'
 }
 
-// Test
-/* param apiAppSettings object = {
+// API app settings - Test
+param apiAppSettingsTest object = {
   ACCESSIBILITY_SYSTEM_ID: 'd26b5f28-41c6-40a3-99f9-a1b762cc8191'
   ADDITIONAL_INSTALLED_APPS: 'smbackend_turku,ptv'
   ALLOWED_HOSTS: '${apiInternalUrl},127.0.0.1,localhost,testipalvelukartta-api.turku.fi,testipalvelukartta.turku.fi'
@@ -300,12 +308,12 @@ param apiAppSettings object = {
   SERVER_EMAIL: 'testipalvelukartta@turku.fi'
   STATIC_ROOT: '/fileshare/staticroot'
   STATIC_URL: '/static/'
-  STREET_MAINTENANCE_LOG_LEVEL: 'INFO'
+  MAINTENANCE_LOG_LEVEL: 'INFO'
   TELRAAM_TOKEN: telraamToken
   TRAFFIC_COUNTER_OBSERVATIONS_BASE_URL: 'https://data.turku.fi/2yxpk2imqi2mzxpa6e6knq/'
   TURKU_API_KEY: turkuApiKey
   TURKU_SERVICES_IMPORT_LOG_LEVEL: 'INFO'
-  TURKU_WFS_URL: 'https://opaskartta.turku.fi/TeklaOGCWeb/WFS.ashx'
+  TURKU_WFS_URL: 'https://turku.asiointi.fi/teklaogcweb/wfs.ashx'
   WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false'
   WEBSITES_PORT: '8000'
   YIT_CLIENT_ID: '01797d9f-1ab5-4d01-880d-01dfa4925a27'
@@ -316,7 +324,9 @@ param apiAppSettings object = {
   YIT_SCOPE: 'api://7f45c30e-cc67-4a93-85f1-0149b44c1cdf/.default'
   YIT_TOKEN_URL: 'https://login.microsoftonline.com/86792d09-0d81-4899-8d66-95dfc96c8014/oauth2/v2.0/token?Scope=api://7f45c30e-cc67-4a93-85f1-0149b44c1cdf/.default'
   YIT_VEHICLES_URL: 'https://api.autori.io/api/dailymaintenance-a3/route/types/vehicle/'
-} */
+}
+
+var apiAppSettings = isProduction ? apiAppSettingsProd : apiAppSettingsTest
 
 @allowed([
   0
@@ -635,13 +645,20 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-11-01-pr
   ]
 }
 
+var dbStorage = isProduction ? {
+  iops: 120
+  tier: 'P4'
+  storageSizeGB: 32
+  autoGrow: 'Disabled'
+} : {
+  iops: 120
+  tier: 'P4'
+  storageSizeGB: 32
+  autoGrow: 'Disabled'
+}
+
 var dbProperties = {
-  storage: {
-    iops: 120
-    tier: 'P4'
-    storageSizeGB: 32
-    autoGrow: 'Disabled'
-  }
+  storage: dbStorage
   network: {
     publicNetworkAccess: 'Enabled'
   }
@@ -658,13 +675,15 @@ var dbProperties = {
   availabilityZone: '2'
 }
 
-var dbSku = {
-  // Must be above Burstable for replication
+var dbSku = isProduction ? {
   name: 'Standard_D2ds_v5'
   tier: 'GeneralPurpose'
+} : {
+  name: 'Standard_B2s'
+  tier: 'Burstable'
 }
 
-resource db 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-preview' = {
+resource db 'Microsoft.DBforPostgreSQL/flexibleServers@2025-08-01' = {
   name: dbServerName
   location: location
   sku: dbSku
@@ -775,16 +794,24 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' = {
   }
 }
 
+var serverfarmPlanSku = isProduction ? {
+  name: 'P0v3'
+  tier: 'Premium0V3'
+  size: 'P0v3'
+  family: 'Pv3'
+  capacity: 1
+} : {
+  name: 'B3'
+  tier: 'Basic'
+  size: 'B3'
+  family: 'B'
+  capacity: 1
+}
+
 resource serverfarmPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: serverfarmPlanName
   location: location
-  sku: {
-    name: 'P0v3'
-    tier: 'Premium0V3'
-    size: 'P0v3'
-    family: 'Pv3'
-    capacity: 1
-  }
+  sku: serverfarmPlanSku
   kind: 'linux'
   properties: {
     perSiteScaling: false
@@ -973,6 +1000,25 @@ resource webApps 'Microsoft.Web/sites@2023-12-01' = [
   }
 ]
 
+resource webAppDiagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = [
+  for i in range(0, length(webAppRequirements)): {
+    scope: webApps[i]
+    name: 'diagnostic-settings'
+    properties: {
+      workspaceId: workspace.id
+      logs: [
+        { category: 'AppServiceHTTPLogs', enabled: true, retentionPolicy: { enabled: false, days: 0 } }
+        { category: 'AppServiceConsoleLogs', enabled: true, retentionPolicy: { enabled: false, days: 0 } }
+        { category: 'AppServiceAppLogs', enabled: true, retentionPolicy: { enabled: false, days: 0 } }
+        { category: 'AppServicePlatformLogs', enabled: true, retentionPolicy: { enabled: false, days: 0 } }
+      ]
+      metrics: [
+        { category: 'AllMetrics', enabled: true, retentionPolicy: { enabled: false, days: 0 } }
+      ]
+    }
+  }
+]
+
 resource keyvault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: keyvaultName
   location: location
@@ -1051,3 +1097,75 @@ resource webAppAcrPullRoleAssignments 'Microsoft.Authorization/roleAssignments@2
     }
   }
 ]
+
+var actionGroupName = isProduction ? 'actionGroups_Service_Center_Alerts_name' : 'actionGroups_Turku_Alert_Test_name'
+var actionGroupShortName = isProduction ? 'SC-Alerts' : 'Test Alerts'
+var actionGroupEmailReceivers = [for (email, i) in alertEmailAddresses: {
+  name: 'EmailAction-${i}'
+  emailAddress: email
+  useCommonAlertSchema: true
+}]
+var redisDownAlertName = isProduction ? 'metricAlerts_SM_Redis_Down_name' : 'metricAlerts_Redis_Cache_Down_name'
+var redisDownAlertDescription = isProduction ? 'Service map Redis cache is down. As Celery periodic tasks are dependant on continuous cache connection, the SM backend API service needs to be restarted for periodic tasks to work again.\n\nSee Gonflu (https://gofore.atlassian.net/wiki/spaces/Flow/pages/1503077592/Continuity+Maintenance+guide+TKUAOK#5.1-Palvelukartta-Celery-API-sudden-fail) for further details.'
+  : 'Alerts when CPU min reaches 0%. This is to alert that the app connected to this cache might need a restart since Celery might not be able to pickup a new cache connection.'
+var redisDownAlertEvaluationFrequency = isProduction ? 'PT1M' : 'PT5M'
+
+@description('Send alerts related to resource group (test: single email; prod: service center + email)')
+resource actionGroup 'microsoft.insights/actionGroups@2024-10-01-preview' = {
+  name: actionGroupName
+  location: 'Global'
+  properties: {
+    groupShortName: actionGroupShortName
+    enabled: true
+    emailReceivers: actionGroupEmailReceivers
+    smsReceivers: []
+    webhookReceivers: []
+    eventHubReceivers: []
+    itsmReceivers: []
+    azureAppPushReceivers: []
+    automationRunbookReceivers: []
+    voiceReceivers: []
+    logicAppReceivers: []
+    azureFunctionReceivers: []
+    armRoleReceivers: []
+  }
+}
+
+@description('Alerts when Redis cache CPU is 0% (cache down); triggers action group for API restart.')
+resource metricAlertRedisCacheDown 'microsoft.insights/metricAlerts@2018-03-01' = {
+  name: redisDownAlertName
+  location: 'global'
+  properties: {
+    description: redisDownAlertDescription
+    severity: 2
+    enabled: true
+    scopes: [cache.id]
+    evaluationFrequency: redisDownAlertEvaluationFrequency
+    windowSize: 'PT5M'
+    criteria: {
+      allOf: [
+        {
+          threshold: json('0')
+          name: 'Metric1'
+          metricNamespace: 'Microsoft.Cache/Redis'
+          metricName: 'percentProcessorTime'
+          operator: 'LessThanOrEqual'
+          timeAggregation: 'Minimum'
+          skipMetricValidation: false
+          criterionType: 'StaticThresholdCriterion'
+        }
+      ]
+      'odata.type': 'Microsoft.Azure.Monitor.MultipleResourceMultipleMetricCriteria'
+    }
+    autoMitigate: true
+    targetResourceType: 'Microsoft.Cache/Redis'
+    targetResourceRegion: 'swedencentral'
+    actions: [
+      {
+        actionGroupId: actionGroup.id
+        webHookProperties: {}
+      }
+    ]
+  }
+  dependsOn: [cache]
+}

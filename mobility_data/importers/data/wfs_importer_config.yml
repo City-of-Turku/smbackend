@@ -207,7 +207,7 @@ features:
   - content_type_name: CrossWalkSign
     wfs_layer: GIS:Liikennemerkit
     include:
-      Varustelaji: 511 Suojatie
+      Varustelaji: E1 Suojatie
     max_features: 50000
 
   - content_type_name: RouteForDisabledSign
@@ -562,7 +562,7 @@ features:
 
   - content_type_name: BrushSaltedBicycleNetwork
     wfs_layer: GIS:Harjasuolatut_pyoratiet
- 
+
   - content_type_name: BrushSandedBicycleNetwork
     wfs_layer: GIS:Harjahiekoitetut_pyoratiet
 

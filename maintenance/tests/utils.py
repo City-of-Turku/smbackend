@@ -1,10 +1,9 @@
+import os
 from datetime import datetime
 
-from street_maintenance.management.commands.constants import (
-    DATE_FORMATS,
-    INFRAROAD,
-    YIT,
-)
+from django.contrib.gis.gdal import DataSource
+
+from maintenance.management.commands.constants import DATE_FORMATS, INFRAROAD, YIT
 
 
 def get_yit_vehicles_mock_data(num_elements):
@@ -359,6 +358,195 @@ def get_kuntec_units_mock_data(num_elements):
     assert num_elements <= len(units)
     data = {"data": {"units": units[:num_elements]}}
     return data
+
+
+def get_ski_trails_maintenance_history_mock_data():
+    null = None
+    data = {
+        "__comment": "Paikannuspalvelu.fi API, please contact: info [at] paikannuspalvelu [dot] fi for description.",
+        "__format": "geojson",
+        "__generated": "2024-09-25 11:56:17",
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {
+                    "speed": 11,
+                    "missing_date": "2024-09-24 10:53",
+                    "device_id": 861774052275250,
+                    "location_id": 866,
+                    "name": "Missing date",
+                    "distance": 0,
+                    "hours_ago": 25.1,
+                    "days_ago": 1,
+                },
+                "geometry": {
+                    "coordinates": [22.249045608908, 60.486433601894],
+                    "type": "Point",
+                },
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "speed": 0,
+                    "date": "26-08-2024 11:56",
+                    "device_id": null,
+                    "location_id": 862,
+                    "name": "Invalid date",
+                    "distance": 0,
+                    "hours_ago": 720,
+                    "days_ago": 30,
+                },
+                "geometry": {
+                    "coordinates": [22.322459622776, 60.477908123479],
+                    "type": "Point",
+                },
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "speed": 0,
+                    "date": "26-08-2024 11:56",
+                    "device_id": null,
+                    "location_id": 424242,
+                    "name": "Invalid locatioin id",
+                    "distance": 0,
+                    "hours_ago": 720,
+                    "days_ago": 30,
+                },
+                "geometry": {
+                    "coordinates": [22.322459622776, 60.477908123479],
+                    "type": "Point",
+                },
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "speed": 0,
+                    "date": "2024-08-26 11:56",
+                    "device_id": null,
+                    "location_id": 863,
+                    "name": "Oriketo-Räntämäki|Oriketo (sv)|Oriketo (en)",
+                    "distance": 0,
+                    "hours_ago": 720,
+                    "days_ago": 30,
+                    "conditioned": 1,
+                    "length": "1,5",
+                    "lights": "6-22",
+                    "condition_note": "Latu ok",
+                },
+                "geometry": {
+                    "coordinates": [22.312831834656, 60.47943016396],
+                    "type": "Point",
+                },
+            },
+        ],
+    }
+    return data
+
+
+def get_ice_tracks_maintenance_history_mock_data():
+    null = None
+    false = False
+    true = True
+    data = {
+        "type": "FeatureCollection",
+        "count": 47,
+        "total_count": 47,
+        "features": [
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [22.316604400000024, 60.47026100000005],
+                },
+                "properties": {
+                    "id": 928,
+                    "name": "Frantsinkenttä|Frantsis plan|Frantsi field",
+                    "description": "",
+                    "group": "Luistelukentät",
+                    "external_id": 462,
+                    "conditioned": true,
+                    "conditioned_at": "2024-10-04 14:30:06",
+                    "conditioned_by": "Österlund Joni",
+                    "condition_note": "Jää hyvä",
+                    "address": "Prelaatinpolku 7",
+                    "zip": "20540",
+                    "city": "Turku",
+                },
+                "crs": {
+                    "type": "name",
+                    "properties": {"name": "urn:ogc:def:crs:OGC:1.3:CRS84"},
+                },
+            },
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [22.269447858259024, 60.439084253951066],
+                },
+                "properties": {
+                    "id": 929,
+                    "name": "Purokadun kenttä",
+                    "description": "Pienpelikokoinen hiekkakenttä",
+                    "group": "Luistelukentät",
+                    "external_id": 767,
+                    "conditioned": false,
+                    "conditioned_at": null,
+                    "conditioned_by": null,
+                    "address": "Kunnallissairaalantie 33",
+                    "zip": "20810",
+                    "city": "Turku",
+                },
+                "crs": {
+                    "type": "name",
+                    "properties": {"name": "urn:ogc:def:crs:OGC:1.3:CRS84"},
+                },
+            },
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [22.298647600000024, 60.458995100000045],
+                },
+                "properties": {
+                    "id": 930,
+                    "name": "Non existing unit",
+                    "description": "Test non existing unit",
+                    "group": "Luistelukentät",
+                    "external_id": 424242,
+                    "conditioned": false,
+                    "conditioned_at": null,
+                    "conditioned_by": null,
+                    "address": "Ruukuntekijänkuja 2",
+                    "zip": "20540",
+                    "city": "Turku",
+                },
+                "crs": {
+                    "type": "name",
+                    "properties": {"name": "urn:ogc:def:crs:OGC:1.3:CRS84"},
+                },
+            },
+        ],
+        "response": {"format": "geojson", "message": []},
+    }
+    return data
+
+
+def get_data_source(file_name):
+    """
+    Returns the given file_name as a GDAL Datasource,
+    the file must be located in /maintenance/tests/data/
+    """
+    data_path = os.path.join(os.path.dirname(__file__), "data")
+    file = os.path.join(data_path, file_name)
+    return DataSource(file)
+
+
+def get_test_fixture_data_layer(file_name):
+    ds = get_data_source(file_name)
+    assert len(ds) == 1
+    return ds[0]
 
 
 def get_routa_works_mock_data(num_elements):

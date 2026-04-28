@@ -16,19 +16,19 @@ DataSource to fail when loading data.
 scooter_parkings.gml:
 xsi:schemaLocation="http://www.opengis.net/wfs
 http://schemas.opengis.net/wfs/1.0.0/WFS-basic.xsd http://www.tekla.com/schemas/GIS
-https://opaskartta.turku.fi/TeklaOGCWeb/WFS.ashx
+https://turku.asiointi.fi/teklaogcweb/wfs.ashx
 ?SERVICE=WFS&REQUEST=DescribeFeatureType&typeName=GIS:Sahkopotkulautaparkki "
 scooter_speed_limits.gml:
 xsi:schemaLocation="http://www.opengis.net/wfs
 http://schemas.opengis.net/wfs/1.0.0/WFS-basic.xsd
 http://www.tekla.com/schemas/GIS
-https://opaskartta.turku.fi/TeklaOGCWeb/WFS.ashx
+https://turku.asiointi.fi/teklaogcweb/wfs.ashx
 ?SERVICE=WFS&REQUEST=DescribeFeatureType&typeName=GIS:Sahkopotkulauta_nopeusrajoitus "
 scooter_no_parking_zones.gml:
 xsi:schemaLocation="http://www.opengis.net/wfs
 http://schemas.opengis.net/wfs/1.0.0/WFS-basic.xsd
 http://www.tekla.com/schemas/GIS
-https://opaskartta.turku.fi/TeklaOGCWeb/WFS.ashx
+https://turku.asiointi.fi/teklaogcweb/wfs.ashx
 ?SERVICE=WFS&REQUEST=DescribeFeatureType&typeName=GIS:Sahkopotkulauta_pysakointikielto "
 """
 

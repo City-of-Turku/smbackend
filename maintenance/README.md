@@ -1,8 +1,9 @@
-# Street Maintenance history
+# Maintenance history
 
-Django app for importing and serving street maintenance data.
+Django app for importing, processing and serving maintenance data.
 
-## Importer
+## Street maintenance history
+### Importer
 Name:
 import_street_maintenance_history 
 
@@ -28,7 +29,7 @@ To import KUNTEC and INFRAROAD street maintenance history:
 ```
 Note, only the MaintenanceWorks and MaintenanceUnits for the given provider from the latest import are stored and the rest are deleted. The GeometryHistory is generated only if more than one MaintenanceWork is created.
 
-### Periodically imorting
+### Periodically importing
 To periodically import data use Celery, for more information [see](https://github.com/City-of-Turku/smbackend/wiki/Celery-Tasks#street-maintenance-history-street_maintenancetasksimport_street_maintenance_history).
 
 
@@ -39,5 +40,23 @@ e.g., to delete all street maintenance history for provider 'destia':
 ./manage.py delete_street_maintenance_history destia
 ```
 
-## API
-See: specificatin.swagger.yaml
+## Ski trails
+To periodically import ski trails maintenance history use Celery, for more information [see](https://github.com/City-of-Turku/smbackend/wiki/Celery-Tasks#unit-maintenance).
+
+### Ski trails
+Before importing the ski trails maintenance history the ski trails must be imported. To import type:
+```
+./manage.py import_ski_trails
+```
+
+### Ski trails maintenance history
+To import the maintenance history, type:
+```
+./manage.py import_ski_trails_maintenance_history
+```
+
+## Ice tracks maintenance history
+To import the maintenance history, type:
+```
+./manage.py import_ice_tracks_maintenance_history
+```

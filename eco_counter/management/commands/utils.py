@@ -10,7 +10,6 @@ from django.conf import settings
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, LineString, MultiLineString, Point
 from django.core.management.base import CommandError
-from django.db.models import Q
 
 from eco_counter.constants import (
     COUNTER_CHOICES_STR,
@@ -38,12 +37,12 @@ from eco_counter.constants import (
 )
 from eco_counter.management.commands.eco_visio_client import EcoVisioAPIClient
 from eco_counter.models import Day, DayData, Station, YearData
+from eco_counter.movement_types import build_nonzero_total_q, DATA_TYPE_TOTAL_FIELDS
 from eco_counter.tests.constants import TEST_COLUMN_NAMES
 from mobility_data.importers.constants import SOUTHWEST_FINLAND_BOUNDARY_SRID
 from mobility_data.importers.utils import get_root_dir, locates_in_south_western_finland
 
 logger = logging.getLogger("eco_counter")
-Q_EXP = Q(value_at__gt=0) | Q(value_pt__gt=0) | Q(value_jt__gt=0) | Q(value_bt__gt=0)
 
 
 class LAMStation:
@@ -100,15 +99,12 @@ class ObservationStation(LAMStation, EcoCounterStation, TrafficCounterStation):
         self.location = None
         self.geometry = None
         self.station_id = None
-        match csv_data_source:
-            # case COUNTERS.TELRAAM_COUNTER:
-            #     TelraamCounterStation.__init__(self, feature)
-            case COUNTERS.LAM_COUNTER:
-                LAMStation.__init__(self, feature)
-            case COUNTERS.ECO_COUNTER:
-                EcoCounterStation.__init__(self, feature)
-            case COUNTERS.TRAFFIC_COUNTER:
-                TrafficCounterStation.__init__(self, feature)
+        if csv_data_source == COUNTERS.LAM_COUNTER:
+            LAMStation.__init__(self, feature)
+        elif csv_data_source == COUNTERS.ECO_COUNTER:
+            EcoCounterStation.__init__(self, feature)
+        elif csv_data_source == COUNTERS.TRAFFIC_COUNTER:
+            TrafficCounterStation.__init__(self, feature)
 
 
 class TelraamStation:
@@ -126,7 +122,7 @@ def get_is_active(station):
         from_date = date.today() - timedelta(days=days - 1)
         day_qs = Day.objects.filter(date__gte=from_date)
         day_data_qs = DayData.objects.filter(station=station, day__in=day_qs)
-        if day_data_qs.filter(Q_EXP).count() > 0:
+        if day_data_qs.filter(build_nonzero_total_q()).exists():
             res[days] = True
         else:
             res[days] = False
@@ -136,19 +132,21 @@ def get_is_active(station):
 def get_sensor_types(station):
     # Return the sensor types(car, bike etc) that has a total year value >0.
     # i.e., there are sensors for counting the type of data.
-    types = ["at", "pt", "jt", "bt"]
     result = []
-    for type in types:
-        filter = {"station": station, f"value_{type}__gt": 0}
-        if YearData.objects.filter(**filter).count() > 0:
-            result.append(type)
+    for value_field in DATA_TYPE_TOTAL_FIELDS.values():
+        if YearData.objects.filter(
+            station=station, **{f"{value_field}__gt": 0}
+        ).exists():
+            result.append(value_field.replace("value_", ""))
     return result
 
 
 def get_data_until_date(station):
     try:
         return (
-            DayData.objects.filter(Q_EXP, station=station).latest("day__date").day.date
+            DayData.objects.filter(build_nonzero_total_q(), station=station)
+            .latest("day__date")
+            .day.date
         )
     except DayData.DoesNotExist:
         return None
@@ -157,7 +155,7 @@ def get_data_until_date(station):
 def get_data_from_date(station):
     try:
         return (
-            DayData.objects.filter(Q_EXP, station=station)
+            DayData.objects.filter(build_nonzero_total_q(), station=station)
             .earliest("day__date")
             .day.date
         )
@@ -544,6 +542,12 @@ def fetch_telraam_camera(mac_id):
     }
     url = TELRAAM_COUNTER_CAMERAS_URL.format(mac_id=mac_id)
     response = TELRAAM_HTTP.get(url, headers=headers)
+    if not response.ok:
+        logger.error(
+            f"Telraam API request failed for camera {mac_id}: "
+            f"HTTP {response.status_code} {response.reason}"
+        )
+        return None
     cameras = response.json().get("camera", None)
     if cameras:
         # Return first camera, as currently only one camera is
@@ -729,37 +733,53 @@ def get_or_create_telraam_station(station):
     return obj
 
 
-def save_stations(csv_data_source):
+def save_stations(csv_data_source, delete_missing=True):
     stations = []
     num_created = 0
-    match csv_data_source:
-        # case COUNTERS.TELRAAM_COUNTER:
-        # Telraam station are handled differently as they are dynamic
-        case COUNTERS.LAM_COUNTER:
-            stations = get_lam_counter_stations()
-        case COUNTERS.ECO_COUNTER:
-            stations = get_eco_visio_stations()
-        case COUNTERS.TRAFFIC_COUNTER:
-            stations = get_traffic_counter_stations()
-    object_ids = list(
-        Station.objects.filter(csv_data_source=csv_data_source).values_list(
-            "id", flat=True
+    num_updated = 0
+    if csv_data_source == COUNTERS.LAM_COUNTER:
+        stations = get_lam_counter_stations()
+    elif csv_data_source == COUNTERS.ECO_COUNTER:
+        stations = get_eco_visio_stations()
+    elif csv_data_source == COUNTERS.TRAFFIC_COUNTER:
+        stations = get_traffic_counter_stations()
+    object_ids = []
+    if delete_missing:
+        object_ids = list(
+            Station.objects.filter(csv_data_source=csv_data_source).values_list(
+                "id", flat=True
+            )
         )
-    )
     if csv_data_source == COUNTERS.ECO_COUNTER:
         for station in stations:
-            obj, created = Station.objects.update_or_create(
+            defaults = {
+                "name": station["name"],
+                "location": station["location"],
+                "geometry": station["geometry"],
+                "data_from_date": station["data_from_date"],
+                "data_until_date": station["data_until_date"],
+            }
+            # Explicitly assign + save to ensure updates are persisted for GIS fields.
+            obj, created = Station.objects.get_or_create(
                 station_id=station["station_id"],
                 csv_data_source=csv_data_source,
-                defaults={
-                    "name": station["name"],
-                    "location": station["location"],
-                    "geometry": station["geometry"],
-                    "data_from_date": station["data_from_date"],
-                    "data_until_date": station["data_until_date"],
-                },
+                defaults=defaults,
             )
-            if obj.id in object_ids:
+            if not created:
+                changed = any(
+                    getattr(obj, key) != value for key, value in defaults.items()
+                )
+                if changed:
+                    for key, value in defaults.items():
+                        setattr(obj, key, value)
+                    obj.save()
+                    num_updated += 1
+                    logger.info(
+                        "Updated Station for counter %s with station_id %s",
+                        csv_data_source,
+                        station["station_id"],
+                    )
+            if delete_missing and obj.id in object_ids:
                 object_ids.remove(obj.id)
             if created:
                 num_created += 1
@@ -774,18 +794,25 @@ def save_stations(csv_data_source):
                 station_id=station.station_id,
                 csv_data_source=csv_data_source,
             )
-            if obj.id in object_ids:
+            if delete_missing and obj.id in object_ids:
                 object_ids.remove(obj.id)
             if created:
                 num_created += 1
-    Station.objects.filter(id__in=object_ids).delete()
-    logger.info(
-        f"Deleted {len(object_ids)} obsolete Stations for counter {csv_data_source}"
-    )
+    if delete_missing:
+        Station.objects.filter(id__in=object_ids).delete()
+        logger.info(
+            f"Deleted {len(object_ids)} obsolete Stations for counter {csv_data_source}"
+        )
+    else:
+        logger.info(
+            f"Skipped deletion of obsolete Stations for counter {csv_data_source}"
+        )
     num_stations = Station.objects.filter(csv_data_source=csv_data_source).count()
     logger.info(
         f"Created {num_created} Stations of total {num_stations} Stations for counter {csv_data_source}."
     )
+    if num_updated > 0:
+        logger.info(f"Updated {num_updated} Stations for counter {csv_data_source}.")
 
 
 def get_test_dataframe(counter):

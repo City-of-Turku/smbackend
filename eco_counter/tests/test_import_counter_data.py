@@ -134,6 +134,9 @@ def test_import_telraam(get_telraam_data_frames_mock):
     assert year_data.value_pk == 24 * num_days_per_location
     assert year_data.value_pp == 24 * num_days_per_location
     assert year_data.value_pt == 24 * num_days_per_location * 2
+    assert year_data.value_sk == 0
+    assert year_data.value_sp == 0
+    assert year_data.value_st == 0
     assert MonthData.objects.count() == stations_qs.count() * Month.objects.count()
     assert (
         MonthData.objects.get(station=station, month=Month.objects.first()).value_at
@@ -184,6 +187,9 @@ def test_import_eco_counter_data(stations):
     assert hour_data.values_pp == res
     assert hour_data.values_pk == res
     assert hour_data.values_pt == res_tot
+    assert hour_data.values_sk == res
+    assert hour_data.values_sp == res
+    assert hour_data.values_st == res_tot
     assert hour_data.values_jk == res
     assert hour_data.values_jp == res
     assert hour_data.values_jt == res_tot
@@ -228,6 +234,9 @@ def test_import_eco_counter_data(stations):
     assert month_data.value_pp == jan_month_days * 96
     assert month_data.value_pk == jan_month_days * 96
     assert month_data.value_pt == jan_month_days * 96 * 2
+    assert month_data.value_sp == jan_month_days * 96
+    assert month_data.value_sk == jan_month_days * 96
+    assert month_data.value_st == jan_month_days * 96 * 2
     month = Month.objects.get(month_number=2, year__year_number=2020)
     num_month_days = month.days.count()
     feb_month_days = calendar.monthrange(month.year.year_number, month.month_number)[1]
@@ -408,6 +417,9 @@ def test_import_traffic_counter_data(stations):
     assert hour_data.values_bk == res
     assert hour_data.values_bp == res
     assert hour_data.values_bt == res_tot
+    assert hour_data.values_sk == [0 for x in range(24)]
+    assert hour_data.values_sp == [0 for x in range(24)]
+    assert hour_data.values_st == [0 for x in range(24)]
 
     # Test traffic counter day data
     day = Day.objects.get(date=start_time)
@@ -484,6 +496,9 @@ def test_import_lam_counter_data(stations):
     assert hour_data.values_bk == res
     assert hour_data.values_bp == res
     assert hour_data.values_bt == res_tot
+    assert hour_data.values_sk == [0 for x in range(24)]
+    assert hour_data.values_sp == [0 for x in range(24)]
+    assert hour_data.values_st == [0 for x in range(24)]
     # 2019 December 2019 has 6 weeks(48,49,50,51,52 and 1) and January 2020 has 5 week = 11 weeks
     assert Week.objects.filter().count() == 11
     # 5 days of week 5 in 2020 is imported, e.g. 4*24*5 = 480

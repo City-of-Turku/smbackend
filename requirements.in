@@ -1,4 +1,4 @@
-Django==4.2.26
+Django==4.2.30
 djangorestframework
 djangorestframework-jsonp
 Markdown
@@ -44,3 +44,4 @@ drf-spectacular
 xmltodict
 freezegun
 geopy
+azure-monitor-opentelemetry>=1.6.0
