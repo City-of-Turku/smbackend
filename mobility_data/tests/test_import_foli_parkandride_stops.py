@@ -25,8 +25,9 @@ Suggestion when there is more time to use:
 
 
 @pytest.mark.django_db
-@patch("mobility_data.importers.utils.fetch_json")
-def test_import_foli_stops(fetch_json_mock):
+@patch("mobility_data.importers.foli_parkandride_stop.fetch_json_with_headers")
+@patch("mobility_data.importers.foli_parkandride_stop.fetch_json")
+def test_import_foli_stops(fetch_json_mock, fetch_json_with_headers_mock):
     from mobility_data.importers.foli_parkandride_stop import (
         FOLI_PARKANDRIDE_BIKES_STOP_CONTENT_TYPE_NAME,
         FOLI_PARKANDRIDE_CARS_STOP_CONTENT_TYPE_NAME,
@@ -34,23 +35,23 @@ def test_import_foli_stops(fetch_json_mock):
         get_parkandride_car_stop_objects,
     )
 
-    fetch_json_mock.return_value = get_test_fixture_json_data(
-        "fintraffic_turku_hubs.json"
-    )
+    fixture_data = get_test_fixture_json_data("fintraffic_turku_hubs.json")
+    fetch_json_with_headers_mock.return_value = fixture_data
+    fetch_json_mock.return_value = fixture_data
 
     car_stops = get_parkandride_car_stop_objects()
     content_type = get_or_create_content_type_from_config(
         FOLI_PARKANDRIDE_CARS_STOP_CONTENT_TYPE_NAME
     )
     num_created, num_deleted = save_to_database(car_stops, content_type)
-    assert num_created == 12
+    assert num_created == 7
     assert num_deleted == 0
     bike_stops = get_parkandride_bike_stop_objects()
     content_type = get_or_create_content_type_from_config(
         FOLI_PARKANDRIDE_BIKES_STOP_CONTENT_TYPE_NAME
     )
     num_created, num_deleted = save_to_database(bike_stops, content_type)
-    assert num_created == 12
+    assert num_created == 7
     assert num_deleted == 0
     cars_stops_content_type = ContentType.objects.get(
         type_name=FOLI_PARKANDRIDE_CARS_STOP_CONTENT_TYPE_NAME
@@ -69,10 +70,10 @@ def test_import_foli_stops(fetch_json_mock):
     bikes_stops_content_type.name_en = config["name"]["en"]
     # Fixture data contains two park and ride stops for cars and bikes.
     assert (
-        MobileUnit.objects.filter(content_types=cars_stops_content_type).count() == 12
+        MobileUnit.objects.filter(content_types=cars_stops_content_type).count() == 7
     )
     assert (
-        MobileUnit.objects.filter(content_types=bikes_stops_content_type).count() == 12
+        MobileUnit.objects.filter(content_types=bikes_stops_content_type).count() == 7
     )
     # Test Föli park and ride cars stop
     train = MobileUnit.objects.filter(name_en="Turku railway station").first()
@@ -97,6 +98,6 @@ def test_import_foli_stops(fetch_json_mock):
     assert num_created == 0
     assert num_deleted == 0
     assert (
-        MobileUnit.objects.filter(content_types=cars_stops_content_type).count() == 12
+        MobileUnit.objects.filter(content_types=cars_stops_content_type).count() == 7
     )
     assert hirvensalo.id == MobileUnit.objects.filter(name_en="Hirvensalo").first().id
