@@ -117,6 +117,7 @@ class UnitImporter:
             for config in get_external_sources_yaml_config():
                 self._handle_external_units(config)
 
+        self._mark_sports_facility_units()
         self.unitsyncher.finish()
         update_service_node_counts()
         update_service_counts()
@@ -151,6 +152,20 @@ class UnitImporter:
         self._handle_service_names(obj)
         self._save_object(obj)
         self.unitsyncher.mark(obj)
+
+    def _mark_sports_facility_units(self):
+        """
+        Mark sports facility units (ski trails, ice tracks) so they are not deleted
+        by unitsyncher.finish(). These units have no associated Service and are
+        managed by the maintenance import commands.
+        """
+        from maintenance.management.commands.utils import SPORTS_FACILITY_UNIT_ID_OFFSET
+
+        sports_units = Unit.objects.filter(id__gte=SPORTS_FACILITY_UNIT_ID_OFFSET)
+        for unit in sports_units:
+            synch_unit = self.unitsyncher.get(unit.id)
+            if synch_unit:
+                self.unitsyncher.mark(synch_unit)
 
     def _handle_external_units(self, config):
         """
