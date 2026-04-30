@@ -432,6 +432,10 @@ CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": env("CACHE_LOCATION"),
+        "OPTIONS": {
+            "socket_connect_timeout": 5,
+            "socket_timeout": 5,
+        },
     }
 }
 # Include extended information. i.e. name of the task etc. otherwise the name will be empty in
