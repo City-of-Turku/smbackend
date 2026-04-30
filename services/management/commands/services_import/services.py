@@ -28,9 +28,13 @@ def import_services(
     noop=False,
     logger=None,
     importer=None,
-    ontologytrees=pk_get("ontologytree"),
-    ontologywords=pk_get("ontologyword"),
+    ontologytrees=None,
+    ontologywords=None,
 ):
+    if ontologytrees is None:
+        ontologytrees = pk_get("ontologytree")
+    if ontologywords is None:
+        ontologywords = pk_get("ontologyword")
 
     nodesyncher = ModelSyncher(ServiceNode.objects.all(), lambda obj: obj.id)
     servicesyncher = ModelSyncher(Service.objects.all(), lambda obj: obj.id)
