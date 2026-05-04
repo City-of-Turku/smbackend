@@ -107,6 +107,13 @@ class UnitImporter:
         self.importer = importer
         self.delete_external_source = delete_external_sources
         self.unitsyncher = ModelSyncher(Unit.objects.all(), lambda obj: obj.id)
+        self._marked_unit_ids = set()
+
+    def _mark_unit(self, obj):
+        """Mark a unit in the syncher, skipping if already marked."""
+        if obj.id not in self._marked_unit_ids:
+            self.unitsyncher.mark(obj)
+            self._marked_unit_ids.add(obj.id)
 
     def import_units(self):
         units = get_turku_resource("palvelupisteet")
@@ -151,7 +158,7 @@ class UnitImporter:
         self._handle_accessibility_shortcomings(obj)
         self._handle_service_names(obj)
         self._save_object(obj)
-        self.unitsyncher.mark(obj)
+        self._mark_unit(obj)
 
     def _mark_sports_facility_units(self):
         """
@@ -165,7 +172,7 @@ class UnitImporter:
         for unit in sports_units:
             synch_unit = self.unitsyncher.get(unit.id)
             if synch_unit:
-                self.unitsyncher.mark(synch_unit)
+                self._mark_unit(synch_unit)
 
     def _handle_external_units(self, config):
         """
@@ -181,7 +188,7 @@ class UnitImporter:
             units_qs = Unit.objects.filter(services__id=service.id)
             for unit in units_qs.all():
                 synch_unit = self.unitsyncher.get(unit.id)
-                self.unitsyncher.mark(synch_unit)
+                self._mark_unit(synch_unit)
 
     def _save_object(self, obj):
         if obj._changed:
