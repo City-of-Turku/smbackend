@@ -20,6 +20,7 @@ from .utils import (
 
 logger = logging.getLogger(__name__)
 TIMEZONE = pytz.timezone("Europe/Helsinki")
+MAX_DAYS_AGO = 30
 
 
 def save_maintenance_history(json_data):
@@ -57,7 +58,6 @@ def save_maintenance_history(json_data):
         # is simply "now minus 30 days" — not an actual maintenance event.
         # In that case we leave maintained_at as None rather than storing a
         # misleading, import-time-dependent date.
-        MAX_DAYS_AGO = 30
         days_ago = properties.get("days_ago", None)
         if days_ago is not None and days_ago >= MAX_DAYS_AGO:
             maintained_at = None
