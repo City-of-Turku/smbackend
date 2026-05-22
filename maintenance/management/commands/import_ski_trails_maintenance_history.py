@@ -53,23 +53,32 @@ def save_maintenance_history(json_data):
             logger.warning(f"Feature missing 'name' property: {properties}")
             continue
 
-        date_str = properties.get("date", None)
-        if not date_str:
-            logger.warning(f"Feature '{name}' missing 'date' field, skipping...")
-            num_skipped_invalid_date += 1
-            continue
+        # The API caps days_ago at 30. When days_ago >= 30 the returned 'date'
+        # is simply "now minus 30 days" — not an actual maintenance event.
+        # In that case we leave maintained_at as None rather than storing a
+        # misleading, import-time-dependent date.
+        MAX_DAYS_AGO = 30
+        days_ago = properties.get("days_ago", None)
+        if days_ago is not None and days_ago >= MAX_DAYS_AGO:
+            maintained_at = None
+        else:
+            date_str = properties.get("date", None)
+            if not date_str:
+                logger.warning(f"Feature '{name}' missing 'date' field, skipping...")
+                num_skipped_invalid_date += 1
+                continue
 
-        try:
-            maintained_at = TIMEZONE.localize(
-                datetime.strptime(date_str, SKI_TRAILS_DATE_FIELD_FORMAT)
-            )
-        except ValueError as exp:
-            logger.error(
-                f"Skipping feature '{name}', invalid 'date' field '{date_str}'"
-                f"(expected format: {SKI_TRAILS_DATE_FIELD_FORMAT}), reason: {exp}."
-            )
-            num_skipped_invalid_date += 1
-            continue
+            try:
+                maintained_at = TIMEZONE.localize(
+                    datetime.strptime(date_str, SKI_TRAILS_DATE_FIELD_FORMAT)
+                )
+            except ValueError as exp:
+                logger.error(
+                    f"Skipping feature '{name}', invalid 'date' field '{date_str}'"
+                    f"(expected format: {SKI_TRAILS_DATE_FIELD_FORMAT}), reason: {exp}."
+                )
+                num_skipped_invalid_date += 1
+                continue
 
         geometry_id = properties.get("location_id", None)
         if not geometry_id:

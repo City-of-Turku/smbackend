@@ -369,6 +369,7 @@ def get_ski_trails_maintenance_history_mock_data():
         "type": "FeatureCollection",
         "features": [
             {
+                # days_ago < 30 but no 'date' field — should be skipped
                 "type": "Feature",
                 "properties": {
                     "speed": 11,
@@ -386,16 +387,17 @@ def get_ski_trails_maintenance_history_mock_data():
                 },
             },
             {
+                # days_ago < 30 but invalid date format — should be skipped
                 "type": "Feature",
                 "properties": {
                     "speed": 0,
                     "date": "26-08-2024 11:56",
                     "device_id": null,
                     "location_id": 862,
-                    "name": "Invalid date",
+                    "name": "Invalid date format",
                     "distance": 0,
-                    "hours_ago": 720,
-                    "days_ago": 30,
+                    "hours_ago": 1,
+                    "days_ago": 1,
                 },
                 "geometry": {
                     "coordinates": [22.322459622776, 60.477908123479],
@@ -403,13 +405,14 @@ def get_ski_trails_maintenance_history_mock_data():
                 },
             },
             {
+                # Invalid location_id — should be skipped (geometry not found)
                 "type": "Feature",
                 "properties": {
                     "speed": 0,
-                    "date": "26-08-2024 11:56",
+                    "date": "2024-08-26 11:56",
                     "device_id": null,
                     "location_id": 424242,
-                    "name": "Invalid locatioin id",
+                    "name": "Invalid location id",
                     "distance": 0,
                     "hours_ago": 720,
                     "days_ago": 30,
@@ -420,6 +423,7 @@ def get_ski_trails_maintenance_history_mock_data():
                 },
             },
             {
+                # days_ago=2 (recent real maintenance) — maintained_at should be set
                 "type": "Feature",
                 "properties": {
                     "speed": 0,
@@ -428,12 +432,31 @@ def get_ski_trails_maintenance_history_mock_data():
                     "location_id": 863,
                     "name": "Oriketo-Räntämäki|Oriketo (sv)|Oriketo (en)",
                     "distance": 0,
-                    "hours_ago": 720,
-                    "days_ago": 30,
+                    "hours_ago": 48,
+                    "days_ago": 2,
                     "conditioned": 1,
                     "length": "1,5",
                     "lights": "6-22",
                     "condition_note": "Latu ok",
+                },
+                "geometry": {
+                    "coordinates": [22.312831834656, 60.47943016396],
+                    "type": "Point",
+                },
+            },
+            {
+                # days_ago=30 (API cap — no real maintenance date known) — maintained_at should be None
+                "type": "Feature",
+                "properties": {
+                    "speed": 0,
+                    "date": "2024-07-26 11:56",
+                    "device_id": null,
+                    "location_id": 864,
+                    "name": "Capped days ago trail",
+                    "distance": 0,
+                    "hours_ago": 720,
+                    "days_ago": 30,
+                    "conditioned": 0,
                 },
                 "geometry": {
                     "coordinates": [22.312831834656, 60.47943016396],
