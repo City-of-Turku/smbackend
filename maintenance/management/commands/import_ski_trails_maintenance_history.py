@@ -111,8 +111,10 @@ def save_maintenance_history(json_data):
             )
             continue
 
-        length_val = maintenance_import_property_value(properties, "length")
-        lights_val = maintenance_import_property_value(properties, "lights")
+        # Use None (not empty string) when the API returns null, so that existing
+        # length/lights values set by import_ski_trails are not overwritten.
+        length_val = maintenance_import_property_value(properties, "length") or None
+        lights_val = maintenance_import_property_value(properties, "lights") or None
         note_val = maintenance_import_property_value(properties, "condition_note")
 
         # Determine which UnitMaintenance to use/update
