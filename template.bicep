@@ -795,9 +795,9 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' = {
 }
 
 var serverfarmPlanSku = isProduction ? {
-  name: 'P0v3'
-  tier: 'Premium0V3'
-  size: 'P0v3'
+  name: 'P1v3'
+  tier: 'PremiumV3'
+  size: 'P1v3'
   family: 'Pv3'
   capacity: 1
 } : {

@@ -13,7 +13,8 @@ django-cors-headers
 django-extensions
 psycopg2-binary<2.9
 django-mptt
-lxml>=4.9.1
+urllib3>=2.3.0
+lxml>=6.1.0
 sentry-sdk>=1.14.0
 pip-tools
 python-dateutil
@@ -23,7 +24,7 @@ django-polymorphic>=3.1
 requests-mock
 tqdm
 django-environ
-black>22.1.0
+black>=24.10.0
 isort
 pep8-naming
 jedi

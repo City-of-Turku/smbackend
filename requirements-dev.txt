@@ -8,11 +8,11 @@ asttokens==2.0.5
     # via stack-data
 backcall==0.2.0
     # via ipython
-black==24.3.0
+black==25.1.0
     # via
     #   -c requirements.txt
     #   ipython
-click==8.0.3
+click==8.3.1
     # via
     #   -c requirements.txt
     #   black
@@ -48,7 +48,7 @@ pexpect==4.8.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
-platformdirs==2.4.0
+platformdirs==4.10.0
     # via
     #   -c requirements.txt
     #   black

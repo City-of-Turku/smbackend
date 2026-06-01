@@ -107,37 +107,47 @@ def test_import_ski_trails_maintenance_history(
     json_data = get_ski_trails_maintenance_history_mock_data()
     get_json_data_mock.return_value = json_data
     save_maintenance_history(get_json_data_mock.return_value)
-    # Note, the mock data contains features with invalid date, missing date, invalid location_id, these are discarded
-    assert len(json_data["features"]) == 4
-    # Only one feature has valid date and location_id (863)
-    # Features with missing date, invalid date format, or invalid location_id are skipped
-    assert UnitMaintenance.objects.count() == 1
-    um = UnitMaintenance.objects.first()
+    # Mock data: 5 features total
+    #  - missing date (days_ago=1, no date field) → skipped
+    #  - invalid date format (days_ago=1) → skipped
+    #  - invalid location_id → skipped (geometry not found)
+    #  - geometry_id 863, days_ago=2 → UnitMaintenance with maintained_at set
+    #  - geometry_id 864, days_ago=30 (API cap) → UnitMaintenance with maintained_at=None
+    assert len(json_data["features"]) == 5
+    assert UnitMaintenance.objects.count() == 2
 
-    # Verify geometry is linked
+    # --- geometry_id 863: recent real maintenance ---
+    um_863 = UnitMaintenance.objects.get(geometries__geometry_id=863)
     unit_maintenance_geometry = unit_maintenance_geometries.get(geometry_id=863)
-    assert unit_maintenance_geometry.unit_maintenance == um
-    assert um.geometries.count() == 1
-    assert um.geometries.first().geometry_id == 863
+    assert unit_maintenance_geometry.unit_maintenance == um_863
+    assert um_863.geometries.count() == 1
+    assert um_863.geometries.first().geometry_id == 863
 
     # geometry_id 863 -> unit_id 100863
-    assert um.unit.id == 100863
-    assert um.unit.name == "Oriketo-Räntämäki"
-    assert um.unit.name_fi == "Oriketo-Räntämäki"
-    assert um.unit.name_sv == "Oriketo-Räntämäki"
-    assert um.unit.name_en == "Oriketo-Räntämäki"
-    assert um.unit.extra[SPORT_NAMES_UNIT_EXTRA_KEY] == {
+    assert um_863.unit.id == 100863
+    assert um_863.unit.name == "Oriketo-Räntämäki"
+    assert um_863.unit.name_fi == "Oriketo-Räntämäki"
+    assert um_863.unit.name_sv == "Oriketo-Räntämäki"
+    assert um_863.unit.name_en == "Oriketo-Räntämäki"
+    assert um_863.unit.extra[SPORT_NAMES_UNIT_EXTRA_KEY] == {
         "fi": "Oriketo-Räntämäki",
         "sv": "Oriketo-Räntämäki",
         "en": "Oriketo-Räntämäki",
     }
-    desc = json.loads(um.unit.description)
+    desc = json.loads(um_863.unit.description)
     assert desc == {
         "length": "1,5",
         "lights": "6-22",
         "condition_note": "Latu ok",
     }
-    assert um.target == UnitMaintenance.SKI_TRAIL
+    assert um_863.target == UnitMaintenance.SKI_TRAIL
     # Condition should be USABLE since mock data has 'conditioned': 1
-    assert um.condition == UnitMaintenance.USABLE
-    assert um.maintained_at is not None
+    assert um_863.condition == UnitMaintenance.USABLE
+    # days_ago=2 → real date, maintained_at should be set
+    assert um_863.maintained_at is not None
+
+    # --- geometry_id 864: days_ago=30 (API cap) → maintained_at must be None ---
+    um_864 = UnitMaintenance.objects.get(geometries__geometry_id=864)
+    assert um_864.target == UnitMaintenance.SKI_TRAIL
+    assert um_864.condition == UnitMaintenance.UNUSABLE
+    assert um_864.maintained_at is None

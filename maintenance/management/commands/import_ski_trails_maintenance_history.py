@@ -20,6 +20,7 @@ from .utils import (
 
 logger = logging.getLogger(__name__)
 TIMEZONE = pytz.timezone("Europe/Helsinki")
+MAX_DAYS_AGO = 30
 
 
 def save_maintenance_history(json_data):
@@ -53,23 +54,31 @@ def save_maintenance_history(json_data):
             logger.warning(f"Feature missing 'name' property: {properties}")
             continue
 
-        date_str = properties.get("date", None)
-        if not date_str:
-            logger.warning(f"Feature '{name}' missing 'date' field, skipping...")
-            num_skipped_invalid_date += 1
-            continue
+        # The API caps days_ago at 30. When days_ago >= 30 the returned 'date'
+        # is simply "now minus 30 days" — not an actual maintenance event.
+        # In that case we leave maintained_at as None rather than storing a
+        # misleading, import-time-dependent date.
+        days_ago = properties.get("days_ago", None)
+        if days_ago is not None and days_ago >= MAX_DAYS_AGO:
+            maintained_at = None
+        else:
+            date_str = properties.get("date", None)
+            if not date_str:
+                logger.warning(f"Feature '{name}' missing 'date' field, skipping...")
+                num_skipped_invalid_date += 1
+                continue
 
-        try:
-            maintained_at = TIMEZONE.localize(
-                datetime.strptime(date_str, SKI_TRAILS_DATE_FIELD_FORMAT)
-            )
-        except ValueError as exp:
-            logger.error(
-                f"Skipping feature '{name}', invalid 'date' field '{date_str}'"
-                f"(expected format: {SKI_TRAILS_DATE_FIELD_FORMAT}), reason: {exp}."
-            )
-            num_skipped_invalid_date += 1
-            continue
+            try:
+                maintained_at = TIMEZONE.localize(
+                    datetime.strptime(date_str, SKI_TRAILS_DATE_FIELD_FORMAT)
+                )
+            except ValueError as exp:
+                logger.error(
+                    f"Skipping feature '{name}', invalid 'date' field '{date_str}'"
+                    f"(expected format: {SKI_TRAILS_DATE_FIELD_FORMAT}), reason: {exp}."
+                )
+                num_skipped_invalid_date += 1
+                continue
 
         geometry_id = properties.get("location_id", None)
         if not geometry_id:
@@ -102,8 +111,10 @@ def save_maintenance_history(json_data):
             )
             continue
 
-        length_val = maintenance_import_property_value(properties, "length")
-        lights_val = maintenance_import_property_value(properties, "lights")
+        # Use None (not empty string) when the API returns null, so that existing
+        # length/lights values set by import_ski_trails are not overwritten.
+        length_val = maintenance_import_property_value(properties, "length") or None
+        lights_val = maintenance_import_property_value(properties, "lights") or None
         note_val = maintenance_import_property_value(properties, "condition_note")
 
         # Determine which UnitMaintenance to use/update
