@@ -82,7 +82,7 @@ class GeoSearchImporter:
     retry_strategy = Retry(
         total=10,
         status_forcelist=[400, 408, 429, 500, 502, 503, 504],
-        method_whitelist=[
+        allowed_methods=[
             "GET",
         ],
         backoff_factor=40,  # 20, 40, 80 , 160, 320, 640, 1280...seconds
