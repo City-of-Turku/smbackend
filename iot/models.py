@@ -7,22 +7,51 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 
+class IoTDataToken(models.Model):
+    url = models.URLField()
+    token_key_name = models.CharField(
+        max_length=64,
+        default="access_token",
+        help_text="Name of the key where the token is located in the JSON response, e.g., 'access_token'",
+    )
+    user = models.CharField(max_length=64, null=True, blank=True)
+    password = models.CharField(max_length=64, null=True, blank=True)
+    headers = models.JSONField(null=True, blank=True)
+    data = models.JSONField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.url} ({self.id})"
+
+
 class IoTDataSource(models.Model):
     source_name = models.CharField(
         max_length=3,
         unique=True,
-        verbose_name="Three letter long identifier for the source. "
+        help_text="Three letter long identifier for the source. "
         "Set the identifier as an argument to the Celery task that fetches the data.",
     )
     source_full_name = models.CharField(max_length=64, null=True)
     is_xml = models.BooleanField(
-        default=False, verbose_name="If True, XML data will be converted to JSON."
+        default=False, help_text="If True, XML data will be converted to JSON."
     )
     url = models.URLField()
     headers = models.JSONField(
         null=True,
         blank=True,
-        verbose_name='request headers in JSON format, e.g., {"key1": "value1", "key2": "value2"}',
+        help_text='Request headers in JSON format, e.g., {"key1": "value1", "key2": "value2"}',
+    )
+    token = models.OneToOneField(
+        IoTDataToken,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="data_source",
+    )
+    token_headers = models.JSONField(
+        blank=True,
+        null=True,
+        help_text='Header used when requesting data with token, e.g., {"Authorization": "Bearer &lt;token&gt;"}, '
+        "Note, &lt;token&gt; will be replaced with the requested token.",
     )
 
     def __str__(self):
