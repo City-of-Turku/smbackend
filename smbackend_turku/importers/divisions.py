@@ -34,7 +34,7 @@ WEB_MERCATOR_SRS = SpatialReference(3857)
 
 TURKU_WFS_URL = (
     settings.TURKU_WFS_URL
-    + "?service=WFS&request=GetFeature&typeName={layer}&outputFormat=GML3"
+    + "?service=WFS&request=GetFeature&typeName={layer}&outputFormat=GML3&maxFeatures=500"
 )
 CONFIG_FILE = "divisions_config.yml"
 TURKU_BOUNDARY = get_turku_boundary()
