@@ -34,7 +34,7 @@ WEB_MERCATOR_SRS = SpatialReference(3857)
 
 TURKU_WFS_URL = (
     settings.TURKU_WFS_URL
-    + "?service=WFS&request=GetFeature&typeName={layer}&outputFormat=GML3"
+    + "?service=WFS&request=GetFeature&typeName={layer}&outputFormat=GML3&maxFeatures=500"
 )
 CONFIG_FILE = "divisions_config.yml"
 TURKU_BOUNDARY = get_turku_boundary()
@@ -184,10 +184,8 @@ class DivisionImporter:
         else:
             parent = muni.division
 
-        if "parent" in div and parent:
-            full_id = "%s-%s" % (parent.origin_id, origin_id)
-        else:
-            full_id = origin_id
+        # Keyed by origin_id alone to match make_div_id, see comment there.
+        full_id = origin_id
         obj = syncher.get(full_id)
         if not obj:
             obj = AdministrativeDivision(origin_id=origin_id, type=type_obj)
@@ -252,10 +250,13 @@ class DivisionImporter:
         self.imported_geometries = {}
 
         def make_div_id(obj):
-            if "parent" in div:
-                return "%s-%s" % (obj.parent.origin_id, obj.origin_id)
-            else:
-                return obj.origin_id
+            # origin_id is unique within a division type regardless of parent.
+            # Keying by parent as well is fragile, as the parent for divisions
+            # without an explicit parent_id is determined heuristically and can
+            # vary slightly between import runs (e.g. due to re-fetched source
+            # geometries), which would otherwise cause an already imported
+            # division to look "new" and collide with its own unique ocd_id.
+            return obj.origin_id
 
         self.logger.info(div["name"])
 
@@ -292,9 +293,23 @@ class DivisionImporter:
             assert len(ds) == 1
             with AdministrativeDivision.objects.delay_mptt_updates():
                 for feat in layer:
-                    self._import_division(
-                        muni, div, type_obj, syncher, parent_dict, feat
-                    )
+                    # Isolate failures to a single feature so that one bad or
+                    # conflicting row cannot abort the import of the rest of
+                    # this division type, leaving the type silently
+                    # incomplete on an otherwise successful task run.
+                    try:
+                        self._import_division(
+                            muni, div, type_obj, syncher, parent_dict, feat
+                        )
+                    except Exception as e:
+                        self.logger.warning(
+                            "Skipping feature %s in division type %s : %s"
+                            % (feat, div["name"], e)
+                        )
+            # Delete divisions that were not present in this import, e.g.
+            # ones removed or renamed at the source. Without this, stale
+            # rows are never cleaned up by the periodic import task.
+            syncher.finish()
         else:
             self.logger.warning(
                 "Skipping division type %s, no wfs_layer defined." % div
