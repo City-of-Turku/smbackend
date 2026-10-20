@@ -21,7 +21,7 @@ from mobility_data.importers.utils import (
 )
 
 DEFAULT_SOURCE_DATA_SRID = 3877
-DEFAULT_MAX_FEATURES = 1000
+DEFAULT_MAX_FEATURES = 10000
 DEFAULT_WFS_TYPE = "string"
 DEFAULT_WFS_VERSION = "1.0.0"
 logger = logging.getLogger("mobility_data")
@@ -189,6 +189,12 @@ def import_wfs_feature(config, data_file=None):
         ds = get_data_source(config, max_features)
     assert len(ds) == 1
     layer = ds[0]
+    if not data_file and len(layer) >= max_features:
+        logger.warning(
+            f"{config['content_type_name']}: WFS returned {len(layer)} features, "
+            f"which reaches max_features ({max_features}). The data is probably "
+            "truncated, increase 'max_features' in the config."
+        )
     for feature in layer:
         try:
             object = MobilityData()
