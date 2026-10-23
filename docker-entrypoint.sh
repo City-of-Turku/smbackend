@@ -42,6 +42,7 @@ elif [ "$1" ]; then
 else
     su -s /bin/bash nobody --command "exec uwsgi --plugin http,python3 --master --http :8000 \
                --processes 4 --threads 1 \
+               --buffer-size=65535 \
                --static-map ${STATIC_URL}=${STATIC_ROOT} \
                --need-app \
                --mount ${URL_PREFIX:-/}=smbackend/wsgi.py \
