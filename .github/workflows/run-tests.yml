@@ -10,6 +10,7 @@ jobs:
   build:
     # Ubuntu latest is Ubuntu 24.04 as of 2025/6
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
 
     env:
       # Database for tests
@@ -48,7 +49,7 @@ jobs:
         isort . -c
     - name: Run pytest code functionality tests
       run: |
-        pytest --cov=.
+        pytest -v --durations=20 --cov=.
     - name: Generate Report
       run: |
         pip install coverage
