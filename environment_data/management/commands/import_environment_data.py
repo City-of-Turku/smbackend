@@ -328,14 +328,12 @@ def clear_cache():
 
 
 def delete_months(months_qs):
-    month_datas_qs = MonthData.objects.filter(month__in=months_qs)
-    [m.measurements.all().delete() for m in month_datas_qs]
     days_qs = Day.objects.filter(month__in=months_qs)
-    day_datas_qs = DayData.objects.filter(day__in=days_qs)
-    [m.measurements.all().delete() for m in day_datas_qs]
     hours_qs = Hour.objects.filter(day__in=days_qs)
-    hour_datas_qs = HourData.objects.filter(hour__in=hours_qs)
-    [m.measurements.all().delete() for m in hour_datas_qs]
+    # Delete measurements set-based
+    Measurement.objects.filter(month_datas__month__in=months_qs).delete()
+    Measurement.objects.filter(day_datas__day__in=days_qs).delete()
+    Measurement.objects.filter(hour_datas__hour__in=hours_qs).delete()
     months_qs.delete()
     days_qs.delete()
     hours_qs.delete()
