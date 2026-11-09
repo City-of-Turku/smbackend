@@ -139,6 +139,8 @@ def get_closest_street_name(point):
     Returns the name of the street that is closest to point.
     """
     address = get_closest_address(point)
+    if address is None:
+        return None
     try:
         street = Street.objects.get(id=address.street_id)
         return street.name
@@ -150,9 +152,11 @@ def get_closest_address_full_name(point):
     """
     Returns multilingual dict full_name,
     e.g. {"fi": Linnakatu 10,"sv": Slottsgata 10, "en": Linnakatu 10}
-     of the closest address to the point.
+     of the closest address to the point, or None if there are no addresses.
     """
     address = get_closest_address(point)
+    if address is None:
+        return None
 
     full_name = {
         "fi": address.full_name_fi,
@@ -164,7 +168,8 @@ def get_closest_address_full_name(point):
 
 def get_closest_address(point):
     """
-    Return the closest address to the point.
+    Return the closest address to the point, or None if there are no addresses
+    with a location.
     Uses the PostGIS KNN distance operator (<->) so that the GiST index on
     Address.location is used instead of sorting all addresses by distance.
     """
@@ -183,7 +188,7 @@ def get_closest_address(point):
         template="(%(expressions)s)",
         output_field=FloatField(),
     )
-    return Address.objects.order_by(knn_distance).first()
+    return Address.objects.filter(location__isnull=False).order_by(knn_distance).first()
 
 
 def get_postal_code(point):
@@ -191,6 +196,8 @@ def get_postal_code(point):
     Returns the clostest known postal code for the given point.
     """
     address = get_closest_address(point)
+    if address is None:
+        return None
     try:
         postal_code_area = PostalCodeArea.objects.get(id=address.postal_code_area_id)
     except PostalCodeArea.DoesNotExist:

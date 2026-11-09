@@ -2,7 +2,10 @@ import pytest
 from django.contrib.gis.geos import Point
 from munigeo.utils import get_default_srid
 
-from mobility_data.importers.utils import get_closest_address
+from mobility_data.importers.utils import (
+    get_closest_address,
+    get_closest_address_full_name,
+)
 
 
 @pytest.mark.django_db
@@ -28,3 +31,10 @@ def test_get_closest_address_no_srid(address):
     point = Point(point.x, point.y)
     assert point.srid is None
     assert get_closest_address(point).full_name_fi == "Test Street 42"
+
+
+@pytest.mark.django_db
+def test_get_closest_address_no_addresses():
+    point = Point(22.2441, 60.4001, srid=4326)
+    assert get_closest_address(point) is None
+    assert get_closest_address_full_name(point) is None

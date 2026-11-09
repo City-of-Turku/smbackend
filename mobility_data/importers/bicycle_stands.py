@@ -21,6 +21,7 @@ from .utils import (
     get_street_name_translations,
     MobileUnitDataBase,
 )
+from .wfs import DEFAULT_MAX_FEATURES, DEFAULT_WFS_VERSION, WFS_URL
 
 CONTENT_TYPE_NAME = "BicycleStand"
 FI_KEY = "fi"
@@ -31,9 +32,12 @@ NAME_PREFIX = {
     SV_KEY: "Cykelparkering",
     EN_KEY: "Bicycle parking",
 }
-BICYCLE_STANDS_URL = "{}{}".format(
-    settings.TURKU_WFS_URL,
-    "?service=WFS&request=GetFeature&typeName=GIS:Polkupyoraparkki&outputFormat=GML3&maxFeatures=10000",
+WFS_LAYER = "GIS:Polkupyoraparkki"
+BICYCLE_STANDS_URL = WFS_URL.format(
+    wfs_url=settings.TURKU_WFS_URL,
+    wfs_version=DEFAULT_WFS_VERSION,
+    wfs_layer=WFS_LAYER,
+    max_features=DEFAULT_MAX_FEATURES,
 )
 WFS_SOURCE_DATA_SRID = 3877
 GEOJSON_SOURCE_DATA_SRID = 4326
@@ -190,6 +194,8 @@ class BicyleStand(MobileUnitDataBase):
         except Municipality.DoesNotExist:
             self.municipality = None
         full_names = get_closest_address_full_name(self.geometry)
+        if full_names is None:
+            raise ValueError("No address found near the bicycle stand")
         self.name[FI_KEY] = full_names[FI_KEY]
         self.name[SV_KEY] = full_names[SV_KEY]
         self.name[EN_KEY] = full_names[FI_KEY]
@@ -200,6 +206,11 @@ def get_data_sources():
     data_sources = []
     # Add the WFS datasource that is in GML format
     ds = DataSource(BICYCLE_STANDS_URL)
+    if len(ds[0]) >= DEFAULT_MAX_FEATURES:
+        logger.warning(
+            f"WFS layer {WFS_LAYER} returned {len(ds[0])} features, which is the "
+            "maxFeatures limit. Some bicycle stands may be missing."
+        )
     data_sources.append(("gml", ds))
     # Add the GEOJSON datasource which is a file
     data_path = os.path.join(get_root_dir(), "mobility_data/data")
@@ -227,10 +238,11 @@ def get_bicycle_stand_objects():
             if data_source[0] == "gml":
                 try:
                     bicycle_stand.set_gml_feature(feature)
-                except IndexError as err:
-                    # Handle IndexError gracefully, as the field names can change in the source data
-                    # and it would prevent importing the GEOJSON data.
-                    logger.warning(f"Discarding {feature}, reason: {err}")
+                except Exception as err:
+                    # Discard invalid features (e.g. renamed fields, broken geometry or no
+                    # nearby address) so that one bad feature does not prevent importing
+                    # the rest of the data, including the GEOJSON data.
+                    logger.warning(f"Discarding feature {feature.fid}, reason: {err!r}")
                     continue
             elif data_source[0] == "geojson":
                 bicycle_stand.set_geojson_feature(feature)
