@@ -1,3 +1,4 @@
+from datetime import datetime
 from unittest.mock import patch
 
 import pytest
@@ -178,6 +179,7 @@ def test_infraroad(
         create_maintenance_works,
     )
 
+    current_date = int(datetime.now().timestamp())
     # Test unit creation
     get_json_data_mock.return_value = get_routa_units_mock_data(1)
     num_created_units, num_del_units = create_maintenance_units(INFRAROAD)
@@ -194,7 +196,7 @@ def test_infraroad(
     assert num_created_units == 0
     assert num_del_units == 0
     assert MaintenanceUnit.objects.count() == 1
-    get_json_data_mock.return_value = get_routa_works_mock_data(3)
+    get_json_data_mock.return_value = get_routa_works_mock_data(3, current_date)
     num_created_works, num_del_works = create_maintenance_works(INFRAROAD, 1, 10)
     assert num_created_works == 4
     assert num_del_works == 0
@@ -203,7 +205,7 @@ def test_infraroad(
     work_id = work.id
     work.events = ["auraus"]
     work.original_event_names = ["Auraus"]
-    get_json_data_mock.return_value = get_routa_works_mock_data(1)
+    get_json_data_mock.return_value = get_routa_works_mock_data(1, current_date)
     num_created_works, num_del_works = create_maintenance_works(INFRAROAD, 1, 10)
     assert num_created_works == 0
     assert num_del_works == 2
@@ -222,7 +224,7 @@ def test_infraroad(
     work_dup = MaintenanceWork.objects.first()
     work_dup.pk = 42
     work_dup.save()
-    get_json_data_mock.return_value = get_routa_works_mock_data(1)
+    get_json_data_mock.return_value = get_routa_works_mock_data(1, current_date)
     num_created_works, num_del_works = create_maintenance_works(INFRAROAD, 1, 10)
     assert num_created_works == 0
     assert num_del_works == 1

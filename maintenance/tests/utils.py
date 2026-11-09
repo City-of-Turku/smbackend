@@ -572,8 +572,11 @@ def get_test_fixture_data_layer(file_name):
     return ds[0]
 
 
-def get_routa_works_mock_data(num_elements):
-    current_date = int(datetime.now().timestamp())
+def get_routa_works_mock_data(num_elements, current_date=None):
+    # Pass a fixed current_date when comparing results of repeated imports, as
+    # timestamps are stored at second precision.
+    if current_date is None:
+        current_date = int(datetime.now().timestamp())
     streets = [
         {
             "id": 1,
