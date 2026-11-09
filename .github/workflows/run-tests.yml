@@ -59,7 +59,7 @@ jobs:
         isort . -c
     - name: Run pytest code functionality tests
       run: |
-        pytest -v --durations=20 --cov=.
+        pytest --durations=20 --cov=.
     - name: Generate Report
       run: |
         pip install coverage
