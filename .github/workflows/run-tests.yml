@@ -10,6 +10,7 @@ jobs:
   build:
     # Ubuntu latest is Ubuntu 24.04 as of 2025/6
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
 
     env:
       # Database for tests
@@ -22,11 +23,13 @@ jobs:
       CACHE_LOCATION: redis://localhost:6379/0
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python 3.10.18
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: 3.10.18
+        cache: pip
+        cache-dependency-path: requirements.txt
     - name: Install required Ubuntu packages
       run: |
         sudo apt-get update && sudo apt-get -y --no-install-recommends install gdal-bin voikko-fi libvoikko-dev gettext
@@ -34,6 +37,14 @@ jobs:
       run: |
         psql -h localhost -U postgres template1 -c 'create extension hstore;'
         psql -h localhost -U postgres template1 -c 'create extension pg_trgm;'
+    - name: Tune Postgres for CI
+      # Durability is not needed for a throwaway test database
+      run: |
+        psql -h localhost -U postgres -c 'alter system set fsync = off;'
+        psql -h localhost -U postgres -c 'alter system set synchronous_commit = off;'
+        psql -h localhost -U postgres -c 'alter system set full_page_writes = off;'
+        docker restart ${{ job.services.postgres.id }}
+        until pg_isready -h localhost -U postgres; do sleep 1; done
     - name: Install PyPI dependencies
       run: |
         python -m pip install --upgrade pip
@@ -48,7 +59,7 @@ jobs:
         isort . -c
     - name: Run pytest code functionality tests
       run: |
-        pytest --cov=.
+        pytest --durations=20 --cov=.
     - name: Generate Report
       run: |
         pip install coverage
@@ -69,7 +80,7 @@ jobs:
       # Label used to access the service container
       postgres:
         # Docker Hub image
-        image: postgis/postgis:13-3.1
+        image: postgis/postgis:16-3.5
         # Provide the password for postgres
         env:
           POSTGRES_HOST_AUTH_METHOD: trust

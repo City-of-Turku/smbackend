@@ -55,7 +55,9 @@ class ParkAndRideStop(MobileUnitDataBase):
         except Municipality.DoesNotExist:
             self.municipality = None
         try:
-            self.address = get_closest_address_full_name(self.geometry)
+            address = get_closest_address_full_name(self.geometry)
+            if address is not None:
+                self.address = address
             self.address_zip = get_postal_code(self.geometry)
         except Exception as e:
             logger.warning("Unable to get address or zip code for a stop.")
