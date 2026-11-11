@@ -13,13 +13,52 @@ from iot.utils import clear_source_names_from_cache, get_cache_keys, get_source_
 logger = logging.getLogger("iot")
 
 
+def get_token(data_token):
+    url = data_token.url
+    data = data_token.data
+    headers = data_token.headers
+    auth = None
+    if data_token.user and data_token.password:
+        auth = (data_token.user, data_token.password)
+
+    response = requests.post(url, headers=headers, data=data, auth=auth)
+    if response.status_code != 200:
+        return Exception(
+            f"POST request failed with status code {response.status_code}: {response.text}"
+        )
+    try:
+        return response.json()[data_token.token_key_name]
+    except KeyError as e:
+        return e
+
+
 def save_data_to_db(source):
     IoTData.objects.filter(data_source=source).delete()
+    token = None
+    if source.token:
+        token = get_token(source.token)
+        if isinstance(token, Exception):
+            logger.error(token)
+            return
     try:
-        response = requests.get(source.url, headers=source.headers)
+        if token is None:
+            response = requests.get(source.url, headers=source.headers)
+        else:
+            if source.token_headers:
+                token_headers = {
+                    key: value.replace("<token>", token)
+                    for key, value in source.token_headers.items()
+                }
+            else:
+                logger.error(
+                    f"IoT-data '{source.source_full_name}' uses token, but no Token headers defined."
+                )
+                return
+            response = requests.get(source.url, headers=token_headers)
     except requests.exceptions.ConnectionError:
         logger.error(f"Could not fetch data from: {source.url}")
         return
+
     if source.is_xml:
         try:
             json_data = xmltodict.parse(response.text)
@@ -36,6 +75,9 @@ def save_data_to_db(source):
             return
 
     IoTData.objects.create(data_source=source, data=json_data)
+    logger.info(
+        f"Imported {source.source_full_name if source.source_full_name else source.source_name}"
+    )
 
 
 def clear_cache(source_name):
